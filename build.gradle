@@ -1,0 +1,42 @@
+/*
+ * Copyright 2000-2016 JetBrains s.r.o.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+buildscript {
+    repositories {
+        maven {
+            url "https://plugins.gradle.org/m2/"
+        }
+    }
+    dependencies {
+        classpath group: 'com.github.rodm', name: 'gradle-teamcity-plugin', version: '0.8.1'
+    }
+}
+
+
+ext {
+    teamcityVersion = hasProperty('teamcity.version') ? property('teamcity.version') : '9.1'
+
+    downloadDir = hasProperty('teamcity.download.dir') ? property('teamcity.download.dir') : "$rootDir/teamcity/tmp"
+
+    teamcityDir = hasProperty('teamcity.dir') ? property('teamcity.dir') : "$rootDir/teamcity/servers/TeamCity-${teamcityVersion}"
+    teamcityDataDir = "$rootDir/teamcity/data/" + (teamcityVersion =~ /(\d+\.\d+).*/)[0][1]
+    teamcityJavaHome = System.properties['java.home']
+}
+
+subprojects {
+    group = 'jetbrains.buildServer.codedeploy'
+}
+
