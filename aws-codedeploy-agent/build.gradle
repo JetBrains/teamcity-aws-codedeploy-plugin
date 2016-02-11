@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-apply plugin: 'java'
 apply plugin: 'com.github.rodm.teamcity-agent'
 
 dependencies {

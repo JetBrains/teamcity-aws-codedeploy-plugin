@@ -37,4 +37,7 @@ teamcity {
     homeDir = file(teamcityDir)
     dataDir = file(teamcityDataDir)
     javaHome = file(teamcityJavaHome)
+
+    version = teamcityVersion
+    downloadDir = file(downloadDir)
 }

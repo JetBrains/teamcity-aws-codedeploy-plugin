@@ -14,14 +14,6 @@
  * limitations under the License.
  */
 
-apply plugin: 'java'
-
-repositories {
-    maven {
-        url 'http://repository.jetbrains.com/all'
-    }
-}
-
 dependencies {
     compile "org.jetbrains.teamcity.idea:annotations:132.719"
 }
