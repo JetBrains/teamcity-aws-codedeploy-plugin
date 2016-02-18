@@ -21,7 +21,7 @@ buildscript {
         }
     }
     dependencies {
-        classpath group: 'com.github.rodm', name: 'gradle-teamcity-plugin', version: '0.8.1'
+        classpath "com.github.rodm:gradle-teamcity-plugin:0.8.1"
     }
 }
 
@@ -34,6 +34,8 @@ ext {
     teamcityDir = hasProperty('teamcity.dir') ? property('teamcity.dir') : "$rootDir/teamcity/servers/TeamCity-${teamcityVersion}"
     teamcityDataDir = "$rootDir/teamcity/data/" + (teamcityVersion =~ /(\d+\.\d+).*/)[0][1]
     teamcityJavaHome = System.properties['java.home']
+
+    awsSDKVersion = '1.10.51'
 }
 
 apply plugin: 'idea'
@@ -59,5 +61,6 @@ configure(subprojects - project(':build')) {
 
     repositories {
         maven { url 'http://repository.jetbrains.com/all' }
+        mavenCentral()
     }
 }

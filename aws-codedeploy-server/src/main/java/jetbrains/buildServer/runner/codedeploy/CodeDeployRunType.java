@@ -16,26 +16,46 @@
 
 package jetbrains.buildServer.runner.codedeploy;
 
+import jetbrains.buildServer.serverSide.InvalidProperty;
 import jetbrains.buildServer.serverSide.PropertiesProcessor;
 import jetbrains.buildServer.serverSide.RunType;
 import jetbrains.buildServer.serverSide.RunTypeRegistry;
+import jetbrains.buildServer.util.CollectionsUtil;
+import jetbrains.buildServer.util.Converter;
+import jetbrains.buildServer.web.openapi.PluginDescriptor;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Map;
 
 /**
  * @author vbedrosova
  */
 public class CodeDeployRunType extends RunType {
-  public CodeDeployRunType(@NotNull RunTypeRegistry registry) {
+  @NotNull
+  private final PluginDescriptor myDescriptor;
+
+  public CodeDeployRunType(@NotNull RunTypeRegistry registry, @NotNull PluginDescriptor descriptor) {
     registry.registerRunType(this);
+    myDescriptor = descriptor;
   }
 
   @Nullable
   @Override
   public PropertiesProcessor getRunnerPropertiesProcessor() {
-    return null;
+    return new PropertiesProcessor() {
+      @Override
+      public Collection<InvalidProperty> process(Map<String, String> properties) {
+        return CollectionsUtil.convertCollection(ParametersValidator.validate(properties).entrySet(), new Converter<InvalidProperty, Map.Entry<String, String>>() {
+          @Override
+          public InvalidProperty createFrom(@NotNull Map.Entry<String, String> source) {
+            return new InvalidProperty(source.getKey(), source.getValue());
+          }
+        });
+      }
+    };
   }
 
   @Nullable
@@ -65,12 +85,12 @@ public class CodeDeployRunType extends RunType {
   @Nullable
   @Override
   public String getEditRunnerParamsJspFilePath() {
-    return CodeDeployConstants.EDIT_PARAMS_JSP;
+    return myDescriptor.getPluginResourcesPath(CodeDeployConstants.EDIT_PARAMS_JSP);
   }
 
   @Nullable
   @Override
   public String getViewRunnerParamsJspFilePath() {
-    return CodeDeployConstants.VIEW_PARAMS_JSP;
+    return myDescriptor.getPluginResourcesPath(CodeDeployConstants.VIEW_PARAMS_JSP);
   }
 }

@@ -14,8 +14,10 @@
  * limitations under the License.
  */
 
-dependencies {
-    compile "com.amazonaws:aws-java-sdk:${awsSDKVersion}"
-    compile "org.jetbrains.teamcity.idea:annotations:132.719"
-    compile "org.jetbrains.teamcity:common-api:${teamcityVersion}"
+package jetbrains.buildServer.runner.codedeploy;
+
+/**
+ * @author vbedrosova
+ */
+public class UploadInterruptedException extends RuntimeException {
 }
