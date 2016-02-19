@@ -70,64 +70,12 @@ public class AWSClient {
     return new AmazonCodeDeployClient(myCredentials).withRegion(myRegion);
   }
 
-//  @NotNull
-//  private String ensureS3Bucket(@NotNull String s3BucketName) {
-//    final AmazonS3Client s3Client = createS3Client();
-//
-//    if (!s3Client.doesBucketExist(s3BucketName)) {
-//      log(String.format("Creating S3 bucket %s in region %s", s3BucketName, myRegion));
-//      s3Client.createBucket(s3BucketName, myRegion.getName());
-//
-//      final String bucketLocation = s3Client.getBucketLocation(s3BucketName);
-//      log("Created S3 bucket location: " + bucketLocation);
-//    }
-//
-//    return s3BucketName;
-//  }
-
-  /**
-   * Uploads application revision archive to S3 bucket named s3BucketName.
-   *
-   * For performing this operation target AWSClient must have corresponding S3 permissions.
-   *
-   * @param revision application revision
-   * @param s3BucketName valid S3 bucket name
-   */
-  public void uploadRevision(@NotNull File revision, @NotNull String s3BucketName) {
-    final String key = revision.getName();
-    try {
-      uploadRevision(revision, s3BucketName, key);
-    } catch (Throwable t) {
-      failBuild(t, s3BucketName.concat(key));
-    }
-  }
-
-  /**
-   * Uploads application revision archive to S3 bucket named s3BucketName and
-   * registers it in CodeDeploy for the specified application (must be pre-configured).
-   *
-   * For performing this operation target AWSClient must have corresponding S3 and CodeDeploy permissions.
-   *
-   * @param revision application revision
-   * @param s3BucketName valid S3 bucket name
-   * @param  applicationName CodeDeploy application name
-   */
-  public void uploadAndRegisterRevision(@NotNull File revision, @NotNull String s3BucketName, @NotNull String applicationName) {
-    debug("AWS region is " + myRegion.getName());
-    final String key = revision.getName();
-    try {
-      registerRevision(uploadRevision(revision, s3BucketName, key), applicationName);
-    } catch (Throwable t) {
-      failBuild(t, s3BucketName.concat(key));
-    }
-  }
-
   /**
    * Uploads application revision archive to S3 bucket named s3BucketName,
-   * registers it in CodeDeploy for the specified application and
+   * registers it in CodeDeploy for the specified application,
    * creates deployment for specified application (must be pre-configured) to
-   * deploymentGroupName (must be pre-confugured) EC2 instances group with
-   * deploymentConfigName or default configuration name.
+   * deploymentGroupName (must be pre-configured) EC2 instances group with
+   * deploymentConfigName or default configuration name and waits for deployment finish.
    *
    * For performing this operation target AWSClient must have corresponding S3 and CodeDeploy permissions.
    *
@@ -136,18 +84,102 @@ public class AWSClient {
    * @param applicationName CodeDeploy application name
    * @param deploymentGroupName deployment group name
    * @param deploymentConfigName deployment configuration name or null for default deployment configuration
+   * @param waitTimeoutSec seconds to wait for the created deployment finish or fail
+   * @param waitIntervalSec seconds between polling CodeDeploy for the created deployment status
    */
-  public void uploadAndRegisterAndDeployRevision(@NotNull File revision, @NotNull String s3BucketName,
-                                      @NotNull String applicationName,
-                                      @NotNull String deploymentGroupName,
-                                      @Nullable String deploymentConfigName) {
+  public void uploadRegisterDeployRevisionAndWait(@NotNull File revision, @NotNull String s3BucketName,
+                                                  @NotNull String applicationName,
+                                                  @NotNull String deploymentGroupName,
+                                                  @Nullable String deploymentConfigName,
+                                                  int waitTimeoutSec,
+                                                  int waitIntervalSec) {
+    uploadRegisterDeployWait(revision, s3BucketName, applicationName, true, deploymentGroupName, deploymentConfigName, true, waitTimeoutSec, waitIntervalSec);
+  }
+
+
+  /**
+   * The same as uploadRegisterDeployRevisionAndWait but without waiting
+   */
+  public void uploadRegisterAndDeployRevision(@NotNull File revision, @NotNull String s3BucketName,
+                                              @NotNull String applicationName,
+                                              @NotNull String deploymentGroupName,
+                                              @Nullable String deploymentConfigName) {
+    uploadRegisterDeployWait(revision, s3BucketName, applicationName, true, deploymentGroupName, deploymentConfigName, false, null, null);
+  }
+
+  /**
+   * The same as uploadRegisterAndDeployRevision but without creating deployment
+   */
+  public void uploadAndRegisterRevision(@NotNull File revision, @NotNull String s3BucketName, @NotNull String applicationName) {
+    uploadRegisterDeployWait(revision, s3BucketName, applicationName, false, null, null, false, null, null);
+  }
+
+  @SuppressWarnings("ConstantConditions")
+  private void uploadRegisterDeployWait(@NotNull File revision, @NotNull String s3BucketName,
+                                        @NotNull String applicationName,
+                                        boolean deploy,
+                                        @Nullable String deploymentGroupName,
+                                        @Nullable String deploymentConfigName,
+                                        boolean wait,
+                                        @Nullable Integer waitTimeoutSec,
+                                        @Nullable Integer waitIntervalSec) {
     debug("AWS region is " + myRegion.getName());
+
     final String key = revision.getName();
     try {
-      createDeployment(uploadRevision(revision, s3BucketName, key), applicationName, deploymentGroupName, deploymentConfigName);
+
+      final RevisionLocation revisionLocation = uploadRevision(revision, s3BucketName, key);
+      registerRevision(revisionLocation, applicationName);
+
+      if (deploy) {
+        final CreateDeploymentResult deployment = createDeployment(revisionLocation, applicationName, deploymentGroupName, deploymentConfigName);
+
+        if (wait) {
+          waitForDeployment(deployment, waitTimeoutSec, waitIntervalSec);
+        }
+      }
     } catch (Throwable t) {
-      failBuild(t, s3BucketName.concat(key));
+      failBuild(t, s3BucketName.concat(key).concat(applicationName));
     }
+  }
+
+  private void waitForDeployment(@NotNull CreateDeploymentResult deploymentResult, int waitTimeoutSec, int waitIntervalSec) {
+    log("Waiting for deployment " + deploymentResult.getDeploymentId() + " finish");
+
+    final AmazonCodeDeployClient cdClient = createCodeDeployClient();
+
+    final GetDeploymentRequest dRequest = new GetDeploymentRequest().withDeploymentId(deploymentResult.getDeploymentId());
+
+    DeploymentInfo dInfo = cdClient.getDeployment(dRequest).getDeploymentInfo();
+
+    long startTime = (dInfo == null || dInfo.getStartTime() == null) ? System.currentTimeMillis() : dInfo.getStartTime().getTime();
+
+    while (dInfo == null || dInfo.getCompleteTime() == null) {
+      dInfo = cdClient.getDeployment(dRequest).getDeploymentInfo();
+
+      debug("Deployment " + deploymentInfoText(dInfo));
+
+      if (System.currentTimeMillis() - startTime > waitTimeoutSec * 1000) {
+        failBuild(waitTimeoutSec, dInfo);
+        return;
+      }
+
+      try {
+        Thread.sleep(waitIntervalSec * 1000);
+      } catch (InterruptedException e) {
+        failBuild(e, null);
+        return;
+      }
+    }
+
+    final String msg = "Deployment " + dInfo.getDeploymentId() + " finished in " + formatDuration(dInfo.getCompleteTime().getTime() - startTime) + " with " + deploymentInfoText(dInfo);
+    if (isSuccess(dInfo)) {
+      log(msg);
+      updateBuildStatusText(dInfo);
+      return;
+    } else err(msg);
+
+    failBuild(null, dInfo);
   }
 
   @NotNull
@@ -210,7 +242,28 @@ public class AWSClient {
     return d;
   }
 
-  private void failBuild(@NotNull Throwable t, String footPrint) {
+  private void failBuild(@Nullable Integer timeoutSec, @NotNull DeploymentInfo dInfo) {
+    if (isSuccess(dInfo)) return;
+
+    String msg;
+    if (timeoutSec == null) msg = "Deployment failed";
+    else {
+      msg = "Timeout " + timeoutSec + "sec exceeded for deployment " + dInfo.getDeploymentId() + ", " + deploymentInfoText(dInfo);
+      err(msg);
+    }
+
+    final ErrorInformation eInfo = dInfo.getErrorInformation();
+    if (eInfo != null) {
+      err("Associated error: " + eInfo.getMessage());
+      err("Error code:       " + eInfo.getCode());
+
+      msg += ": " + eInfo.getMessage();
+    }
+
+    problem(getIdentity(dInfo), timeoutSec == null? "CODE_DEPLOY_FAILURE" : "CODE_DEPLOY_TIMEOUT", msg);
+  }
+
+  private void failBuild(@NotNull Throwable t, @Nullable String footPrint) {
     String message;
 
     if (t instanceof AmazonServiceException) {
@@ -240,14 +293,22 @@ public class AWSClient {
     }
   }
 
-  private int getIdentity(@NotNull AmazonServiceException e, String footPrint) {
+  private int getIdentity(@NotNull AmazonServiceException e, @Nullable String footPrint) {
     return getIdentity(e.getServiceName(), e.getErrorType().name(), String.valueOf(e.getStatusCode()), e.getErrorCode(), footPrint);
+  }
+
+  private int getIdentity(@NotNull DeploymentInfo dInfo) {
+    final ErrorInformation eInfo = dInfo.getErrorInformation();
+    final S3Location s3Location = dInfo.getRevision().getS3Location();
+    return getIdentity(dInfo.getStatus(), eInfo == null ? "" : eInfo.getCode(), dInfo.getApplicationName(), s3Location.getKey(), s3Location.getBucket());
   }
 
   private int getIdentity(String... parts) {
     final StringBuilder sb = new StringBuilder();
 
     for (String p : parts) {
+      if (p == null) continue;
+
       p = p.replace("\\", "/");
       if (StringUtil.isNotEmpty(myBaseDir)) p = p.replace(myBaseDir.replace("\\", "/"), "");
       sb.append(p);
@@ -260,6 +321,35 @@ public class AWSClient {
   @NotNull
   private String getClientFootPrint() {
     return myRegion.getName() + myCredentials.getAWSAccessKeyId() + myCredentials.getAWSSecretKey();
+  }
+
+  private void updateBuildStatusText(@NotNull DeploymentInfo dInfo) {
+    if (!isSuccess(dInfo)) return;
+    log("##teamcity[buildStatus tc:tags='tc:internal' text='{build.status.text}; Deployment succeeded: instances " + instancesText(dInfo, false) + "']");
+  }
+
+  private String instancesText(DeploymentInfo dInfo, boolean detailed) {
+    final DeploymentOverview o = dInfo.getDeploymentOverview();
+
+    if (o == null) return "<unknown>";
+
+    final StringBuilder sb = new StringBuilder("succeeded: ").append(o.getSucceeded());
+    if (o.getFailed() > 0 || detailed) sb.append(", failed: ").append(o.getFailed());
+    if (o.getSkipped() > 0 || detailed) sb.append(", skipped: ").append(o.getSkipped());
+    if (o.getSkipped() > 0 || detailed) sb.append(", in progress: ").append(o.getInProgress());
+    return sb.toString();
+  }
+
+  private String deploymentInfoText(DeploymentInfo dInfo) {
+    return "status: " + (dInfo == null ? "<unknown>" : (dInfo.getStatus() + ", instances: " + instancesText(dInfo, true)));
+  }
+
+  private boolean isSuccess(@NotNull DeploymentInfo dInfo) {
+    return DeploymentStatus.Succeeded.toString().equals(dInfo.getStatus());
+  }
+
+  private String formatDuration(long milliseconds) {
+    return String.format("%.1f seconds", (milliseconds / 1000d)); //TODO: better formatting
   }
 
   protected void log(@NotNull String message) {
@@ -285,4 +375,19 @@ public class AWSClient {
   protected String getDescription() {
     return getClass().getName();
   }
+
+  //  @NotNull
+//  private String ensureS3Bucket(@NotNull String s3BucketName) {
+//    final AmazonS3Client s3Client = createS3Client();
+//
+//    if (!s3Client.doesBucketExist(s3BucketName)) {
+//      log(String.format("Creating S3 bucket %s in region %s", s3BucketName, myRegion));
+//      s3Client.createBucket(s3BucketName, myRegion.getName());
+//
+//      final String bucketLocation = s3Client.getBucketLocation(s3BucketName);
+//      log("Created S3 bucket location: " + bucketLocation);
+//    }
+//
+//    return s3BucketName;
+//  }
 }

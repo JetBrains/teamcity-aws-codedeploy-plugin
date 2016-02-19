@@ -16,6 +16,8 @@
 
 package jetbrains.buildServer.runner.codedeploy;
 
+import com.amazonaws.services.dynamodbv2.xspec.S;
+import jetbrains.buildServer.util.CollectionsUtil;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Collections;
@@ -58,7 +60,15 @@ public interface CodeDeployConstants {
   String DEPLOYMENT_CONFIG_NAME_LABEL = "Deployment configuration";
 
   String WAIT_FLAG_PARAM = "codedeploy.wait";
+  String WAIT_FLAG_LABEL = "Wait for deployment finish";
   String WAIT_TIMEOUT_SEC_PARAM = "codedeploy.wait.timeout.sec";
-  String WAIT_INTERVAL_SEC_PARAM = "codedeploy.wait.interval.sec";
+  String WAIT_TIMEOUT_SEC_LABEL = "Timeout (seconds)";
+  String WAIT_POLL_INTERVAL_SEC_PARAM = "codedeploy.wait.poll.interval.sec";
+  String WAIT_POLL_INTERVAL_SEC_LABEL = "Poll interval (seconds)";
+  int WAIT_POLL_INTERVAL_SEC_DEFAULT = 20;
 
+  Map<String, String> DEFAULTS = CollectionsUtil.asMap(
+    WAIT_FLAG_PARAM, "true",
+    WAIT_POLL_INTERVAL_SEC_PARAM, String.valueOf(WAIT_POLL_INTERVAL_SEC_DEFAULT)
+  );
 }

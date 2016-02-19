@@ -25,14 +25,14 @@ dependencies {
     server project(':aws-codedeploy-server')
 }
 
-def awsSDKFiles = project(':aws-codedeploy-common').configurations.compile.files({it.group == 'com.amazonaws' && it.name == 'aws-java-sdk'});
+def awsSDKFiles = {project(':aws-codedeploy-common').configurations.compile.files({it.group == 'com.amazonaws' && it.name == 'aws-java-sdk'})}
 
 teamcity {
     agent {
         descriptor = project(':aws-codedeploy-agent').file('teamcity-plugin.xml')
         files {
             into('lib') {
-                from awsSDKFiles
+                from awsSDKFiles()
             }
         }
     }
@@ -41,8 +41,8 @@ teamcity {
         descriptor = file("$rootDir/teamcity-plugin.xml")
         tokens = [Plugin_Version: 'SNAPSHOT-' + new Date().format('yyyyMMddHHmm')]
         files {
-            into('lib') {
-                from project(':aws-codedeploy-common').configurations.compile.files({it.group == 'com.amazonaws' && it.name == 'aws-java-sdk'})
+            into('server') {
+                from awsSDKFiles()
             }
         }
     }

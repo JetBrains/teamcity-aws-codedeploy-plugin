@@ -48,7 +48,7 @@ public class CodeDeployRunType extends RunType {
     return new PropertiesProcessor() {
       @Override
       public Collection<InvalidProperty> process(Map<String, String> properties) {
-        return CollectionsUtil.convertCollection(ParametersValidator.validate(properties).entrySet(), new Converter<InvalidProperty, Map.Entry<String, String>>() {
+        return CollectionsUtil.convertCollection(ParametersValidator.validateSettings(properties).entrySet(), new Converter<InvalidProperty, Map.Entry<String, String>>() {
           @Override
           public InvalidProperty createFrom(@NotNull Map.Entry<String, String> source) {
             return new InvalidProperty(source.getKey(), source.getValue());
@@ -61,7 +61,7 @@ public class CodeDeployRunType extends RunType {
   @Nullable
   @Override
   public Map<String, String> getDefaultRunnerProperties() {
-    return null;
+    return CodeDeployConstants.DEFAULTS;
   }
 
   @NotNull

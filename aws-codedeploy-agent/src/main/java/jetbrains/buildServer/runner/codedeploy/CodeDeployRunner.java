@@ -39,20 +39,29 @@ public class CodeDeployRunner implements AgentBuildRunner {
 
         ParametersValidator.validateRuntime(runnerParameters, runningBuild.getCheckoutDirectory());
 
-        final String accessKeyId = runnerParameters.get(CodeDeployConstants.ACCESS_KEY_ID_PARAM);
-        final String secretAccessKey = runnerParameters.get(CodeDeployConstants.SECRET_ACCESS_KEY_PARAM);
-        final String regionName = runnerParameters.get(CodeDeployConstants.REGION_NAME_PARAM);
+        final AWSClient awsClient = createAWSClient(
+          runnerParameters.get(CodeDeployConstants.ACCESS_KEY_ID_PARAM),
+          runnerParameters.get(CodeDeployConstants.SECRET_ACCESS_KEY_PARAM),
+          runnerParameters.get(CodeDeployConstants.REGION_NAME_PARAM),
+          runningBuild);
 
-        final AWSClient awsClient = createAWSClient(accessKeyId, secretAccessKey, regionName, runningBuild);
+        final File revision = FileUtil.resolvePath(runningBuild.getCheckoutDirectory(), runnerParameters.get(CodeDeployConstants.READY_REVISION_PATH_PARAM));
 
-        final String revisionPath = runnerParameters.get(CodeDeployConstants.READY_REVISION_PATH_PARAM);
-        final File revision = FileUtil.resolvePath(runningBuild.getCheckoutDirectory(), revisionPath);
         final String s3BucketName = runnerParameters.get(CodeDeployConstants.S3_BUCKET_NAME_PARAM);
         final String applicationName = runnerParameters.get(CodeDeployConstants.APP_NAME_PARAM);
         final String deploymentGroupName = runnerParameters.get(CodeDeployConstants.DEPLOYMENT_GROUP_NAME_PARAM);
         final String deploymentConfigName = StringUtil.nullIfEmpty(runnerParameters.get(CodeDeployConstants.DEPLOYMENT_CONFIG_NAME_PARAM));
 
-        awsClient.uploadAndRegisterAndDeployRevision(revision, s3BucketName, applicationName, deploymentGroupName, deploymentConfigName);
+        if (Boolean.parseBoolean(runnerParameters.get(CodeDeployConstants.WAIT_FLAG_PARAM))) {
+          awsClient.uploadRegisterDeployRevisionAndWait(
+            revision,
+            s3BucketName, applicationName,
+            deploymentGroupName, deploymentConfigName,
+            Integer.parseInt(runnerParameters.get(CodeDeployConstants.WAIT_TIMEOUT_SEC_PARAM)),
+            Integer.getInteger(runnerParameters.get(CodeDeployConstants.WAIT_POLL_INTERVAL_SEC_PARAM), CodeDeployConstants.WAIT_POLL_INTERVAL_SEC_DEFAULT));
+        } else {
+          awsClient.uploadRegisterAndDeployRevision(revision, s3BucketName, applicationName, deploymentGroupName, deploymentConfigName);
+        }
       }
     };
   }

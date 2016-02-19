@@ -46,10 +46,27 @@
 <c:set var="dep_config_name_param" value="<%=CodeDeployConstants.DEPLOYMENT_CONFIG_NAME_PARAM%>"/>
 <c:set var="dep_config_name_label" value="<%=CodeDeployConstants.DEPLOYMENT_CONFIG_NAME_LABEL%>"/>
 
+<c:set var="wait_flag_param" value="<%=CodeDeployConstants.WAIT_FLAG_PARAM%>"/>
+<c:set var="wait_flag_label" value="<%=CodeDeployConstants.WAIT_FLAG_LABEL%>"/>
+
+<c:set var="wait_timeout_param" value="<%=CodeDeployConstants.WAIT_TIMEOUT_SEC_PARAM%>"/>
+<c:set var="wait_timeout_label" value="<%=CodeDeployConstants.WAIT_TIMEOUT_SEC_LABEL%>"/>
+
+<c:set var="wait_poll_interval_param" value="<%=CodeDeployConstants.WAIT_POLL_INTERVAL_SEC_PARAM%>"/>
+<c:set var="wait_poll_interval_label" value="<%=CodeDeployConstants.WAIT_POLL_INTERVAL_SEC_LABEL%>"/>
+<c:set var="wait_poll_interval_default" value="<%=CodeDeployConstants.WAIT_POLL_INTERVAL_SEC_DEFAULT%>"/>
+
 <tr>
     <th><label for="${revision_path_param}">${revision_path_label}: <l:star/></label></th>
     <td><props:textProperty name="${revision_path_param}" className="longField" maxlength="256"/>
-        <span class="smallNote">Path to a valid application revision including appspec.yml that should be deployed</span><span class="error" id="error_${revision_path_param}"></span>
+        <span class="smallNote">Path to a valid application revision (including appspec.yml) that should be deployed</span><span class="error" id="error_${revision_path_param}"></span>
+    </td>
+</tr>
+
+<tr>
+    <th><label for="${region_name_param}">${region_name_label}: <l:star/></label></th>
+    <td><props:textProperty name="${region_name_param}" maxlength="256"/>
+        <span class="smallNote">e.g. "us-east-1", "eu-west-1"</span><span class="error" id="error_${region_name_param}" ?></span>
     </td>
 </tr>
 
@@ -85,12 +102,6 @@
         </td>
     </tr>
     <tr>
-        <th><label for="${region_name_param}">${region_name_label}: <l:star/></label></th>
-        <td><props:textProperty name="${region_name_param}" maxlength="256"/>
-            <span class="smallNote">e.g. "us-east-1", "eu-west-1"</span><span class="error" id="error_${region_name_param}" ?></span>
-        </td>
-    </tr>
-    <tr>
         <th><label for="${dep_group_name_param}">${dep_group_name_label}: <l:star/></label></th>
         <td><props:textProperty name="${dep_group_name_param}" className="longField" maxlength="256"/>
             <span class="smallNote">Pre-configured EC2 instances, must be running for deployment to succeed</span><span class="error" id="error_${dep_group_name_param}"></span>
@@ -99,8 +110,37 @@
     <tr>
         <th><label for="${dep_config_name_param}">${dep_config_name_label}: </label></th>
         <td><props:textProperty name="${dep_config_name_param}" className="longField" maxlength="256"/>
-            <span class="smallNote">e.g. "CodeDeployDefault.OneAtATime", "CodeDeployDefault.AllAtOnce" or a custom one. Leave blank for a default configuration.</span><span class="error" id="error_${dep_config_name_param}"></span>
+            <span class="smallNote">e.g. "CodeDeployDefault.OneAtATime", "CodeDeployDefault.AllAtOnce" or a custom one, leave blank for default configuration</span><span class="error" id="error_${dep_config_name_param}"></span>
+        </td>
+    </tr>
+    <tr>
+        <th><label for="${wait_flag_param}">${wait_flag_label}: </label></th>
+        <td><props:checkboxProperty name="${wait_flag_param}" onclick="codeDeployUpdateVisibility()"/></td>
+    </tr>
+    <tr id="${wait_timeout_param}_row">
+        <th><label for="${wait_timeout_param}">${wait_timeout_label}: </label></th>
+        <td><props:textProperty name="${wait_timeout_param}" maxlength="256"/>
+            <span class="smallNote">Build will fail if timeout is exceeded</span><span class="error" id="error_${wait_timeout_param}"></span>
+        </td>
+    </tr>
+    <tr id="${wait_poll_interval_param}_row">
+        <th><label for="${wait_poll_interval_param}">${wait_poll_interval_label}: </label></th>
+        <td><props:textProperty name="${wait_poll_interval_param}" maxlength="256"/>
+            <span class="smallNote">Default value is ${wait_poll_interval_default} seconds</span><span class="error" id="error_${wait_poll_interval_param}"></span>
         </td>
     </tr>
 </l:settingsGroup>
+
+<script type="application/javascript">
+    window.codeDeployUpdateVisibility = function () {
+        var wait = $('${wait_flag_param}');
+        if (wait.checked) {
+            BS.Util.show('${wait_timeout_param}_row', '${wait_poll_interval_param}_row');
+        } else {
+            BS.Util.hide('${wait_timeout_param}_row', '${wait_poll_interval_param}_row');
+        }
+        BS.VisibilityHandlers.updateVisibility($('runnerParams'))
+    }
+    codeDeployUpdateVisibility();
+</script>
 
