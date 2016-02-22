@@ -14,47 +14,13 @@
   ~ limitations under the License.
   --%>
 
-<%@ page import="jetbrains.buildServer.runner.codedeploy.CodeDeployConstants" %>
-
 <%@ taglib prefix="props" tagdir="/WEB-INF/tags/props" %>
 <%@ taglib prefix="l" tagdir="/WEB-INF/tags/layout" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="forms" tagdir="/WEB-INF/tags/forms" %>
 <%@ taglib prefix="bs" tagdir="/WEB-INF/tags" %>
 
-<c:set var="revision_path_param" value="<%=CodeDeployConstants.READY_REVISION_PATH_PARAM%>"/>
-<c:set var="revision_path_label" value="<%=CodeDeployConstants.READY_REVISION_PATH_LABEL%>"/>
-
-<c:set var="region_name_param" value="<%=CodeDeployConstants.REGION_NAME_PARAM%>"/>
-<c:set var="region_name_label" value="<%=CodeDeployConstants.REGION_NAME_LABEL%>"/>
-
-<c:set var="access_key_id_param" value="<%=CodeDeployConstants.ACCESS_KEY_ID_PARAM%>"/>
-<c:set var="access_key_id_label" value="<%=CodeDeployConstants.ACCESS_KEY_ID_LABEL%>"/>
-
-<c:set var="secret_access_key_param" value="<%=CodeDeployConstants.SECRET_ACCESS_KEY_PARAM%>"/>
-<c:set var="secret_access_key_label" value="<%=CodeDeployConstants.SECRET_ACCESS_KEY_LABEL%>"/>
-
-<c:set var="bucket_name_param" value="<%=CodeDeployConstants.S3_BUCKET_NAME_PARAM%>"/>
-<c:set var="bucket_name_label" value="<%=CodeDeployConstants.S3_BUCKET_NAME_LABEL%>"/>
-
-<c:set var="app_name_param" value="<%=CodeDeployConstants.APP_NAME_PARAM%>"/>
-<c:set var="app_name_label" value="<%=CodeDeployConstants.APP_NAME_LABEL%>"/>
-
-<c:set var="dep_group_name_param" value="<%=CodeDeployConstants.DEPLOYMENT_GROUP_NAME_PARAM%>"/>
-<c:set var="dep_group_name_label" value="<%=CodeDeployConstants.DEPLOYMENT_GROUP_NAME_LABEL%>"/>
-
-<c:set var="dep_config_name_param" value="<%=CodeDeployConstants.DEPLOYMENT_CONFIG_NAME_PARAM%>"/>
-<c:set var="dep_config_name_label" value="<%=CodeDeployConstants.DEPLOYMENT_CONFIG_NAME_LABEL%>"/>
-
-<c:set var="wait_flag_param" value="<%=CodeDeployConstants.WAIT_FLAG_PARAM%>"/>
-<c:set var="wait_flag_label" value="<%=CodeDeployConstants.WAIT_FLAG_LABEL%>"/>
-
-<c:set var="wait_timeout_param" value="<%=CodeDeployConstants.WAIT_TIMEOUT_SEC_PARAM%>"/>
-<c:set var="wait_timeout_label" value="<%=CodeDeployConstants.WAIT_TIMEOUT_SEC_LABEL%>"/>
-
-<c:set var="wait_poll_interval_param" value="<%=CodeDeployConstants.WAIT_POLL_INTERVAL_SEC_PARAM%>"/>
-<c:set var="wait_poll_interval_label" value="<%=CodeDeployConstants.WAIT_POLL_INTERVAL_SEC_LABEL%>"/>
-<c:set var="wait_poll_interval_default" value="<%=CodeDeployConstants.WAIT_POLL_INTERVAL_SEC_DEFAULT%>"/>
+<%@include file="paramsConstants.jspf"%>
 
 <tr>
     <th><label for="${revision_path_param}">${revision_path_label}: <l:star/></label></th>
@@ -118,7 +84,7 @@
         <td><props:checkboxProperty name="${wait_flag_param}" onclick="codeDeployUpdateVisibility()"/></td>
     </tr>
     <tr id="${wait_timeout_param}_row">
-        <th><label for="${wait_timeout_param}">${wait_timeout_label}: </label></th>
+        <th><label for="${wait_timeout_param}">${wait_timeout_label}: <l:star/></label></th>
         <td><props:textProperty name="${wait_timeout_param}" maxlength="256"/>
             <span class="smallNote">Build will fail if timeout is exceeded</span><span class="error" id="error_${wait_timeout_param}"></span>
         </td>
@@ -140,7 +106,7 @@
             BS.Util.hide('${wait_timeout_param}_row', '${wait_poll_interval_param}_row');
         }
         BS.VisibilityHandlers.updateVisibility($('runnerParams'))
-    }
+    };
     codeDeployUpdateVisibility();
 </script>
 

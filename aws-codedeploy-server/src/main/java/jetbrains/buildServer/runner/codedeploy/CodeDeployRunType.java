@@ -93,4 +93,20 @@ public class CodeDeployRunType extends RunType {
   public String getViewRunnerParamsJspFilePath() {
     return myDescriptor.getPluginResourcesPath(CodeDeployConstants.VIEW_PARAMS_JSP);
   }
+
+  @SuppressWarnings("StringBufferReplaceableByString")
+  @NotNull
+  @Override
+  public String describeParameters(@NotNull Map<String, String> parameters) {
+    final StringBuilder descr = new StringBuilder();
+    descr
+      .append("Deploy ")
+      .append(parameters.get(CodeDeployConstants.READY_REVISION_PATH_PARAM))
+      .append(" to deployment group ")
+      .append(parameters.get(CodeDeployConstants.DEPLOYMENT_GROUP_NAME_PARAM))
+      .append(" in scope of ")
+      .append(parameters.get(CodeDeployConstants.APP_NAME_PARAM))
+      .append(" application");
+    return descr.toString();
+  }
 }
