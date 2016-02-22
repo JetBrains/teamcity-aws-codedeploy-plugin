@@ -18,6 +18,7 @@ package jetbrains.buildServer.runner.codedeploy;
 
 import jetbrains.buildServer.RunBuildException;
 import jetbrains.buildServer.agent.*;
+import jetbrains.buildServer.messages.ErrorData;
 import jetbrains.buildServer.util.FileUtil;
 import jetbrains.buildServer.util.StringUtil;
 import org.jetbrains.annotations.NotNull;
@@ -35,9 +36,9 @@ public class CodeDeployRunner implements AgentBuildRunner {
     return new SyncBuildProcessAdapter(context.getBuild().getBuildLogger()) {
       @Override
       protected void runProcess() throws RunBuildException {
-        final Map<String, String> runnerParameters = context.getRunnerParameters();
+        validateParams();
 
-        ParametersValidator.validateRuntime(runnerParameters, runningBuild.getCheckoutDirectory());
+        final Map<String, String> runnerParameters = context.getRunnerParameters();
 
         final AWSClient awsClient = createAWSClient(
           runnerParameters.get(CodeDeployConstants.ACCESS_KEY_ID_PARAM),
@@ -62,6 +63,12 @@ public class CodeDeployRunner implements AgentBuildRunner {
         } else {
           awsClient.uploadRegisterAndDeployRevision(revision, s3BucketName, applicationName, deploymentGroupName, deploymentConfigName);
         }
+      }
+
+      private void validateParams() throws RunBuildException {
+        final Map<String, String> invalids = ParametersValidator.validateRuntime(context.getRunnerParameters(), runningBuild.getCheckoutDirectory());
+        if (invalids.isEmpty()) return;
+        throw new RunBuildException(invalids.values().iterator().next(), null, ErrorData.BUILD_RUNNER_ERROR_TYPE);
       }
     };
   }

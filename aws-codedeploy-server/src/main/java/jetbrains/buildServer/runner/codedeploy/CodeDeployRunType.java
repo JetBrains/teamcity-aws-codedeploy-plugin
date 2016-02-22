@@ -101,11 +101,17 @@ public class CodeDeployRunType extends RunType {
     final StringBuilder descr = new StringBuilder();
     descr
       .append("Deploy ")
+      .append("<b>")
       .append(parameters.get(CodeDeployConstants.READY_REVISION_PATH_PARAM))
+      .append("</b>")
       .append(" to deployment group ")
+      .append("<b>")
       .append(parameters.get(CodeDeployConstants.DEPLOYMENT_GROUP_NAME_PARAM))
+      .append("</b>")
       .append(" in scope of ")
+      .append("<b>")
       .append(parameters.get(CodeDeployConstants.APP_NAME_PARAM))
+      .append("</b>")
       .append(" application");
     return descr.toString();
   }

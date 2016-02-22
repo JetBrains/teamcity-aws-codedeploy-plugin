@@ -16,11 +16,8 @@
 
 package jetbrains.buildServer.runner.codedeploy;
 
-import com.amazonaws.services.dynamodbv2.xspec.S;
 import jetbrains.buildServer.util.CollectionsUtil;
-import org.jetbrains.annotations.NotNull;
 
-import java.util.Collections;
 import java.util.Map;
 
 /**
