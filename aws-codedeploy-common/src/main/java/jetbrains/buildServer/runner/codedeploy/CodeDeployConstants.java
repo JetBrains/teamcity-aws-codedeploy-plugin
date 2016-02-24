@@ -19,6 +19,7 @@ package jetbrains.buildServer.runner.codedeploy;
 import jetbrains.buildServer.util.CollectionsUtil;
 
 import java.util.Map;
+import java.util.UUID;
 
 /**
  * @author vbedrosova
@@ -35,10 +36,23 @@ public interface CodeDeployConstants {
 
 
 
+  String CREDENTIALS_TYPE_PARAM = "codedeploy.credentials.type";
+  String CREDENTIALS_TYPE_LABEL = "Credentials type";
+  String TEMP_CREDENTIALS_PARAM = "codedeploy.temp.credentials";
+  String TEMP_CREDENTIALS_LABEL = "Temporary credentials";
+  String ACCESS_KEYS_PARAM = "codedeploy.access.keys";
+  String ACCESS_KEYS_LABEL = "Access keys";
+
   String ACCESS_KEY_ID_PARAM = "codedeploy.access.key.id";
   String ACCESS_KEY_ID_LABEL = "Access key ID";
   String SECRET_ACCESS_KEY_PARAM = "codedeploy.secret.access.key";
   String SECRET_ACCESS_KEY_LABEL = "Secret access key";
+
+  String IAM_ROLE_ARN_PARAM = "codedeploy.iam.role.arn";
+  String IAM_ROLE_ARN_LABEL = "IAM role ARN";
+  String EXTERNAL_ID_PARAM = "codedeploy.external.id";
+  String EXTERNAL_ID_LABEL = "External ID";
+  int TEMP_CREDENTIALS_DURATION_SEC_DEFAULT = 1800;
 
   String READY_REVISION_PATH_PARAM = "codedeploy.ready.revision.path";
   String READY_REVISION_PATH_LABEL = "Application revision";
@@ -65,6 +79,8 @@ public interface CodeDeployConstants {
   int WAIT_POLL_INTERVAL_SEC_DEFAULT = 20;
 
   Map<String, String> DEFAULTS = CollectionsUtil.asMap(
+    CREDENTIALS_TYPE_PARAM, TEMP_CREDENTIALS_PARAM,
+    EXTERNAL_ID_PARAM, UUID.randomUUID().toString(),
     WAIT_FLAG_PARAM, "true",
     WAIT_POLL_INTERVAL_SEC_PARAM, String.valueOf(WAIT_POLL_INTERVAL_SEC_DEFAULT)
   );

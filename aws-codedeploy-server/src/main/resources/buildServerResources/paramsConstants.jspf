@@ -24,11 +24,26 @@
 <c:set var="region_name_param" value="<%=CodeDeployConstants.REGION_NAME_PARAM%>"/>
 <c:set var="region_name_label" value="<%=CodeDeployConstants.REGION_NAME_LABEL%>"/>
 
+<c:set var="credentials_type_param" value="<%=CodeDeployConstants.CREDENTIALS_TYPE_PARAM%>"/>
+<c:set var="credentials_type_label" value="<%=CodeDeployConstants.CREDENTIALS_TYPE_LABEL%>"/>
+
+<c:set var="temp_credentials_param" value="<%=CodeDeployConstants.TEMP_CREDENTIALS_PARAM%>"/>
+<c:set var="temp_credentials_label" value="<%=CodeDeployConstants.TEMP_CREDENTIALS_LABEL%>"/>
+
+<c:set var="access_keys_param" value="<%=CodeDeployConstants.ACCESS_KEYS_PARAM%>"/>
+<c:set var="access_keys_label" value="<%=CodeDeployConstants.ACCESS_KEYS_LABEL%>"/>
+
 <c:set var="access_key_id_param" value="<%=CodeDeployConstants.ACCESS_KEY_ID_PARAM%>"/>
 <c:set var="access_key_id_label" value="<%=CodeDeployConstants.ACCESS_KEY_ID_LABEL%>"/>
 
 <c:set var="secret_access_key_param" value="<%=CodeDeployConstants.SECRET_ACCESS_KEY_PARAM%>"/>
 <c:set var="secret_access_key_label" value="<%=CodeDeployConstants.SECRET_ACCESS_KEY_LABEL%>"/>
+
+<c:set var="iam_role_arn_param" value="<%=CodeDeployConstants.IAM_ROLE_ARN_PARAM%>"/>
+<c:set var="iam_role_arn_label" value="<%=CodeDeployConstants.IAM_ROLE_ARN_LABEL%>"/>
+
+<c:set var="external_id_param" value="<%=CodeDeployConstants.EXTERNAL_ID_PARAM%>"/>
+<c:set var="external_id_label" value="<%=CodeDeployConstants.EXTERNAL_ID_LABEL%>"/>
 
 <c:set var="bucket_name_param" value="<%=CodeDeployConstants.S3_BUCKET_NAME_PARAM%>"/>
 <c:set var="bucket_name_label" value="<%=CodeDeployConstants.S3_BUCKET_NAME_LABEL%>"/>

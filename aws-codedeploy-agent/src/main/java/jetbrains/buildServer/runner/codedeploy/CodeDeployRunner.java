@@ -40,11 +40,7 @@ public class CodeDeployRunner implements AgentBuildRunner {
 
         final Map<String, String> runnerParameters = context.getRunnerParameters();
 
-        final AWSClient awsClient = createAWSClient(
-          runnerParameters.get(CodeDeployConstants.ACCESS_KEY_ID_PARAM),
-          runnerParameters.get(CodeDeployConstants.SECRET_ACCESS_KEY_PARAM),
-          runnerParameters.get(CodeDeployConstants.REGION_NAME_PARAM),
-          runningBuild);
+        final AWSClient awsClient = createAWSClient(runnerParameters, runningBuild);
 
         final File revision = FileUtil.resolvePath(runningBuild.getCheckoutDirectory(), runnerParameters.get(CodeDeployConstants.READY_REVISION_PATH_PARAM));
 
@@ -91,46 +87,59 @@ public class CodeDeployRunner implements AgentBuildRunner {
   }
 
   @NotNull
-  private AWSClient createAWSClient(@NotNull String accessKeyId, @NotNull String secretAccessKey, @NotNull String regionName, @NotNull final AgentRunningBuild runningBuild) {
+  private AWSClient createAWSClient(final Map<String, String> runnerParameters, @NotNull final AgentRunningBuild runningBuild) {
     final BuildProgressLogger buildLogger = runningBuild.getBuildLogger();
+    final String regionName = runnerParameters.get(CodeDeployConstants.REGION_NAME_PARAM);
 
-    return new AWSClient(accessKeyId, secretAccessKey, regionName) {
-      @Override
-      protected void log(@NotNull String message) {
-        buildLogger.message(message);
-      }
+    return CodeDeployConstants.ACCESS_KEYS_PARAM.equals(runnerParameters.get(CodeDeployConstants.CREDENTIALS_TYPE_PARAM))
+      ?
+      new AWSClient(
+        runnerParameters.get(CodeDeployConstants.ACCESS_KEY_ID_PARAM),
+        runnerParameters.get(CodeDeployConstants.SECRET_ACCESS_KEY_PARAM),
+        regionName
+      ) :
+      new AWSClient(
+        runnerParameters.get(CodeDeployConstants.IAM_ROLE_ARN_PARAM),
+        runnerParameters.get(CodeDeployConstants.EXTERNAL_ID_PARAM),
+        runnerParameters.get(CodeDeployConstants.ACCESS_KEY_ID_PARAM),
+        runnerParameters.get(CodeDeployConstants.SECRET_ACCESS_KEY_PARAM),
+        runningBuild.getBuildTypeName(),
+        2 * Integer.getInteger(runnerParameters.get(CodeDeployConstants.WAIT_TIMEOUT_SEC_PARAM), CodeDeployConstants.TEMP_CREDENTIALS_DURATION_SEC_DEFAULT),
+        regionName
+      )
+      .withBaseDir(runningBuild.getCheckoutDirectory().getAbsolutePath())
+      .withDescription(runningBuild.getBuildNumber())
+      .withLogger(new AWSClient.Logger() {
+        @Override
+        protected void log(@NotNull String message) {
+          buildLogger.message(message);
+        }
 
-      @Override
-      protected void err(@NotNull String message) {
-        buildLogger.error(message);
-      }
+        @Override
+        protected void err(@NotNull String message) {
+          buildLogger.error(message);
+        }
 
-      @Override
-      protected void debug(@NotNull String message) {
-        buildLogger.message(String.format("##teamcity[message text='%s' tc:tags='tc:internal']", escape(message)));
-      }
+        @Override
+        protected void debug(@NotNull String message) {
+          buildLogger.message(String.format("##teamcity[message text='%s' tc:tags='tc:internal']", escape(message)));
+        }
 
-      @Override
-      protected void problem(int identity, @NotNull String type, @NotNull String descr) {
-         buildLogger.message(String.format("##teamcity[buildProblem identity='%d' type='%s' description='%s' tc:tags='tc:internal']", identity, type, escape(descr)));
-      }
+        @Override
+        protected void problem(int identity, @NotNull String type, @NotNull String descr) {
+          buildLogger.message(String.format("##teamcity[buildProblem identity='%d' type='%s' description='%s' tc:tags='tc:internal']", identity, type, escape(descr)));
+        }
 
-      @NotNull
-      private String escape(@NotNull String s) {
-        return s.
-          replace("|", "||").
-          replace("'", "|'").
-          replace("\n", "|n").
-          replace("\r", "|r").
-          replace("\\uNNNN", "|0xNNNN").
-          replace("[", "|[").replace("]", "|]");
-      }
-
-      @NotNull
-      @Override
-      protected String getDescription() {
-        return runningBuild.getBuildNumber();
-      }
-    }.withBaseDir(runningBuild.getCheckoutDirectory().getAbsolutePath());
+        @NotNull
+        private String escape(@NotNull String s) {
+          return s.
+            replace("|", "||").
+            replace("'", "|'").
+            replace("\n", "|n").
+            replace("\r", "|r").
+            replace("\\uNNNN", "|0xNNNN").
+            replace("[", "|[").replace("]", "|]");
+        }
+      });
   }
 }

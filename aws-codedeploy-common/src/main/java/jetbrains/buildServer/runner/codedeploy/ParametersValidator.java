@@ -16,6 +16,7 @@
 
 package jetbrains.buildServer.runner.codedeploy;
 
+import jetbrains.buildServer.parameters.ReferencesResolverUtil;
 import jetbrains.buildServer.util.FileUtil;
 import jetbrains.buildServer.util.StringUtil;
 import org.jetbrains.annotations.NotNull;
@@ -39,7 +40,7 @@ public final class ParametersValidator {
     if (!invalids.containsKey(CodeDeployConstants.READY_REVISION_PATH_PARAM)) {
       final String revisionPath = params.get(CodeDeployConstants.READY_REVISION_PATH_PARAM);
       if (!FileUtil.resolvePath(checkoutDir, revisionPath).exists()) {
-        invalids.put(CodeDeployConstants.READY_REVISION_PATH_PARAM, "Application revision " + revisionPath + " not found");
+        invalids.put(CodeDeployConstants.READY_REVISION_PATH_PARAM, "Application revision " + revisionPath + " doesn't exist");
       }
     }
 
@@ -61,33 +62,44 @@ public final class ParametersValidator {
     if (StringUtil.isEmptyOrSpaces(revisionPath)) {
       invalids.put(CodeDeployConstants.READY_REVISION_PATH_PARAM, CodeDeployConstants.READY_REVISION_PATH_LABEL + " mustn't be empty");
     } else {
-      try {
-        AWSClient.getBundleType(revisionPath);
-      } catch (IllegalArgumentException e) {
-        if (!isReference(revisionPath, runtime)) {
-          invalids.put(CodeDeployConstants.READY_REVISION_PATH_PARAM, e.getMessage());
+      if (!isReference(revisionPath, runtime)) {
+        try {
+          AWSClient.getBundleType(revisionPath);
+        } catch (IllegalArgumentException e) {
+            invalids.put(CodeDeployConstants.READY_REVISION_PATH_PARAM, e.getMessage());
         }
       }
     }
 
     final String accessKeyId = params.get(CodeDeployConstants.ACCESS_KEY_ID_PARAM);
-    if (StringUtil.isEmptyOrSpaces(accessKeyId)) {
-      invalids.put(CodeDeployConstants.ACCESS_KEY_ID_PARAM, CodeDeployConstants.ACCESS_KEY_ID_LABEL + " mustn't be empty");
+    if (StringUtil.isNotEmpty(accessKeyId)) {
+      final String secretAccessKey = params.get(CodeDeployConstants.SECRET_ACCESS_KEY_PARAM);
+      if (StringUtil.isEmptyOrSpaces(secretAccessKey)) {
+        invalids.put(CodeDeployConstants.SECRET_ACCESS_KEY_PARAM, CodeDeployConstants.SECRET_ACCESS_KEY_LABEL + " mustn't be empty");
+      }
     }
-
-    final String secretAccessKey = params.get(CodeDeployConstants.SECRET_ACCESS_KEY_PARAM);
-    if (StringUtil.isEmptyOrSpaces(secretAccessKey)) {
-      invalids.put(CodeDeployConstants.SECRET_ACCESS_KEY_PARAM, CodeDeployConstants.SECRET_ACCESS_KEY_LABEL + " mustn't be empty");
+    final String credentialsType = params.get(CodeDeployConstants.CREDENTIALS_TYPE_PARAM);
+    if (CodeDeployConstants.TEMP_CREDENTIALS_PARAM.equals(credentialsType)) {
+      final String iamRole = params.get(CodeDeployConstants.IAM_ROLE_ARN_PARAM);
+      if (StringUtil.isEmptyOrSpaces(iamRole)) {
+        invalids.put(CodeDeployConstants.IAM_ROLE_ARN_PARAM, CodeDeployConstants.IAM_ROLE_ARN_LABEL + " mustn't be empty");
+      }
+    } else if (StringUtil.isEmptyOrSpaces(credentialsType)) {
+      invalids.put(CodeDeployConstants.CREDENTIALS_TYPE_PARAM, CodeDeployConstants.CREDENTIALS_TYPE_LABEL + " mustn't be empty");
+    } else {
+      invalids.put(CodeDeployConstants.CREDENTIALS_TYPE_PARAM, "Unexpected " + CodeDeployConstants.CREDENTIALS_TYPE_LABEL + " " + credentialsType);
     }
 
     final String regionName = params.get(CodeDeployConstants.REGION_NAME_PARAM);
     if (StringUtil.isEmptyOrSpaces(regionName)) {
       invalids.put(CodeDeployConstants.REGION_NAME_PARAM, CodeDeployConstants.REGION_NAME_LABEL + " mustn't be empty");
     } else {
-      try {
-        AWSClient.getRegion(regionName);
-      } catch (IllegalArgumentException e) {
-        invalids.put(CodeDeployConstants.REGION_NAME_PARAM, e.getMessage());
+      if (!isReference(regionName, runtime)) {
+        try {
+          AWSClient.getRegion(regionName);
+        } catch (IllegalArgumentException e) {
+          invalids.put(CodeDeployConstants.REGION_NAME_PARAM, e.getMessage());
+        }
       }
     }
 
@@ -126,19 +138,19 @@ public final class ParametersValidator {
   }
 
   private static void validatePositiveInteger(@NotNull Map<String, String> invalids, @NotNull String param, @NotNull String key, @NotNull String name, boolean runtime) {
-    try {
-      final int i = Integer.parseInt(param);
-      if (i <= 0) {
-        invalids.put(key, name + " must be a positive integer value");
-      }
-    } catch (NumberFormatException e) {
-      if (!isReference(param, runtime)) {
-        invalids.put(key, name + " must be a positive integer value");
+    if (!isReference(param, runtime)) {
+      try {
+        final int i = Integer.parseInt(param);
+        if (i <= 0) {
+          invalids.put(key, name + " must be a positive integer value");
+        }
+      } catch (NumberFormatException e) {
+          invalids.put(key, name + " must be a positive integer value");
       }
     }
   }
 
   private static boolean isReference(@NotNull String param, boolean runtime) {
-    return param.contains("%") && !runtime;
+    return ReferencesResolverUtil.containsReference(param) && !runtime;
   }
 }

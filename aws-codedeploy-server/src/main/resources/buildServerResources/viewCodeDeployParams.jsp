@@ -21,16 +21,21 @@
 
 <%@include file="paramsConstants.jspf"%>
 
+<c:set var="cred_type" value="${propertiesBean.properties[credentials_type_param]}"/>
+<c:choose>
+    <c:when test="${empty cred_type or (temp_credentials_param eq cred_type)}">
+        <div class="parameter">
+            ${iam_role_arn_label}: <strong><props:displayValue name="${iam_role_arn_param}" emptyValue="empty"/></strong>
+        </div>
+    </c:when>
+    <c:otherwise>
+        <div class="parameter">
+            ${access_key_id_label}: <strong><props:displayValue name="${access_key_id_param}" emptyValue="empty"/></strong>
+        </div>
+    </c:otherwise>
+</c:choose>
 <div class="parameter">
     ${revision_path_label}: <strong><props:displayValue name="${revision_path_param}" emptyValue="empty"/></strong>
-</div>
-
-<div class="parameter">
-    ${region_name_label}: <strong><props:displayValue name="${region_name_param}" emptyValue="empty"/></strong>
-</div>
-
-<div class="parameter">
-    ${access_key_id_label}: <strong><props:displayValue name="${access_key_id_param}" emptyValue="empty"/></strong>
 </div>
 
 <div class="parameter">
@@ -39,6 +44,10 @@
 
 <div class="parameter">
     ${app_name_label}: <strong><props:displayValue name="${app_name_param}" emptyValue="empty"/></strong>
+</div>
+
+<div class="parameter">
+    ${region_name_label}: <strong><props:displayValue name="${region_name_param}" emptyValue="empty"/></strong>
 </div>
 
 <div class="parameter">

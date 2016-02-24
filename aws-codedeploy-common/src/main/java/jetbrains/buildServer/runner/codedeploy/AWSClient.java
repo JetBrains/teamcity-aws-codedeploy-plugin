@@ -20,12 +20,16 @@ import com.amazonaws.AmazonClientException;
 import com.amazonaws.AmazonServiceException;
 import com.amazonaws.auth.AWSCredentials;
 import com.amazonaws.auth.BasicAWSCredentials;
+import com.amazonaws.auth.BasicSessionCredentials;
 import com.amazonaws.regions.Region;
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.codedeploy.AmazonCodeDeployClient;
 import com.amazonaws.services.codedeploy.model.*;
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.model.PutObjectRequest;
+import com.amazonaws.services.securitytoken.AWSSecurityTokenServiceClient;
+import com.amazonaws.services.securitytoken.model.AssumeRoleRequest;
+import com.amazonaws.services.securitytoken.model.Credentials;
 import jetbrains.buildServer.util.StringUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -37,37 +41,81 @@ import java.net.URL;
  * @author vbedrosova
  */
 public class AWSClient {
-  @NotNull private final AWSCredentials myCredentials;
-  @NotNull private final Region myRegion;
-  @Nullable private String myBaseDir;
+  public static final String UNSUPPORTED_SESSION_NAME_CHARS = "[^\\w+=,.@-]";
 
-  public AWSClient(@NotNull String accessKeyId, @NotNull String secretAccessKey, @NotNull String regionName) {
-    this(new BasicAWSCredentials(accessKeyId, secretAccessKey), getRegion(regionName));
+  @Nullable private final AWSCredentials myCredentials;
+  @NotNull private final Region myRegion;
+
+  @Nullable private String myBaseDir;
+  @Nullable private String myDescription;
+
+  @NotNull private Logger myLogger = new Logger();
+
+  public AWSClient(@Nullable String accessKeyId, @Nullable String secretAccessKey, @NotNull String regionName) {
+    this(getBasicCredentials(accessKeyId, secretAccessKey), getRegion(regionName));
   }
 
-  private AWSClient(@NotNull AWSCredentials credentials, @NotNull Region region) {
+  public AWSClient(@NotNull String iamRoleARN, @Nullable String externalID,
+                   @Nullable String accessKeyId, @Nullable String secretAccessKey,
+                   @NotNull String sessionName, int sessionDuration,
+                   @NotNull String regionName) {
+    this(getTempCredentials(iamRoleARN, externalID, accessKeyId, secretAccessKey, patchSessionName(sessionName), sessionDuration), getRegion(regionName));
+  }
+
+  @NotNull
+  private static String patchSessionName(@NotNull String sessionName) {
+    return sessionName.replaceAll(UNSUPPORTED_SESSION_NAME_CHARS, "_");
+  }
+
+  @Nullable
+  private static BasicAWSCredentials getBasicCredentials(@Nullable String accessKeyId, @Nullable String secretAccessKey) {
+    if (accessKeyId == null) return null;
+    if (secretAccessKey == null) throw new IllegalArgumentException("");
+    return new BasicAWSCredentials(accessKeyId, secretAccessKey);
+  }
+
+  @NotNull
+  private static AWSCredentials getTempCredentials(@NotNull String iamRoleARN, @Nullable String externalID,
+                                                   @Nullable String accessKeyId, @Nullable String secretAccessKey,
+                                                   @NotNull String sessionName, int sessionDuration) {
+    final AssumeRoleRequest assumeRoleRequest = new AssumeRoleRequest().withRoleArn(iamRoleARN).withRoleSessionName(sessionName).withDurationSeconds(sessionDuration);
+    if (StringUtil.isNotEmpty(externalID)) assumeRoleRequest.setExternalId(externalID);
+
+    final Credentials credentials = new AWSSecurityTokenServiceClient(getBasicCredentials(accessKeyId, secretAccessKey)).assumeRole(assumeRoleRequest).getCredentials();
+    return new BasicSessionCredentials(credentials.getAccessKeyId(), credentials.getSecretAccessKey(), credentials.getSessionToken());
+  }
+
+  private AWSClient(@Nullable AWSCredentials credentials, @NotNull Region region) {
     myCredentials = credentials;
     myRegion = region;
   }
 
   @NotNull
-  public AWSClient withBaseDir(@Nullable String baseDir) {
-    setBaseDir(baseDir);
+  public AWSClient withBaseDir(@NotNull String baseDir) {
+    myBaseDir = baseDir;
     return this;
   }
 
-  private void setBaseDir(@Nullable String baseDir) {
-    myBaseDir = baseDir;
+  @NotNull
+  public AWSClient withDescription(@NotNull String description) {
+    myDescription = description;
+    return this;
+  }
+
+  @NotNull
+  public AWSClient withLogger(@NotNull Logger logger) {
+    myLogger = logger;
+    return this;
   }
 
   @NotNull
   private AmazonS3Client createS3Client() {
-    return new AmazonS3Client(myCredentials).withRegion(myRegion);
+    return (myCredentials == null ? new AmazonS3Client() : new AmazonS3Client(myCredentials)).withRegion(myRegion);
   }
 
   @NotNull
   private AmazonCodeDeployClient createCodeDeployClient() {
-    return new AmazonCodeDeployClient(myCredentials).withRegion(myRegion);
+    return (myCredentials == null ? new AmazonCodeDeployClient() : new AmazonCodeDeployClient(myCredentials)).withRegion(myRegion);
   }
 
   /**
@@ -320,7 +368,7 @@ public class AWSClient {
 
   @NotNull
   private String getClientFootPrint() {
-    return myRegion.getName() + myCredentials.getAWSAccessKeyId() + myCredentials.getAWSSecretKey();
+    return myRegion.getName() + (myCredentials == null ? "" : myCredentials.getAWSAccessKeyId() + myCredentials.getAWSSecretKey());
   }
 
   private void updateBuildStatusText(@NotNull DeploymentInfo dInfo) {
@@ -352,28 +400,24 @@ public class AWSClient {
     return String.format("%.1f seconds", (milliseconds / 1000d)); //TODO: better formatting
   }
 
-  protected void log(@NotNull String message) {
-    System.out.println(message);
-  }
+  void log(@NotNull String message) { myLogger.log(message); }
 
-  protected void err(@NotNull String message) {
-    System.err.println(message);
-  }
+  void err(@NotNull String message) { myLogger.err(message); }
 
-  protected void debug(@NotNull String message) {
-    System.out.println(message);
-  }
+  void debug(@NotNull String message) { myLogger.debug(message); }
 
-  protected void problem(int identity, @NotNull String type, @NotNull String descr) {
-    System.out.println("Build Problem:");
-    System.out.println("identity:" + identity);
-    System.out.println("type:" + type);
-    System.out.println("description:" + descr);
-  }
+  void problem(int identity, @NotNull String type, @NotNull String descr) { myLogger.problem(identity, type, descr); }
 
   @NotNull
-  protected String getDescription() {
-    return getClass().getName();
+  private String getDescription() {
+    return StringUtil.emptyIfNull(myDescription);
+  }
+
+  public static class Logger {
+    void log(@NotNull String message) {}
+    void err(@NotNull String message) {}
+    void debug(@NotNull String message) {}
+    void problem(int identity, @NotNull String type, @NotNull String descr) {}
   }
 
   //  @NotNull
