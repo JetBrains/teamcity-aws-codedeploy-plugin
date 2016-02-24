@@ -255,9 +255,12 @@ public class AWSClient {
 
   @NotNull
   public static Region getRegion(@NotNull String regionName) throws IllegalArgumentException {
-    final Region region = Region.getRegion(Regions.fromName(regionName));
-    if (region == null) throw new IllegalArgumentException("Unsupported region name " + regionName);
-    return region;
+    try {
+      return Region.getRegion(Regions.fromName(regionName));
+    } catch (Exception e) {
+      // see below
+    }
+    throw new IllegalArgumentException("Unsupported region name " + regionName);
   }
 
   private void registerRevision(@NotNull RevisionLocation revisionLocation, @NotNull String applicationName) {

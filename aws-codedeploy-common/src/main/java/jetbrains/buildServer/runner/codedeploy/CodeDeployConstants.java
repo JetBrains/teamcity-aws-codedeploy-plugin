@@ -27,7 +27,7 @@ import java.util.UUID;
 public interface CodeDeployConstants {
   String RUNNER_TYPE = "codedeploy";
   String RUNNER_DISPLAY_NAME = "AWS CodeDeploy";
-  String RUNNER_DESCR = "Prepare, upload, register and deploy application revision to EC2 using CodeDeploy";
+  String RUNNER_DESCR = "Prepare, upload, register and deploy application revision using CodeDeploy";
 
 
 

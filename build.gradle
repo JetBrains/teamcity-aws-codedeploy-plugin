@@ -35,7 +35,7 @@ ext {
     teamcityDataDir = "$rootDir/teamcity/data/" + (teamcityVersion =~ /(\d+\.\d+).*/)[0][1]
     teamcityJavaHome = System.properties['java.home']
 
-    awsSDKVersion = '1.10.51'
+    awsSDKVersion = hasProperty('aws.sdk.version') ? property('aws.sdk.version') : '1.10.51'
 }
 
 apply plugin: 'idea'
