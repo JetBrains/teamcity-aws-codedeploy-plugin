@@ -33,6 +33,11 @@ import java.util.*;
  * @author vbedrosova
  */
 public class CodeDeployRunner implements AgentBuildRunner {
+
+  public static final String DEPLOY_APPLICATION = "deploy application";
+  public static final String REGISTER_REVISION = "register revision";
+  public static final String UPLOAD_REVISION = "upload revision";
+
   @NotNull
   @Override
   public BuildProcess createBuildProcess(@NotNull final AgentRunningBuild runningBuild, @NotNull final BuildRunnerContext context) throws RunBuildException {
@@ -114,30 +119,30 @@ public class CodeDeployRunner implements AgentBuildRunner {
       .withListener(new AWSClient.Listener() {
         @Override
         void uploadRevisionStarted(@NotNull File revision, @NotNull String s3BucketName, @NotNull String key) {
-          open("upload revision");
+          open(UPLOAD_REVISION);
           log(String.format("Uploading application revision %s to S3 bucket %s using key %s", revision.getPath(), s3BucketName, key));
         }
 
         @Override
         void uploadRevisionFinished(@NotNull File revision, @NotNull String s3BucketName, @NotNull String key, @NotNull String url) {
           log("Uploaded application revision S3 URL : " + url);
-          close("upload revision");
+          close(UPLOAD_REVISION);
         }
 
         @Override
         void registerRevisionStarted(@NotNull String applicationName, @NotNull String s3BucketName, @NotNull String key, @NotNull String bundleType) {
-          open("register revision");
+          open(REGISTER_REVISION);
           log(String.format("Registering application %s revision from S3 bucket %s with key %s and bundle type %s", applicationName, s3BucketName, key, bundleType));
         }
 
         @Override
         void registerRevisionFinished(@NotNull String applicationName, @NotNull String s3BucketName, @NotNull String key, @NotNull String bundleType) {
-          close("register revision");
+          close(REGISTER_REVISION);
         }
 
         @Override
         void createDeploymentStarted(@NotNull String applicationName, @NotNull String deploymentGroupName, @Nullable String deploymentConfigName) {
-          open("deploy application");
+          open(DEPLOY_APPLICATION);
           log(String.format("Creating application %s deployment to deployment group %s with %s deployment configuration", applicationName, deploymentGroupName, StringUtil.isEmptyOrSpaces(deploymentConfigName) ? "default" : deploymentConfigName));
         }
 
@@ -177,7 +182,7 @@ public class CodeDeployRunner implements AgentBuildRunner {
 
           problem(getIdentity(timeoutSec, errorInfo, instancesStatus), timeoutSec == null? CodeDeployConstants.FAILURE_BUILD_PROBLEM_TYPE : CodeDeployConstants.TIMEOUT_BUILD_PROBLEM_TYPE, msg);
 
-          close("deploy application");
+          close(DEPLOY_APPLICATION);
         }
 
         @Override
@@ -187,7 +192,7 @@ public class CodeDeployRunner implements AgentBuildRunner {
           log(msg + deploymentDescription(instancesStatus, true));
           statusText(msg + deploymentDescription(instancesStatus, false));
 
-          close("deploy application");
+          close(DEPLOY_APPLICATION);
         }
 
         @Override
@@ -195,7 +200,7 @@ public class CodeDeployRunner implements AgentBuildRunner {
           err(message);
           if (StringUtil.isNotEmpty(details)) err(details);
           problem(getIdentity(message, identity), type == null ? CodeDeployConstants.EXCEPTION_BUILD_PROBLEM_TYPE : type, message);
-          close("deploy application");
+          close(DEPLOY_APPLICATION);
         }
 
         private int getIdentity(@Nullable Integer timeoutSec, @Nullable ErrorInfo errorInfo, @Nullable InstancesStatus instancesStatus) {
