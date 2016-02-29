@@ -30,57 +30,67 @@ public interface CodeDeployConstants {
   String RUNNER_DESCR = "Prepare, upload, register and deploy application revision using CodeDeploy";
 
 
+  String DEPLOYMENT_ID_BUILD_ENV_VAR = "env.codedeploy.deploment.id";
+
+
 
   String EDIT_PARAMS_JSP = "editCodeDeployParams.jsp";
   String VIEW_PARAMS_JSP = "viewCodeDeployParams.jsp";
 
 
+  String TIMEOUT_BUILD_PROBLEM_TYPE = "CODEDEPLOY_TIMEOUT";
+  String FAILURE_BUILD_PROBLEM_TYPE = "CODEDEPLOY_FAILURE";
+  String EXCEPTION_BUILD_PROBLEM_TYPE = "CODEDEPLOY_EXCEPTION";
+  String SERVICE_PROBLEM_TYPE = "CODEDEPLOY_SERVICE";
+  String CLIENT_PROBLEM_TYPE = "CODEDEPLOY_CLIENT";
 
-  String CREDENTIALS_TYPE_PARAM = "codedeploy.credentials.type";
+
+
+  String CREDENTIALS_TYPE_PARAM = "codedeploy_credentials_type";
   String CREDENTIALS_TYPE_LABEL = "Credentials type";
-  String TEMP_CREDENTIALS_PARAM = "codedeploy.temp.credentials";
+  String TEMP_CREDENTIALS_OPTION = "codedeploy_temp_credentials";
   String TEMP_CREDENTIALS_LABEL = "Temporary credentials";
-  String ACCESS_KEYS_PARAM = "codedeploy.access.keys";
+  String ACCESS_KEYS_OPTION = "codedeploy_access_keys";
   String ACCESS_KEYS_LABEL = "Access keys";
 
-  String ACCESS_KEY_ID_PARAM = "codedeploy.access.key.id";
+  String ACCESS_KEY_ID_PARAM = "codedeploy_access_key_id";
   String ACCESS_KEY_ID_LABEL = "Access key ID";
-  String SECRET_ACCESS_KEY_PARAM = "codedeploy.secret.access.key";
+  String SECRET_ACCESS_KEY_PARAM = "codedeploy_secret_access_key";
   String SECRET_ACCESS_KEY_LABEL = "Secret access key";
 
-  String IAM_ROLE_ARN_PARAM = "codedeploy.iam.role.arn";
+  String IAM_ROLE_ARN_PARAM = "codedeploy_iam_role_arn";
   String IAM_ROLE_ARN_LABEL = "IAM role ARN";
-  String EXTERNAL_ID_PARAM = "codedeploy.external.id";
+  String EXTERNAL_ID_PARAM = "codedeploy_external_id";
   String EXTERNAL_ID_LABEL = "External ID";
   int TEMP_CREDENTIALS_DURATION_SEC_DEFAULT = 1800;
 
-  String READY_REVISION_PATH_PARAM = "codedeploy.ready.revision.path";
+  String READY_REVISION_PATH_PARAM = "codedeploy_ready_revision_path";
   String READY_REVISION_PATH_LABEL = "Application revision";
 
-  String S3_BUCKET_NAME_PARAM = "codedeploy.s3.bucket.name";
+  String S3_BUCKET_NAME_PARAM = "codedeploy_s3_bucket_name";
   String S3_BUCKET_NAME_LABEL = "S3 bucket";
 
-  String APP_NAME_PARAM = "codedeploy.application.name";
+  String APP_NAME_PARAM = "codedeploy_application_name";
   String APP_NAME_LABEL = "Application name";
-  String REGION_NAME_PARAM = "codedeploy.region.name";
+  String REGION_NAME_PARAM = "codedeploy_region_name";
   String REGION_NAME_LABEL = "AWS region";
 
-  String DEPLOYMENT_GROUP_NAME_PARAM = "codedeploy.deployment.group.name";
+  String DEPLOYMENT_GROUP_NAME_PARAM = "codedeploy_deployment_group_name";
   String DEPLOYMENT_GROUP_NAME_LABEL = "Deployment group";
-  String DEPLOYMENT_CONFIG_NAME_PARAM = "codedeploy.deployment.config.name";
+  String DEPLOYMENT_CONFIG_NAME_PARAM = "codedeploy_deployment_config_name";
   String DEPLOYMENT_CONFIG_NAME_LABEL = "Deployment configuration";
 
-  String WAIT_FLAG_PARAM = "codedeploy.wait";
+  String WAIT_FLAG_PARAM = "codedeploy_wait";
   String WAIT_FLAG_LABEL = "Wait for deployment finish";
-  String WAIT_TIMEOUT_SEC_PARAM = "codedeploy.wait.timeout.sec";
+  String WAIT_TIMEOUT_SEC_PARAM = "codedeploy_wait_timeout_sec";
   String WAIT_TIMEOUT_SEC_LABEL = "Timeout (seconds)";
-  String WAIT_POLL_INTERVAL_SEC_PARAM = "codedeploy.wait.poll.interval.sec";
+  String WAIT_POLL_INTERVAL_SEC_PARAM = "codedeploy_wait_poll_interval_sec";
   String WAIT_POLL_INTERVAL_SEC_LABEL = "Poll interval (seconds)";
   int WAIT_POLL_INTERVAL_SEC_DEFAULT = 20;
 
   Map<String, String> DEFAULTS = CollectionsUtil.asMap(
-    CREDENTIALS_TYPE_PARAM, TEMP_CREDENTIALS_PARAM,
-    EXTERNAL_ID_PARAM, UUID.randomUUID().toString(),
+    CREDENTIALS_TYPE_PARAM, TEMP_CREDENTIALS_OPTION,
+    EXTERNAL_ID_PARAM, UUID.randomUUID().toString(), // see jetbrains.buildServer.runner.codedeploy.CodeDeployRunType#getDefaultRunnerProperties
     WAIT_FLAG_PARAM, "true",
     WAIT_POLL_INTERVAL_SEC_PARAM, String.valueOf(WAIT_POLL_INTERVAL_SEC_DEFAULT)
   );

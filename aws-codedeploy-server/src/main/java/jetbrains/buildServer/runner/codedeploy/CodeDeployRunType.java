@@ -16,17 +16,16 @@
 
 package jetbrains.buildServer.runner.codedeploy;
 
-import jetbrains.buildServer.serverSide.InvalidProperty;
-import jetbrains.buildServer.serverSide.PropertiesProcessor;
-import jetbrains.buildServer.serverSide.RunType;
-import jetbrains.buildServer.serverSide.RunTypeRegistry;
+import jetbrains.buildServer.serverSide.*;
 import jetbrains.buildServer.util.CollectionsUtil;
 import jetbrains.buildServer.util.Converter;
+import jetbrains.buildServer.util.StringUtil;
 import jetbrains.buildServer.web.openapi.PluginDescriptor;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -35,10 +34,13 @@ import java.util.Map;
 public class CodeDeployRunType extends RunType {
   @NotNull
   private final PluginDescriptor myDescriptor;
+  @NotNull
+  private final ServerSettings myServerSettings;
 
-  public CodeDeployRunType(@NotNull RunTypeRegistry registry, @NotNull PluginDescriptor descriptor) {
+  public CodeDeployRunType(@NotNull RunTypeRegistry registry, @NotNull PluginDescriptor descriptor, @NotNull ServerSettings serverSettings) {
     registry.registerRunType(this);
     myDescriptor = descriptor;
+    myServerSettings = serverSettings;
   }
 
   @Nullable
@@ -60,7 +62,12 @@ public class CodeDeployRunType extends RunType {
   @Nullable
   @Override
   public Map<String, String> getDefaultRunnerProperties() {
-    return CodeDeployConstants.DEFAULTS;
+    final Map<String, String> defaults = new HashMap<String, String>(CodeDeployConstants.DEFAULTS);
+    final String serverUUID = myServerSettings.getServerUUID();
+    if (StringUtil.isNotEmpty(serverUUID)) {
+      defaults.put(CodeDeployConstants.EXTERNAL_ID_PARAM, serverUUID);
+    }
+    return defaults;
   }
 
   @NotNull

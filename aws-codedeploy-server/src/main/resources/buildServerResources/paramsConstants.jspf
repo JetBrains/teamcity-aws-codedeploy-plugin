@@ -27,10 +27,10 @@
 <c:set var="credentials_type_param" value="<%=CodeDeployConstants.CREDENTIALS_TYPE_PARAM%>"/>
 <c:set var="credentials_type_label" value="<%=CodeDeployConstants.CREDENTIALS_TYPE_LABEL%>"/>
 
-<c:set var="temp_credentials_param" value="<%=CodeDeployConstants.TEMP_CREDENTIALS_PARAM%>"/>
+<c:set var="temp_credentials_option" value="<%=CodeDeployConstants.TEMP_CREDENTIALS_OPTION%>"/>
 <c:set var="temp_credentials_label" value="<%=CodeDeployConstants.TEMP_CREDENTIALS_LABEL%>"/>
 
-<c:set var="access_keys_param" value="<%=CodeDeployConstants.ACCESS_KEYS_PARAM%>"/>
+<c:set var="access_keys_option" value="<%=CodeDeployConstants.ACCESS_KEYS_OPTION%>"/>
 <c:set var="access_keys_label" value="<%=CodeDeployConstants.ACCESS_KEYS_LABEL%>"/>
 
 <c:set var="access_key_id_param" value="<%=CodeDeployConstants.ACCESS_KEY_ID_PARAM%>"/>

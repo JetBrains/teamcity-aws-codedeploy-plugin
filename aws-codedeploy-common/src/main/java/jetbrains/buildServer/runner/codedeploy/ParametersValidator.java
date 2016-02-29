@@ -79,14 +79,14 @@ public final class ParametersValidator {
       }
     }
     final String credentialsType = params.get(CodeDeployConstants.CREDENTIALS_TYPE_PARAM);
-    if (CodeDeployConstants.TEMP_CREDENTIALS_PARAM.equals(credentialsType)) {
+    if (CodeDeployConstants.TEMP_CREDENTIALS_OPTION.equals(credentialsType)) {
       final String iamRole = params.get(CodeDeployConstants.IAM_ROLE_ARN_PARAM);
       if (StringUtil.isEmptyOrSpaces(iamRole)) {
         invalids.put(CodeDeployConstants.IAM_ROLE_ARN_PARAM, CodeDeployConstants.IAM_ROLE_ARN_LABEL + " mustn't be empty");
       }
     } else if (StringUtil.isEmptyOrSpaces(credentialsType)) {
       invalids.put(CodeDeployConstants.CREDENTIALS_TYPE_PARAM, CodeDeployConstants.CREDENTIALS_TYPE_LABEL + " mustn't be empty");
-    } else {
+    } else if (!CodeDeployConstants.ACCESS_KEYS_OPTION.equals(credentialsType)) {
       invalids.put(CodeDeployConstants.CREDENTIALS_TYPE_PARAM, "Unexpected " + CodeDeployConstants.CREDENTIALS_TYPE_LABEL + " " + credentialsType);
     }
 

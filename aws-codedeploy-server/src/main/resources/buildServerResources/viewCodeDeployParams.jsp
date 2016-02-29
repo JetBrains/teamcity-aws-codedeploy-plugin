@@ -23,7 +23,7 @@
 
 <c:set var="cred_type" value="${propertiesBean.properties[credentials_type_param]}"/>
 <c:choose>
-    <c:when test="${empty cred_type or (temp_credentials_param eq cred_type)}">
+    <c:when test="${empty cred_type or (temp_credentials_option eq cred_type)}">
         <div class="parameter">
             ${iam_role_arn_label}: <strong><props:displayValue name="${iam_role_arn_param}" emptyValue="empty"/></strong>
         </div>

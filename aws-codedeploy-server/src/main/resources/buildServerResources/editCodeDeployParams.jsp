@@ -25,13 +25,14 @@
 <l:settingsGroup title="AWS Security Credentials">
     <tr>
         <th><label for="${credentials_type_param}">${credentials_type_label}: <l:star/></label></th>
-        <td><props:radioButtonProperty name="${credentials_type_param}" value="${temp_credentials_param}" id="${temp_credentials_param}" onclick="codeDeployUpdateVisibility()"/>
-            <label for="${temp_credentials_param}">${temp_credentials_label}</label>
+        <td><props:radioButtonProperty name="${credentials_type_param}" value="${temp_credentials_option}" id="${temp_credentials_option}" onclick="codeDeployUpdateVisibility()"/>
+            <label for="${temp_credentials_option}">${temp_credentials_label}</label>
             <span class="smallNote">Get temporary access keys via AWS STS</span>
             <br/>
-            <props:radioButtonProperty name="${credentials_type_param}" value="${access_keys_param}" id="${access_keys_param}" onclick="codeDeployUpdateVisibility()"/>
-            <label for="${access_keys_param}">${access_keys_label}</label>
+            <props:radioButtonProperty name="${credentials_type_param}" value="${access_keys_option}" id="${access_keys_option}" onclick="codeDeployUpdateVisibility()"/>
+            <label for="${access_keys_option}">${access_keys_label}</label>
             <span class="smallNote">Use pre-configured AWS account access keys</span>
+            <span class="error" id="error_${credentials_type_param}"></span>
         </td>
     </tr>
     <tr id="${iam_role_arn_param}_row">
@@ -60,6 +61,13 @@
     </tr>
 </l:settingsGroup>
 
+<tr>
+    <th><label for="${region_name_param}">${region_name_label}: <l:star/></label></th>
+    <td><props:textProperty name="${region_name_param}" maxlength="256"/>
+        <span class="smallNote">e.g. "us-east-1", "eu-west-1"</span><span class="error" id="error_${region_name_param}" ?></span>
+    </td>
+</tr>
+
 <l:settingsGroup title="Revision location">
     <tr>
         <th><label for="${revision_path_param}">${revision_path_label}: <l:star/></label></th>
@@ -80,12 +88,6 @@
         <th><label for="${app_name_param}">${app_name_label}: <l:star/></label></th>
         <td><props:textProperty name="${app_name_param}" className="longField" maxlength="256"/>
             <span class="smallNote">Pre-configured CodeDeploy application name</span><span class="error" id="error_${app_name_param}"></span>
-        </td>
-    </tr>
-    <tr>
-        <th><label for="${region_name_param}">${region_name_label}: <l:star/></label></th>
-        <td><props:textProperty name="${region_name_param}" maxlength="256"/>
-            <span class="smallNote">e.g. "us-east-1", "eu-west-1"</span><span class="error" id="error_${region_name_param}" ?></span>
         </td>
     </tr>
     <tr>
@@ -128,7 +130,7 @@
             BS.Util.hide('${wait_timeout_param}_row', '${wait_poll_interval_param}_row');
         }
 
-        if ($('${access_keys_param}').checked) {
+        if ($('${access_keys_option}').checked) {
             BS.Util.hide('${iam_role_arn_param}_row', '${external_id_param}_row');
         } else {
             BS.Util.show('${iam_role_arn_param}_row', '${external_id_param}_row');

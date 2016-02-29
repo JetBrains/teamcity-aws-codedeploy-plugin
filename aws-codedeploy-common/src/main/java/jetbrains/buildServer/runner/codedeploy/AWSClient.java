@@ -31,11 +31,11 @@ import com.amazonaws.services.securitytoken.AWSSecurityTokenServiceClient;
 import com.amazonaws.services.securitytoken.model.AssumeRoleRequest;
 import com.amazonaws.services.securitytoken.model.Credentials;
 import jetbrains.buildServer.util.StringUtil;
+import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
-import java.net.URL;
 
 /**
  * @author vbedrosova
@@ -43,13 +43,16 @@ import java.net.URL;
 public class AWSClient {
   public static final String UNSUPPORTED_SESSION_NAME_CHARS = "[^\\w+=,.@-]";
 
-  @Nullable private final AWSCredentials myCredentials;
-  @NotNull private final Region myRegion;
+  @Nullable
+  private final AWSCredentials myCredentials;
+  @NotNull
+  private final Region myRegion;
 
-  @Nullable private String myBaseDir;
-  @Nullable private String myDescription;
+  @Nullable
+  private String myDescription;
 
-  @NotNull private Logger myLogger = new Logger();
+  @NotNull
+  private Listener myListener = new Listener();
 
   public AWSClient(@Nullable String accessKeyId, @Nullable String secretAccessKey, @NotNull String regionName) {
     this(getBasicCredentials(accessKeyId, secretAccessKey), getRegion(regionName));
@@ -70,7 +73,7 @@ public class AWSClient {
   @Nullable
   private static BasicAWSCredentials getBasicCredentials(@Nullable String accessKeyId, @Nullable String secretAccessKey) {
     if (accessKeyId == null) return null;
-    if (secretAccessKey == null) throw new IllegalArgumentException("");
+    if (secretAccessKey == null) throw new IllegalArgumentException("secretAccessKey mustn't be empty");
     return new BasicAWSCredentials(accessKeyId, secretAccessKey);
   }
 
@@ -91,20 +94,14 @@ public class AWSClient {
   }
 
   @NotNull
-  public AWSClient withBaseDir(@NotNull String baseDir) {
-    myBaseDir = baseDir;
-    return this;
-  }
-
-  @NotNull
   public AWSClient withDescription(@NotNull String description) {
     myDescription = description;
     return this;
   }
 
   @NotNull
-  public AWSClient withLogger(@NotNull Logger logger) {
-    myLogger = logger;
+  public AWSClient withListener(@NotNull Listener listener) {
+    myListener = listener;
     return this;
   }
 
@@ -124,16 +121,16 @@ public class AWSClient {
    * creates deployment for specified application (must be pre-configured) to
    * deploymentGroupName (must be pre-configured) EC2 instances group with
    * deploymentConfigName or default configuration name and waits for deployment finish.
-   *
+   * <p>
    * For performing this operation target AWSClient must have corresponding S3 and CodeDeploy permissions.
    *
-   * @param revision application revision
-   * @param s3BucketName valid S3 bucket name
-   * @param applicationName CodeDeploy application name
-   * @param deploymentGroupName deployment group name
+   * @param revision             application revision
+   * @param s3BucketName         valid S3 bucket name
+   * @param applicationName      CodeDeploy application name
+   * @param deploymentGroupName  deployment group name
    * @param deploymentConfigName deployment configuration name or null for default deployment configuration
-   * @param waitTimeoutSec seconds to wait for the created deployment finish or fail
-   * @param waitIntervalSec seconds between polling CodeDeploy for the created deployment status
+   * @param waitTimeoutSec       seconds to wait for the created deployment finish or fail
+   * @param waitIntervalSec      seconds between polling CodeDeploy for the created deployment status
    */
   public void uploadRegisterDeployRevisionAndWait(@NotNull File revision, @NotNull String s3BucketName,
                                                   @NotNull String applicationName,
@@ -171,8 +168,6 @@ public class AWSClient {
                                         boolean wait,
                                         @Nullable Integer waitTimeoutSec,
                                         @Nullable Integer waitIntervalSec) {
-    debug("AWS region is " + myRegion.getName());
-
     final String key = revision.getName();
     try {
 
@@ -180,65 +175,61 @@ public class AWSClient {
       registerRevision(revisionLocation, applicationName);
 
       if (deploy) {
-        final CreateDeploymentResult deployment = createDeployment(revisionLocation, applicationName, deploymentGroupName, deploymentConfigName);
+        final String deploymentId = createDeployment(revisionLocation, applicationName, deploymentGroupName, deploymentConfigName);
 
         if (wait) {
-          waitForDeployment(deployment, waitTimeoutSec, waitIntervalSec);
+          waitForDeployment(deploymentId, waitTimeoutSec, waitIntervalSec);
         }
       }
     } catch (Throwable t) {
-      failBuild(t, s3BucketName.concat(key).concat(applicationName));
+      processFailure(t);
     }
   }
 
-  private void waitForDeployment(@NotNull CreateDeploymentResult deploymentResult, int waitTimeoutSec, int waitIntervalSec) {
-    log("Waiting for deployment " + deploymentResult.getDeploymentId() + " finish");
+  private void waitForDeployment(@NotNull String deploymentId, int waitTimeoutSec, int waitIntervalSec) {
+    myListener.deploymentWaitStarted(deploymentId);
 
     final AmazonCodeDeployClient cdClient = createCodeDeployClient();
 
-    final GetDeploymentRequest dRequest = new GetDeploymentRequest().withDeploymentId(deploymentResult.getDeploymentId());
+    final GetDeploymentRequest dRequest = new GetDeploymentRequest().withDeploymentId(deploymentId);
 
     DeploymentInfo dInfo = cdClient.getDeployment(dRequest).getDeploymentInfo();
 
     long startTime = (dInfo == null || dInfo.getStartTime() == null) ? System.currentTimeMillis() : dInfo.getStartTime().getTime();
 
     while (dInfo == null || dInfo.getCompleteTime() == null) {
-      dInfo = cdClient.getDeployment(dRequest).getDeploymentInfo();
-
-      debug("Deployment " + deploymentInfoText(dInfo));
+      myListener.deploymentInProgress(deploymentId, getInstancesStatus(dInfo));
 
       if (System.currentTimeMillis() - startTime > waitTimeoutSec * 1000) {
-        failBuild(waitTimeoutSec, dInfo);
+        myListener.deploymentFailed(deploymentId, waitTimeoutSec, getErrorInfo(dInfo), getInstancesStatus(dInfo));
         return;
       }
 
       try {
         Thread.sleep(waitIntervalSec * 1000);
       } catch (InterruptedException e) {
-        failBuild(e, null);
+        processFailure(e);
         return;
       }
+
+      dInfo = cdClient.getDeployment(dRequest).getDeploymentInfo();
     }
 
-    final String msg = "Deployment " + dInfo.getDeploymentId() + " finished in " + formatDuration(dInfo.getCompleteTime().getTime() - startTime) + " with " + deploymentInfoText(dInfo);
     if (isSuccess(dInfo)) {
-      log(msg);
-      updateBuildStatusText(dInfo);
-      return;
-    } else err(msg);
-
-    failBuild(null, dInfo);
+      myListener.deploymentSucceeded(deploymentId, getInstancesStatus(dInfo));
+    } else {
+      myListener.deploymentFailed(deploymentId, null, getErrorInfo(dInfo), getInstancesStatus(dInfo));
+    }
   }
 
   @NotNull
   private RevisionLocation uploadRevision(@NotNull File revision, @NotNull String s3BucketName, @NotNull String key) {
-    log(String.format("Uploading application revision %s to S3 bucket %s using key %s", revision.getPath(), s3BucketName, key));
+    myListener.uploadRevisionStarted(revision, s3BucketName, key);
 
     final AmazonS3Client s3Client = createS3Client();
     s3Client.putObject(new PutObjectRequest(s3BucketName, key, revision));
 
-    final URL url = s3Client.getUrl(s3BucketName, key);
-    log("Uploaded application revision S3 link : " + url.toString());
+    myListener.uploadRevisionFinished(revision, s3BucketName, key, s3Client.getUrl(s3BucketName, key).toString());
 
     final S3Location loc = new S3Location().withBucket(s3BucketName).withKey(key).withBundleType(getBundleType(revision.getName()));
     return new RevisionLocation().withRevisionType(RevisionLocationType.S3).withS3Location(loc);
@@ -264,163 +255,154 @@ public class AWSClient {
   }
 
   private void registerRevision(@NotNull RevisionLocation revisionLocation, @NotNull String applicationName) {
-    log(String.format("Registering application %s revision from S3 bucket %s", applicationName, revisionLocation.getS3Location().getBucket()));
+    final S3Location s3Location = revisionLocation.getS3Location();
+    myListener.registerRevisionStarted(applicationName, s3Location.getBucket(), s3Location.getKey(), s3Location.getBundleType());
+
     createCodeDeployClient().registerApplicationRevision(
       new RegisterApplicationRevisionRequest()
         .withRevision(revisionLocation)
         .withApplicationName(applicationName)
-        .withDescription("Application revision registered by TeamCity build " + getDescription()));
+        .withDescription("Application revision registered by " + getDescription()));
+
+    myListener.registerRevisionFinished(applicationName, s3Location.getBucket(), s3Location.getKey(), s3Location.getBundleType());
   }
 
   @NotNull
-  private CreateDeploymentResult createDeployment(@NotNull RevisionLocation revisionLocation,
-                                                  @NotNull String applicationName,
-                                                  @NotNull String deploymentGroupName,
-                                                  @Nullable String deploymentConfigName) {
-    log(String.format("Creating deployment to deployment group %s with %s deployment configuration", deploymentGroupName, StringUtil.isEmptyOrSpaces(deploymentConfigName) ? "default" : deploymentConfigName));
+  private String createDeployment(@NotNull RevisionLocation revisionLocation,
+                                  @NotNull String applicationName,
+                                  @NotNull String deploymentGroupName,
+                                  @Nullable String deploymentConfigName) {
+    myListener.createDeploymentStarted(applicationName, deploymentGroupName, deploymentConfigName);
 
     final CreateDeploymentRequest request =
       new CreateDeploymentRequest()
         .withRevision(revisionLocation)
         .withApplicationName(applicationName)
         .withDeploymentGroupName(deploymentGroupName)
-        .withDescription("Deployment created by TeamCity build " + getDescription());
+        .withDescription("Deployment created by " + getDescription());
 
     if (StringUtil.isNotEmpty(deploymentConfigName)) request.setDeploymentConfigName(deploymentConfigName);
 
-    final CreateDeploymentResult d = createCodeDeployClient().createDeployment(request);
-    log("Deployment " + d.getDeploymentId() + " created");
-    return d;
+    final String deploymentId = createCodeDeployClient().createDeployment(request).getDeploymentId();
+    myListener.createDeploymentFinished(applicationName, deploymentGroupName, deploymentConfigName, deploymentId);
+    return deploymentId;
   }
 
-  private void failBuild(@Nullable Integer timeoutSec, @NotNull DeploymentInfo dInfo) {
-    if (isSuccess(dInfo)) return;
-
-    String msg;
-    if (timeoutSec == null) msg = "Deployment failed";
-    else {
-      msg = "Timeout " + timeoutSec + "sec exceeded for deployment " + dInfo.getDeploymentId() + ", " + deploymentInfoText(dInfo);
-      err(msg);
-    }
-
-    final ErrorInformation eInfo = dInfo.getErrorInformation();
-    if (eInfo != null) {
-      err("Associated error: " + eInfo.getMessage());
-      err("Error code:       " + eInfo.getCode());
-
-      msg += ": " + eInfo.getMessage();
-    }
-
-    problem(getIdentity(dInfo), timeoutSec == null? "CODE_DEPLOY_FAILURE" : "CODE_DEPLOY_TIMEOUT", msg);
-  }
-
-  private void failBuild(@NotNull Throwable t, @Nullable String footPrint) {
-    String message;
-
+  private void processFailure(@NotNull Throwable t) {
     if (t instanceof AmazonServiceException) {
-      AmazonServiceException ase = (AmazonServiceException) t;
+      final AmazonServiceException ase = (AmazonServiceException) t;
 
-      message = "AWS request failure: " + ase.getErrorMessage();
+      final String details =
+        "Service   :          " + ase.getServiceName() + "\n" +
+          "HTTP Status Code:    " + ase.getStatusCode() + "\n" +
+          "AWS Error Code:      " + ase.getErrorCode() + "\n" +
+          "Error Type:          " + ase.getErrorType() + "\n" +
+          "Request ID:          " + ase.getRequestId();
 
-      err(message);
-      err("Service   :       " + ase.getServiceName());
-      err("HTTP Status Code: " + ase.getStatusCode());
-      err("AWS Error Code:   " + ase.getErrorCode());
-      err("Error Type:       " + ase.getErrorType());
-      err("Request ID:       " + ase.getRequestId());
-
-      debug("Response content: " + ase.getRawResponseContent());
-
-      problem(getIdentity(ase, footPrint), "CODE_DEPLOY_SERVICE", message);
+      myListener.exception(
+        "AWS request failure: " + ase.getErrorMessage(),
+        details, CodeDeployConstants.SERVICE_PROBLEM_TYPE,
+        ase.getServiceName() + ase.getErrorType().name() + String.valueOf(ase.getStatusCode()) + ase.getErrorCode());
 
     } else if (t instanceof AmazonClientException) {
-      message = "Internal error while trying to communicate with AWS: " + t.getMessage();
-      err(message);
-      problem(getIdentity(t.getMessage(), footPrint), "CODE_DEPLOY_CLIENT", message);
+      myListener.exception("Internal error while trying to communicate with AWS: " + t.getMessage(), null, CodeDeployConstants.CLIENT_PROBLEM_TYPE, null);
     } else {
-      message = "Unexpected error during deployment: " + t.getMessage();
-      err(message);
-      problem(getIdentity(t.getMessage(), footPrint), "CODE_DEPLOY_EXCEPTION", message);
+      myListener.exception("Unexpected error during deployment: " + t.getMessage(), null, null, null);
     }
-  }
-
-  private int getIdentity(@NotNull AmazonServiceException e, @Nullable String footPrint) {
-    return getIdentity(e.getServiceName(), e.getErrorType().name(), String.valueOf(e.getStatusCode()), e.getErrorCode(), footPrint);
-  }
-
-  private int getIdentity(@NotNull DeploymentInfo dInfo) {
-    final ErrorInformation eInfo = dInfo.getErrorInformation();
-    final S3Location s3Location = dInfo.getRevision().getS3Location();
-    return getIdentity(dInfo.getStatus(), eInfo == null ? "" : eInfo.getCode(), dInfo.getApplicationName(), s3Location.getKey(), s3Location.getBucket());
-  }
-
-  private int getIdentity(String... parts) {
-    final StringBuilder sb = new StringBuilder();
-
-    for (String p : parts) {
-      if (p == null) continue;
-
-      p = p.replace("\\", "/");
-      if (StringUtil.isNotEmpty(myBaseDir)) p = p.replace(myBaseDir.replace("\\", "/"), "");
-      sb.append(p);
-    }
-    sb.append(getClientFootPrint());
-
-    return sb.toString().replace(" ", "").toLowerCase().hashCode();
-  }
-
-  @NotNull
-  private String getClientFootPrint() {
-    return myRegion.getName() + (myCredentials == null ? "" : myCredentials.getAWSAccessKeyId() + myCredentials.getAWSSecretKey());
-  }
-
-  private void updateBuildStatusText(@NotNull DeploymentInfo dInfo) {
-    if (!isSuccess(dInfo)) return;
-    log("##teamcity[buildStatus tc:tags='tc:internal' text='{build.status.text}; Deployment succeeded: instances " + instancesText(dInfo, false) + "']");
-  }
-
-  private String instancesText(DeploymentInfo dInfo, boolean detailed) {
-    final DeploymentOverview o = dInfo.getDeploymentOverview();
-
-    if (o == null) return "<unknown>";
-
-    final StringBuilder sb = new StringBuilder("succeeded: ").append(o.getSucceeded());
-    if (o.getFailed() > 0 || detailed) sb.append(", failed: ").append(o.getFailed());
-    if (o.getSkipped() > 0 || detailed) sb.append(", skipped: ").append(o.getSkipped());
-    if (o.getSkipped() > 0 || detailed) sb.append(", in progress: ").append(o.getInProgress());
-    return sb.toString();
-  }
-
-  private String deploymentInfoText(DeploymentInfo dInfo) {
-    return "status: " + (dInfo == null ? "<unknown>" : (dInfo.getStatus() + ", instances: " + instancesText(dInfo, true)));
   }
 
   private boolean isSuccess(@NotNull DeploymentInfo dInfo) {
     return DeploymentStatus.Succeeded.toString().equals(dInfo.getStatus());
   }
 
-  private String formatDuration(long milliseconds) {
-    return String.format("%.1f seconds", (milliseconds / 1000d)); //TODO: better formatting
-  }
-
-  void log(@NotNull String message) { myLogger.log(message); }
-
-  void err(@NotNull String message) { myLogger.err(message); }
-
-  void debug(@NotNull String message) { myLogger.debug(message); }
-
-  void problem(int identity, @NotNull String type, @NotNull String descr) { myLogger.problem(identity, type, descr); }
-
   @NotNull
   private String getDescription() {
-    return StringUtil.emptyIfNull(myDescription);
+    return StringUtil.isEmptyOrSpaces(myDescription) ? getClass().getName() : myDescription;
   }
 
-  public static class Logger {
-    void log(@NotNull String message) {}
-    void err(@NotNull String message) {}
-    void debug(@NotNull String message) {}
-    void problem(int identity, @NotNull String type, @NotNull String descr) {}
+  @Contract("null -> null")
+  @Nullable
+  private Listener.InstancesStatus getInstancesStatus(@Nullable DeploymentInfo dInfo) {
+    if (dInfo == null) return null;
+    if (dInfo.getStatus() == null || dInfo.getDeploymentOverview() == null) return null;
+
+    final Listener.InstancesStatus instancesStatus = new Listener.InstancesStatus();
+    instancesStatus.status = dInfo.getStatus();
+
+    final DeploymentOverview overview = dInfo.getDeploymentOverview();
+    instancesStatus.succeeded = overview.getSucceeded();
+    instancesStatus.failed = overview.getFailed();
+    instancesStatus.inProgress = overview.getInProgress();
+    instancesStatus.skipped = overview.getSkipped();
+    instancesStatus.pending = overview.getPending();
+
+    return instancesStatus;
+  }
+
+  @Contract("null -> null")
+  @Nullable
+  private Listener.ErrorInfo getErrorInfo(@Nullable DeploymentInfo dInfo) {
+    if (dInfo == null) return null;
+
+    final ErrorInformation errorInformation = dInfo.getErrorInformation();
+    if (errorInformation == null) return null;
+
+    final Listener.ErrorInfo errorInfo = new Listener.ErrorInfo();
+    errorInfo.message = errorInformation.getMessage();
+    errorInfo.code = errorInformation.getCode();
+    return errorInfo;
+  }
+
+  public static class Listener {
+    void uploadRevisionStarted(@NotNull File revision, @NotNull String s3BucketName, @NotNull String key) {
+    }
+
+    void uploadRevisionFinished(@NotNull File revision, @NotNull String s3BucketName, @NotNull String key, @NotNull String url) {
+    }
+
+    void registerRevisionStarted(@NotNull String applicationName, @NotNull String s3BucketName, @NotNull String key, @NotNull String bundleType) {
+    }
+
+    void registerRevisionFinished(@NotNull String applicationName, @NotNull String s3BucketName, @NotNull String key, @NotNull String bundleType) {
+    }
+
+    void createDeploymentStarted(@NotNull String applicationName, @NotNull String deploymentGroupName, @Nullable String deploymentConfigName) {
+    }
+
+    void createDeploymentFinished(@NotNull String applicationName, @NotNull String deploymentGroupName, @Nullable String deploymentConfigName, @NotNull String deploymentId) {
+    }
+
+    void deploymentWaitStarted(@NotNull String deploymentId) {
+    }
+
+    void deploymentInProgress(@NotNull String deploymentId, @Nullable InstancesStatus instancesStatus) {
+    }
+
+    void deploymentFailed(@NotNull String deploymentId, @Nullable Integer timeoutSec, @Nullable ErrorInfo errorInfo, @Nullable InstancesStatus instancesStatus) {
+    }
+
+    void deploymentSucceeded(@NotNull String deploymentId, @Nullable InstancesStatus instancesStatus) {
+    }
+
+    void exception(@NotNull String message, @Nullable String details, @Nullable String type, @Nullable String identity) {
+    }
+
+    public static class InstancesStatus {
+      long pending;
+      long inProgress;
+      long succeeded;
+      long failed;
+      long skipped;
+      @Nullable
+      String status;
+    }
+
+    public static class ErrorInfo {
+      @Nullable
+      String code;
+      @Nullable
+      String message;
+    }
   }
 
   //  @NotNull
