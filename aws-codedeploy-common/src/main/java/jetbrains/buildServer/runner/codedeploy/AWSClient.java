@@ -289,7 +289,7 @@ public class AWSClient {
     if (t instanceof AmazonServiceException) {
       final AmazonServiceException ase = (AmazonServiceException) t;
 
-      final String details =
+      final String details = "\n" +
         "Service   :          " + ase.getServiceName() + "\n" +
         "HTTP Status Code:    " + ase.getStatusCode() + "\n" +
         "AWS Error Code:      " + ase.getErrorCode() + "\n" +
