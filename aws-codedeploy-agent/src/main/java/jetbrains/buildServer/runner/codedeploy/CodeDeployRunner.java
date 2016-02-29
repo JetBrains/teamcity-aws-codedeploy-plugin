@@ -193,6 +193,7 @@ public class CodeDeployRunner implements AgentBuildRunner {
         @Override
         void exception(@NotNull String message, @Nullable String details, @Nullable String type, @Nullable String identity) {
           err(message);
+          if (StringUtil.isNotEmpty(details)) err(details);
           problem(getIdentity(message, identity), type == null ? CodeDeployConstants.EXCEPTION_BUILD_PROBLEM_TYPE : type, message);
           close("deploy application");
         }

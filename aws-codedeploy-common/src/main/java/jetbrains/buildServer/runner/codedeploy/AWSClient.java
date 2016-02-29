@@ -43,13 +43,10 @@ import java.io.File;
 public class AWSClient {
   public static final String UNSUPPORTED_SESSION_NAME_CHARS = "[^\\w+=,.@-]";
 
-  @Nullable
-  private final AWSCredentials myCredentials;
-  @NotNull
-  private final Region myRegion;
+  @Nullable private final AWSCredentials myCredentials;
+  @NotNull private final Region myRegion;
 
-  @Nullable
-  private String myDescription;
+  @Nullable private String myDescription;
 
   @NotNull
   private Listener myListener = new Listener();
@@ -294,10 +291,10 @@ public class AWSClient {
 
       final String details =
         "Service   :          " + ase.getServiceName() + "\n" +
-          "HTTP Status Code:    " + ase.getStatusCode() + "\n" +
-          "AWS Error Code:      " + ase.getErrorCode() + "\n" +
-          "Error Type:          " + ase.getErrorType() + "\n" +
-          "Request ID:          " + ase.getRequestId();
+        "HTTP Status Code:    " + ase.getStatusCode() + "\n" +
+        "AWS Error Code:      " + ase.getErrorCode() + "\n" +
+        "Error Type:          " + ase.getErrorType() + "\n" +
+        "Request ID:          " + ase.getRequestId();
 
       myListener.exception(
         "AWS request failure: " + ase.getErrorMessage(),
@@ -354,38 +351,17 @@ public class AWSClient {
   }
 
   public static class Listener {
-    void uploadRevisionStarted(@NotNull File revision, @NotNull String s3BucketName, @NotNull String key) {
-    }
-
-    void uploadRevisionFinished(@NotNull File revision, @NotNull String s3BucketName, @NotNull String key, @NotNull String url) {
-    }
-
-    void registerRevisionStarted(@NotNull String applicationName, @NotNull String s3BucketName, @NotNull String key, @NotNull String bundleType) {
-    }
-
-    void registerRevisionFinished(@NotNull String applicationName, @NotNull String s3BucketName, @NotNull String key, @NotNull String bundleType) {
-    }
-
-    void createDeploymentStarted(@NotNull String applicationName, @NotNull String deploymentGroupName, @Nullable String deploymentConfigName) {
-    }
-
-    void createDeploymentFinished(@NotNull String applicationName, @NotNull String deploymentGroupName, @Nullable String deploymentConfigName, @NotNull String deploymentId) {
-    }
-
-    void deploymentWaitStarted(@NotNull String deploymentId) {
-    }
-
-    void deploymentInProgress(@NotNull String deploymentId, @Nullable InstancesStatus instancesStatus) {
-    }
-
-    void deploymentFailed(@NotNull String deploymentId, @Nullable Integer timeoutSec, @Nullable ErrorInfo errorInfo, @Nullable InstancesStatus instancesStatus) {
-    }
-
-    void deploymentSucceeded(@NotNull String deploymentId, @Nullable InstancesStatus instancesStatus) {
-    }
-
-    void exception(@NotNull String message, @Nullable String details, @Nullable String type, @Nullable String identity) {
-    }
+    void uploadRevisionStarted(@NotNull File revision, @NotNull String s3BucketName, @NotNull String key) {}
+    void uploadRevisionFinished(@NotNull File revision, @NotNull String s3BucketName, @NotNull String key, @NotNull String url) {}
+    void registerRevisionStarted(@NotNull String applicationName, @NotNull String s3BucketName, @NotNull String key, @NotNull String bundleType) {}
+    void registerRevisionFinished(@NotNull String applicationName, @NotNull String s3BucketName, @NotNull String key, @NotNull String bundleType) {}
+    void createDeploymentStarted(@NotNull String applicationName, @NotNull String deploymentGroupName, @Nullable String deploymentConfigName) {}
+    void createDeploymentFinished(@NotNull String applicationName, @NotNull String deploymentGroupName, @Nullable String deploymentConfigName, @NotNull String deploymentId) {}
+    void deploymentWaitStarted(@NotNull String deploymentId) {}
+    void deploymentInProgress(@NotNull String deploymentId, @Nullable InstancesStatus instancesStatus) {}
+    void deploymentFailed(@NotNull String deploymentId, @Nullable Integer timeoutSec, @Nullable ErrorInfo errorInfo, @Nullable InstancesStatus instancesStatus) {}
+    void deploymentSucceeded(@NotNull String deploymentId, @Nullable InstancesStatus instancesStatus) {}
+    void exception(@NotNull String message, @Nullable String details, @Nullable String type, @Nullable String identity) {}
 
     public static class InstancesStatus {
       long pending;
