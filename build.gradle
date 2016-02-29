@@ -21,7 +21,7 @@ buildscript {
         }
     }
     dependencies {
-        classpath "com.github.rodm:gradle-teamcity-plugin:0.8.1"
+        classpath "com.github.rodm:gradle-teamcity-plugin:0.8.2"
     }
 }
 
@@ -60,7 +60,6 @@ configure(subprojects - project(':build')) {
     }
 
     repositories {
-        maven { url 'http://repository.jetbrains.com/all' }
         mavenCentral()
     }
 }

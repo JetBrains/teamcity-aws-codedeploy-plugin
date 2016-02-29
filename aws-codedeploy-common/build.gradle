@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
+apply plugin: 'com.github.rodm.teamcity-common'
+
 dependencies {
     compile "com.amazonaws:aws-java-sdk:${awsSDKVersion}"
-    compile "org.jetbrains.teamcity.idea:annotations:132.719"
-    compile "org.jetbrains.teamcity:common-api:${teamcityVersion}"
 }
