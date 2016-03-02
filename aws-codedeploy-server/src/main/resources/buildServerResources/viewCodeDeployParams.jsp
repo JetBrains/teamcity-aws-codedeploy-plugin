@@ -34,6 +34,11 @@
         </div>
     </c:otherwise>
 </c:choose>
+
+<div class="parameter">
+    ${region_name_label}: <strong><props:displayValue name="${region_name_param}" emptyValue="empty"/></strong>
+</div>
+
 <div class="parameter">
     ${revision_path_label}: <strong><props:displayValue name="${revision_path_param}" emptyValue="empty"/></strong>
 </div>
@@ -44,10 +49,6 @@
 
 <div class="parameter">
     ${app_name_label}: <strong><props:displayValue name="${app_name_param}" emptyValue="empty"/></strong>
-</div>
-
-<div class="parameter">
-    ${region_name_label}: <strong><props:displayValue name="${region_name_param}" emptyValue="empty"/></strong>
 </div>
 
 <div class="parameter">
