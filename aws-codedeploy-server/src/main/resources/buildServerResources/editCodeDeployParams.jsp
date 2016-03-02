@@ -68,7 +68,7 @@
     </tr>
 </l:settingsGroup>
 
-<l:settingsGroup title="Revision location">
+<l:settingsGroup title="Revision Location">
     <tr>
         <th><label for="${revision_path_param}">${revision_path_label}: <l:star/></label></th>
         <td><props:textProperty name="${revision_path_param}" className="longField" maxlength="256"/>
