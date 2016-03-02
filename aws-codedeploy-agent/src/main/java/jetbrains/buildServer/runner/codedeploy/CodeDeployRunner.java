@@ -160,7 +160,7 @@ public class CodeDeployRunner implements AgentBuildRunner {
 
         @Override
         void deploymentInProgress(@NotNull String deploymentId, @Nullable InstancesStatus instancesStatus) {
-          debug("Deployment  " + deploymentDescription(instancesStatus, true));
+          debug("Deployment " + deploymentDescription(instancesStatus, true));
         }
 
         @Override
