@@ -153,7 +153,7 @@ public class CodeDeployRunner implements AgentBuildRunner {
 
         @Override
         void createDeploymentFinished(@NotNull String applicationName, @NotNull String deploymentGroupName, @Nullable String deploymentConfigName, @NotNull String deploymentId) {
-          parameter(CodeDeployConstants.DEPLOYMENT_ID_BUILD_ENV_VAR, deploymentId);
+          parameter(CodeDeployConstants.DEPLOYMENT_ID_BUILD_CONFIG_PARAM, deploymentId);
           log("Deployment " + deploymentId + " created");
         }
 

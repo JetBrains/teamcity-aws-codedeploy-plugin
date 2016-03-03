@@ -30,7 +30,7 @@ public interface CodeDeployConstants {
   String RUNNER_DESCR = "Prepare, upload, register and deploy application revision using CodeDeploy";
 
 
-  String DEPLOYMENT_ID_BUILD_ENV_VAR = "env.codedeploy.deploment.id";
+  String DEPLOYMENT_ID_BUILD_CONFIG_PARAM = "codedeploy.deploment.id";
 
 
 
