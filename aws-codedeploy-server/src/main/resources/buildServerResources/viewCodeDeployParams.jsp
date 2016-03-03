@@ -21,6 +21,10 @@
 
 <%@include file="paramsConstants.jspf"%>
 
+<div class="parameter">
+    ${region_name_label}: <strong><props:displayValue name="${region_name_param}" emptyValue="empty"/></strong>
+</div>
+
 <c:set var="cred_type" value="${propertiesBean.properties[credentials_type_param]}"/>
 <c:choose>
     <c:when test="${empty cred_type or (temp_credentials_option eq cred_type)}">
@@ -34,10 +38,6 @@
         </div>
     </c:otherwise>
 </c:choose>
-
-<div class="parameter">
-    ${region_name_label}: <strong><props:displayValue name="${region_name_param}" emptyValue="empty"/></strong>
-</div>
 
 <div class="parameter">
     ${revision_path_label}: <strong><props:displayValue name="${revision_path_param}" emptyValue="empty"/></strong>

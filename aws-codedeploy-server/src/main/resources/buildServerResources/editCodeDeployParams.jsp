@@ -22,6 +22,13 @@
 
 <%@include file="paramsConstants.jspf"%>
 
+<tr>
+    <th><label for="${region_name_param}">${region_name_label}: <l:star/></label></th>
+    <td><props:textProperty name="${region_name_param}" maxlength="256"/>
+        <span class="smallNote">e.g. "us-east-1", "eu-west-1"</span><span class="error" id="error_${region_name_param}" ?></span>
+    </td>
+</tr>
+
 <l:settingsGroup title="AWS Security Credentials">
     <tr>
         <th><label for="${credentials_type_param}">${credentials_type_label}: <l:star/></label></th>
@@ -63,13 +70,6 @@
         </td>
     </tr>
 </l:settingsGroup>
-
-<tr>
-    <th><label for="${region_name_param}">${region_name_label}: <l:star/></label></th>
-    <td><props:textProperty name="${region_name_param}" maxlength="256"/>
-        <span class="smallNote">e.g. "us-east-1", "eu-west-1"</span><span class="error" id="error_${region_name_param}" ?></span>
-    </td>
-</tr>
 
 <l:settingsGroup title="Revision Location">
     <tr>
