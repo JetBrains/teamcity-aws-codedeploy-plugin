@@ -68,9 +68,6 @@
     <div class="parameter">
         ${wait_timeout_label}: <strong><props:displayValue name="${wait_timeout_param}" emptyValue="empty"/></strong>
     </div>
-
-    <div class="parameter">
-        ${wait_poll_interval_label}: <strong><props:displayValue name="${wait_poll_interval_param}" emptyValue="default"/></strong>
-    </div>
 </c:if>
+
 

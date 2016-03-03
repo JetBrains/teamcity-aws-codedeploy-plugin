@@ -62,7 +62,3 @@
 
 <c:set var="wait_timeout_param" value="<%=CodeDeployConstants.WAIT_TIMEOUT_SEC_PARAM%>"/>
 <c:set var="wait_timeout_label" value="<%=CodeDeployConstants.WAIT_TIMEOUT_SEC_LABEL%>"/>
-
-<c:set var="wait_poll_interval_param" value="<%=CodeDeployConstants.WAIT_POLL_INTERVAL_SEC_PARAM%>"/>
-<c:set var="wait_poll_interval_label" value="<%=CodeDeployConstants.WAIT_POLL_INTERVAL_SEC_LABEL%>"/>
-<c:set var="wait_poll_interval_default" value="<%=CodeDeployConstants.WAIT_POLL_INTERVAL_SEC_DEFAULT%>"/>

@@ -114,20 +114,14 @@
             <span class="smallNote">Build will fail if timeout is exceeded</span><span class="error" id="error_${wait_timeout_param}"></span>
         </td>
     </tr>
-    <tr id="${wait_poll_interval_param}_row">
-        <th><label for="${wait_poll_interval_param}">${wait_poll_interval_label}: </label></th>
-        <td><props:textProperty name="${wait_poll_interval_param}" maxlength="256"/>
-            <span class="smallNote">Default value is ${wait_poll_interval_default} seconds</span><span class="error" id="error_${wait_poll_interval_param}"></span>
-        </td>
-    </tr>
 </l:settingsGroup>
 
 <script type="application/javascript">
     window.codeDeployUpdateVisibility = function () {
         if ($('${wait_flag_param}').checked) {
-            BS.Util.show('${wait_timeout_param}_row', '${wait_poll_interval_param}_row');
+            BS.Util.show('${wait_timeout_param}_row');
         } else {
-            BS.Util.hide('${wait_timeout_param}_row', '${wait_poll_interval_param}_row');
+            BS.Util.hide('${wait_timeout_param}_row');
         }
 
         if ($('${access_keys_option}').checked) {

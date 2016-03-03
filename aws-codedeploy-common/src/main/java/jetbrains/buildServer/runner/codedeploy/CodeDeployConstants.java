@@ -84,14 +84,12 @@ public interface CodeDeployConstants {
   String WAIT_FLAG_LABEL = "Wait for deployment finish";
   String WAIT_TIMEOUT_SEC_PARAM = "codedeploy_wait_timeout_sec";
   String WAIT_TIMEOUT_SEC_LABEL = "Timeout (seconds)";
-  String WAIT_POLL_INTERVAL_SEC_PARAM = "codedeploy_wait_poll_interval_sec";
-  String WAIT_POLL_INTERVAL_SEC_LABEL = "Poll interval (seconds)";
+  String WAIT_POLL_INTERVAL_SEC_CONFIG_PARAM = "codedeploy.wait.poll.interval.sec";
   int WAIT_POLL_INTERVAL_SEC_DEFAULT = 20;
 
   Map<String, String> DEFAULTS = CollectionsUtil.asMap(
     CREDENTIALS_TYPE_PARAM, TEMP_CREDENTIALS_OPTION,
     EXTERNAL_ID_PARAM, UUID.randomUUID().toString(), // see jetbrains.buildServer.runner.codedeploy.CodeDeployRunType#getDefaultRunnerProperties
-    WAIT_FLAG_PARAM, "true",
-    WAIT_POLL_INTERVAL_SEC_PARAM, String.valueOf(WAIT_POLL_INTERVAL_SEC_DEFAULT)
+    WAIT_FLAG_PARAM, "true"
   );
 }

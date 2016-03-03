@@ -63,16 +63,21 @@ public class CodeDeployRunner implements AgentBuildRunner {
             s3BucketName, applicationName,
             deploymentGroupName, deploymentConfigName,
             Integer.parseInt(runnerParameters.get(CodeDeployConstants.WAIT_TIMEOUT_SEC_PARAM)),
-            Integer.getInteger(runnerParameters.get(CodeDeployConstants.WAIT_POLL_INTERVAL_SEC_PARAM), CodeDeployConstants.WAIT_POLL_INTERVAL_SEC_DEFAULT));
+            getIntegerOrDefault(context.getConfigParameters().get(CodeDeployConstants.WAIT_POLL_INTERVAL_SEC_CONFIG_PARAM), CodeDeployConstants.WAIT_POLL_INTERVAL_SEC_DEFAULT));
         } else {
           awsClient.uploadRegisterAndDeployRevision(revision, s3BucketName, applicationName, deploymentGroupName, deploymentConfigName);
         }
       }
 
       private void validateParams() throws RunBuildException {
-        final Map<String, String> invalids = ParametersValidator.validateRuntime(context.getRunnerParameters(), runningBuild.getCheckoutDirectory());
+        final Map<String, String> invalids = ParametersValidator.validateRuntime(context.getRunnerParameters(), context.getConfigParameters(), runningBuild.getCheckoutDirectory());
         if (invalids.isEmpty()) return;
         throw new RunBuildException(invalids.values().iterator().next(), null, ErrorData.BUILD_RUNNER_ERROR_TYPE);
+      }
+
+      @NotNull
+      private Integer getIntegerOrDefault(@Nullable String parameter, @NotNull Integer defaultVal) {
+        return StringUtil.isEmptyOrSpaces(parameter) ? defaultVal : Integer.parseInt(parameter);
       }
     };
   }
@@ -217,7 +222,7 @@ public class CodeDeployRunner implements AgentBuildRunner {
 
           if (instancesStatus == null) sb.append(" unknown");
           else {
-            sb.append(" ").append(StringUtil.isEmptyOrSpaces(instancesStatus.status) ? "unknown" : instancesStatus.status.toLowerCase());
+            sb.append(" ").append(StringUtil.isEmptyOrSpaces(instancesStatus.status) ? "unknown" : instancesStatus.status);
             sb.append(", instances succeeded: ").append(instancesStatus.succeeded);
             if (instancesStatus.failed > 0 || detailed) sb.append(", failed: ").append(instancesStatus.failed);
             if (instancesStatus.pending > 0 || detailed) sb.append(", pending: ").append(instancesStatus.pending);

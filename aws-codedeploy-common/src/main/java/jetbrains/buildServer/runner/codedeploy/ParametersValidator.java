@@ -34,14 +34,19 @@ public final class ParametersValidator {
    * Returns map from parameter name to invalidity reason
    */
   @NotNull
-  public static Map<String, String> validateRuntime(@NotNull Map<String, String> params, @NotNull File checkoutDir) {
-    final Map<String, String> invalids = new HashMap<String, String>(validate(params, true));
+  public static Map<String, String> validateRuntime(@NotNull Map<String, String> runnerParams, @NotNull Map<String, String> configParams, @NotNull File checkoutDir) {
+    final Map<String, String> invalids = new HashMap<String, String>(validate(runnerParams, true));
 
     if (!invalids.containsKey(CodeDeployConstants.READY_REVISION_PATH_PARAM)) {
-      final String revisionPath = params.get(CodeDeployConstants.READY_REVISION_PATH_PARAM);
+      final String revisionPath = runnerParams.get(CodeDeployConstants.READY_REVISION_PATH_PARAM);
       if (!FileUtil.resolvePath(checkoutDir, revisionPath).exists()) {
         invalids.put(CodeDeployConstants.READY_REVISION_PATH_PARAM, "Application revision " + revisionPath + " doesn't exist");
       }
+    }
+
+    final String waitIntervalSec = configParams.get(CodeDeployConstants.WAIT_POLL_INTERVAL_SEC_CONFIG_PARAM);
+    if (StringUtil.isNotEmpty(waitIntervalSec)) {
+      validatePositiveInteger(invalids, waitIntervalSec, CodeDeployConstants.WAIT_POLL_INTERVAL_SEC_CONFIG_PARAM, CodeDeployConstants.WAIT_POLL_INTERVAL_SEC_CONFIG_PARAM, true);
     }
 
     return invalids;
@@ -55,10 +60,10 @@ public final class ParametersValidator {
     return validate(params, false);
   }
 
-  private static Map<String, String> validate(@NotNull Map<String, String> params, boolean runtime) {
+  private static Map<String, String> validate(@NotNull Map<String, String> runnerParams, boolean runtime) {
     final Map<String, String> invalids = new HashMap<String, String>();
 
-    final String revisionPath = params.get(CodeDeployConstants.READY_REVISION_PATH_PARAM);
+    final String revisionPath = runnerParams.get(CodeDeployConstants.READY_REVISION_PATH_PARAM);
     if (StringUtil.isEmptyOrSpaces(revisionPath)) {
       invalids.put(CodeDeployConstants.READY_REVISION_PATH_PARAM, CodeDeployConstants.READY_REVISION_PATH_LABEL + " mustn't be empty");
     } else {
@@ -71,16 +76,16 @@ public final class ParametersValidator {
       }
     }
 
-    final String accessKeyId = params.get(CodeDeployConstants.ACCESS_KEY_ID_PARAM);
+    final String accessKeyId = runnerParams.get(CodeDeployConstants.ACCESS_KEY_ID_PARAM);
     if (StringUtil.isNotEmpty(accessKeyId)) {
-      final String secretAccessKey = params.get(CodeDeployConstants.SECRET_ACCESS_KEY_PARAM);
+      final String secretAccessKey = runnerParams.get(CodeDeployConstants.SECRET_ACCESS_KEY_PARAM);
       if (StringUtil.isEmptyOrSpaces(secretAccessKey)) {
         invalids.put(CodeDeployConstants.SECRET_ACCESS_KEY_PARAM, CodeDeployConstants.SECRET_ACCESS_KEY_LABEL + " mustn't be empty");
       }
     }
-    final String credentialsType = params.get(CodeDeployConstants.CREDENTIALS_TYPE_PARAM);
+    final String credentialsType = runnerParams.get(CodeDeployConstants.CREDENTIALS_TYPE_PARAM);
     if (CodeDeployConstants.TEMP_CREDENTIALS_OPTION.equals(credentialsType)) {
-      final String iamRole = params.get(CodeDeployConstants.IAM_ROLE_ARN_PARAM);
+      final String iamRole = runnerParams.get(CodeDeployConstants.IAM_ROLE_ARN_PARAM);
       if (StringUtil.isEmptyOrSpaces(iamRole)) {
         invalids.put(CodeDeployConstants.IAM_ROLE_ARN_PARAM, CodeDeployConstants.IAM_ROLE_ARN_LABEL + " mustn't be empty");
       }
@@ -90,7 +95,7 @@ public final class ParametersValidator {
       invalids.put(CodeDeployConstants.CREDENTIALS_TYPE_PARAM, "Unexpected " + CodeDeployConstants.CREDENTIALS_TYPE_LABEL + " " + credentialsType);
     }
 
-    final String regionName = params.get(CodeDeployConstants.REGION_NAME_PARAM);
+    final String regionName = runnerParams.get(CodeDeployConstants.REGION_NAME_PARAM);
     if (StringUtil.isEmptyOrSpaces(regionName)) {
       invalids.put(CodeDeployConstants.REGION_NAME_PARAM, CodeDeployConstants.REGION_NAME_LABEL + " mustn't be empty");
     } else {
@@ -103,35 +108,30 @@ public final class ParametersValidator {
       }
     }
 
-    final String s3BucketName = params.get(CodeDeployConstants.S3_BUCKET_NAME_PARAM);
+    final String s3BucketName = runnerParams.get(CodeDeployConstants.S3_BUCKET_NAME_PARAM);
     if (StringUtil.isEmptyOrSpaces(s3BucketName)) {
       invalids.put(CodeDeployConstants.S3_BUCKET_NAME_PARAM, CodeDeployConstants.S3_BUCKET_NAME_LABEL + " mustn't be empty");
     } else if (s3BucketName.contains("/")) {
       invalids.put(CodeDeployConstants.S3_BUCKET_NAME_PARAM, CodeDeployConstants.S3_BUCKET_NAME_LABEL + " mustn't contain / characters");
     }
 
-    final String applicationName = params.get(CodeDeployConstants.APP_NAME_PARAM);
+    final String applicationName = runnerParams.get(CodeDeployConstants.APP_NAME_PARAM);
     if (StringUtil.isEmptyOrSpaces(applicationName)) {
       invalids.put(CodeDeployConstants.APP_NAME_PARAM, CodeDeployConstants.APP_NAME_LABEL + " mustn't be empty");
     }
 
-    final String deploymentGroupName = params.get(CodeDeployConstants.DEPLOYMENT_GROUP_NAME_PARAM);
+    final String deploymentGroupName = runnerParams.get(CodeDeployConstants.DEPLOYMENT_GROUP_NAME_PARAM);
     if (StringUtil.isEmptyOrSpaces(deploymentGroupName)) {
       invalids.put(CodeDeployConstants.DEPLOYMENT_GROUP_NAME_PARAM, CodeDeployConstants.DEPLOYMENT_GROUP_NAME_LABEL + " mustn't be empty");
     }
 
-    final boolean wait = Boolean.parseBoolean(params.get(CodeDeployConstants.WAIT_FLAG_PARAM));
+    final boolean wait = Boolean.parseBoolean(runnerParams.get(CodeDeployConstants.WAIT_FLAG_PARAM));
     if (wait) {
-      final String waitTimeoutSec = params.get(CodeDeployConstants.WAIT_TIMEOUT_SEC_PARAM);
+      final String waitTimeoutSec = runnerParams.get(CodeDeployConstants.WAIT_TIMEOUT_SEC_PARAM);
       if (StringUtil.isEmptyOrSpaces(waitTimeoutSec)) {
         invalids.put(CodeDeployConstants.WAIT_TIMEOUT_SEC_PARAM, CodeDeployConstants.WAIT_TIMEOUT_SEC_LABEL + " mustn't be empty");
       } else {
         validatePositiveInteger(invalids, waitTimeoutSec, CodeDeployConstants.WAIT_TIMEOUT_SEC_PARAM, CodeDeployConstants.WAIT_TIMEOUT_SEC_LABEL, runtime);
-      }
-
-      final String waitIntervalSec = params.get(CodeDeployConstants.WAIT_POLL_INTERVAL_SEC_PARAM);
-      if (StringUtil.isNotEmpty(waitIntervalSec)) {
-        validatePositiveInteger(invalids, waitIntervalSec, CodeDeployConstants.WAIT_POLL_INTERVAL_SEC_PARAM, CodeDeployConstants.WAIT_POLL_INTERVAL_SEC_LABEL, runtime);
       }
     }
     return invalids;
