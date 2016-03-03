@@ -33,7 +33,10 @@
             <label for="${access_keys_option}">${access_keys_label}</label>
             <span class="smallNote">Use pre-configured AWS account access keys</span>
             <span class="error" id="error_${credentials_type_param}"></span>
+            <br/>
+            <a href="http://console.aws.amazon.com/iam" target="_blank">Open IAM Console</a>
         </td>
+        <td></td>
     </tr>
     <tr id="${iam_role_arn_param}_row">
         <th><label for="${iam_role_arn_param}">${iam_role_arn_label}: <l:star/></label></th>
@@ -77,7 +80,7 @@
     </tr>
     <tr>
         <th><label for="${bucket_name_param}">${bucket_name_label}: <l:star/></label></th>
-        <td><props:textProperty name="${bucket_name_param}" className="longField" maxlength="256"/>
+        <td><props:textProperty name="${bucket_name_param}" className="longField" maxlength="256"/><a href="http://console.aws.amazon.com/s3" target="_blank">Open S3 Console</a>
             <span class="smallNote">Existing S3 bucket name</span><span class="error" id="error_${bucket_name_param}"></span>
         </td>
     </tr>
@@ -86,7 +89,7 @@
 <l:settingsGroup title="CodeDeploy Application">
     <tr>
         <th><label for="${app_name_param}">${app_name_label}: <l:star/></label></th>
-        <td><props:textProperty name="${app_name_param}" className="longField" maxlength="256"/>
+        <td><props:textProperty name="${app_name_param}" className="longField" maxlength="256"/><a href="http://console.aws.amazon.com/codedeploy" target="_blank">Open CodeDeploy Console</a>
             <span class="smallNote">Pre-configured CodeDeploy application name</span><span class="error" id="error_${app_name_param}"></span>
         </td>
     </tr>
