@@ -57,7 +57,8 @@ public class CodeDeployRunner implements AgentBuildRunner {
         final String deploymentGroupName = runnerParameters.get(CodeDeployConstants.DEPLOYMENT_GROUP_NAME_PARAM);
         final String deploymentConfigName = StringUtil.nullIfEmpty(runnerParameters.get(CodeDeployConstants.DEPLOYMENT_CONFIG_NAME_PARAM));
 
-        if (Boolean.parseBoolean(runnerParameters.get(CodeDeployConstants.WAIT_FLAG_PARAM))) {
+        final String waitParam = runnerParameters.get(CodeDeployConstants.WAIT_FLAG_PARAM);
+        if (StringUtil.isEmptyOrSpaces(waitParam) || Boolean.parseBoolean(waitParam)) {
           awsClient.uploadRegisterDeployRevisionAndWait(
             revision,
             s3BucketName, applicationName,
@@ -104,22 +105,21 @@ public class CodeDeployRunner implements AgentBuildRunner {
     final BuildProgressLogger buildLogger = runningBuild.getBuildLogger();
     final String regionName = runnerParameters.get(CodeDeployConstants.REGION_NAME_PARAM);
 
-    return (CodeDeployConstants.ACCESS_KEYS_OPTION.equals(runnerParameters.get(CodeDeployConstants.CREDENTIALS_TYPE_PARAM))
-      ?
-      new AWSClient(
-        runnerParameters.get(CodeDeployConstants.ACCESS_KEY_ID_PARAM),
-        runnerParameters.get(CodeDeployConstants.SECRET_ACCESS_KEY_PARAM),
-        regionName
-      ) :
+    final boolean useDefaultCredProvChain = Boolean.parseBoolean(runnerParameters.get(CodeDeployConstants.USE_DEFAULT_CREDENTIAL_PROVIDER_CHAIN_PARAM));
+    final String accessKeyId = useDefaultCredProvChain ? null : runnerParameters.get(CodeDeployConstants.ACCESS_KEY_ID_PARAM);
+    final String secretAccessKey = useDefaultCredProvChain ? null : runnerParameters.get(CodeDeployConstants.SECRET_ACCESS_KEY_PARAM);
+
+    return (CodeDeployConstants.TEMP_CREDENTIALS_OPTION.equals(runnerParameters.get(CodeDeployConstants.CREDENTIALS_TYPE_PARAM)) ?
       new AWSClient(
         runnerParameters.get(CodeDeployConstants.IAM_ROLE_ARN_PARAM),
         runnerParameters.get(CodeDeployConstants.EXTERNAL_ID_PARAM),
-        runnerParameters.get(CodeDeployConstants.ACCESS_KEY_ID_PARAM),
-        runnerParameters.get(CodeDeployConstants.SECRET_ACCESS_KEY_PARAM),
+        accessKeyId,
+        secretAccessKey,
         runningBuild.getBuildTypeName(),
         2 * Integer.getInteger(runnerParameters.get(CodeDeployConstants.WAIT_TIMEOUT_SEC_PARAM), CodeDeployConstants.TEMP_CREDENTIALS_DURATION_SEC_DEFAULT),
         regionName
-      ))
+      ) :
+      new AWSClient(accessKeyId, secretAccessKey, regionName))
       .withDescription("TeamCity build " + runningBuild.getBuildTypeName() + " #" + runningBuild.getBuildNumber())
       .withListener(new AWSClient.Listener() {
         @Override
@@ -185,7 +185,7 @@ public class CodeDeployRunner implements AgentBuildRunner {
             }
           }
 
-          problem(getIdentity(timeoutSec, errorInfo, instancesStatus), timeoutSec == null? CodeDeployConstants.FAILURE_BUILD_PROBLEM_TYPE : CodeDeployConstants.TIMEOUT_BUILD_PROBLEM_TYPE, msg);
+          problem(getIdentity(timeoutSec, errorInfo, instancesStatus), timeoutSec == null ? CodeDeployConstants.FAILURE_BUILD_PROBLEM_TYPE : CodeDeployConstants.TIMEOUT_BUILD_PROBLEM_TYPE, msg);
 
           close(DEPLOY_APPLICATION);
         }

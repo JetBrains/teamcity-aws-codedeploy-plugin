@@ -81,7 +81,11 @@ public class AWSClient {
     final AssumeRoleRequest assumeRoleRequest = new AssumeRoleRequest().withRoleArn(iamRoleARN).withRoleSessionName(sessionName).withDurationSeconds(sessionDuration);
     if (StringUtil.isNotEmpty(externalID)) assumeRoleRequest.setExternalId(externalID);
 
-    final Credentials credentials = new AWSSecurityTokenServiceClient(getBasicCredentials(accessKeyId, secretAccessKey)).assumeRole(assumeRoleRequest).getCredentials();
+    final BasicAWSCredentials basicCredentials = getBasicCredentials(accessKeyId, secretAccessKey);
+    final Credentials credentials =
+      (basicCredentials == null ? new AWSSecurityTokenServiceClient() : new AWSSecurityTokenServiceClient(basicCredentials))
+        .assumeRole(assumeRoleRequest).getCredentials();
+
     return new BasicSessionCredentials(credentials.getAccessKeyId(), credentials.getSecretAccessKey(), credentials.getSessionToken());
   }
 

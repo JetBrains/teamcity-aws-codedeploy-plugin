@@ -53,6 +53,9 @@ public interface CodeDeployConstants {
   String ACCESS_KEYS_OPTION = "codedeploy_access_keys";
   String ACCESS_KEYS_LABEL = "Access keys";
 
+  String USE_DEFAULT_CREDENTIAL_PROVIDER_CHAIN_PARAM = "codedeploy_use_default_credential_provider_chain";
+  String USE_DEFAULT_CREDENTIAL_PROVIDER_CHAIN_LABEL = "Use default credential provider chain";
+
   String ACCESS_KEY_ID_PARAM = "codedeploy_access_key_id";
   String ACCESS_KEY_ID_LABEL = "Access key ID";
   String SECRET_ACCESS_KEY_PARAM = "codedeploy_secret_access_key";
@@ -88,8 +91,9 @@ public interface CodeDeployConstants {
   int WAIT_POLL_INTERVAL_SEC_DEFAULT = 20;
 
   Map<String, String> DEFAULTS = CollectionsUtil.asMap(
-    CREDENTIALS_TYPE_PARAM, TEMP_CREDENTIALS_OPTION,
+    CREDENTIALS_TYPE_PARAM, ACCESS_KEYS_OPTION,
     EXTERNAL_ID_PARAM, UUID.randomUUID().toString(), // see jetbrains.buildServer.runner.codedeploy.CodeDeployRunType#getDefaultRunnerProperties
-    WAIT_FLAG_PARAM, "true"
+    WAIT_FLAG_PARAM, "true",
+    USE_DEFAULT_CREDENTIAL_PROVIDER_CHAIN_PARAM, "false"
   );
 }
