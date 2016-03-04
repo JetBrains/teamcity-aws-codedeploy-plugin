@@ -53,8 +53,8 @@
     </tr>
     <tr id="${external_id_param}_row">
         <th><label for="${external_id_param}">${external_id_label}: </label></th>
-        <td><props:textProperty name="${external_id_param}" className="longField" maxlength="256" disabled="true"/>
-        <span class="smallNote">External ID to be used in role trust relationship condition</span><span class="error" id="error_${external_id_param}"></span>
+        <td><props:textProperty name="${external_id_param}" className="longField" maxlength="256"/>
+        <span class="smallNote">External ID is strongly recommended to be used in role trust relationship condition</span><span class="error" id="error_${external_id_param}"></span>
         </td>
     </tr>
     <tr>

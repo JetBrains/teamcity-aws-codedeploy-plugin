@@ -31,6 +31,9 @@
     <div class="parameter">
             ${iam_role_arn_label}: <strong><props:displayValue name="${iam_role_arn_param}" emptyValue="empty"/></strong>
     </div>
+    <div class="parameter">
+            ${external_id_label}: <strong><props:displayValue name="${external_id_param}" emptyValue="empty"/></strong>
+    </div>
 </c:if>
 
 <div class="parameter">

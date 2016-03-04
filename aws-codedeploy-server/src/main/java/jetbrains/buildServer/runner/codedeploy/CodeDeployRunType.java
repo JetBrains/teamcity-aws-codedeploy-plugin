@@ -65,7 +65,7 @@ public class CodeDeployRunType extends RunType {
     final Map<String, String> defaults = new HashMap<String, String>(CodeDeployConstants.DEFAULTS);
     final String serverUUID = myServerSettings.getServerUUID();
     if (StringUtil.isNotEmpty(serverUUID)) {
-      defaults.put(CodeDeployConstants.EXTERNAL_ID_PARAM, serverUUID);
+      defaults.put(CodeDeployConstants.EXTERNAL_ID_PARAM, "TeamCity-server-" + serverUUID);
     }
     return defaults;
   }
