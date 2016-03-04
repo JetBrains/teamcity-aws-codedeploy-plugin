@@ -25,7 +25,6 @@
     ${region_name_label}: <strong><props:displayValue name="${region_name_param}" emptyValue="empty"/></strong>
 </div>
 
-<c:set var="use_default" value="${propertiesBean.properties[use_default_cred_chain_param] eq 'true'}"/>
 <c:set var="cred_type" value="${propertiesBean.properties[credentials_type_param]}"/>
 
 <c:if test="${temp_credentials_option eq cred_type}">
@@ -38,11 +37,11 @@
     ${use_default_cred_chain_label}: <strong><props:displayCheckboxValue name="${use_default_cred_chain_param}"/></strong>
 </div>
 
-<c:if test="${not use_default}">
+<c:set var="use_default" value="${propertiesBean.properties[use_default_cred_chain_param]}"/>
+<c:if test="${empty use_default or ('false' eq use_default)}">
     <div class="parameter">
         ${access_key_id_label}: <strong><props:displayValue name="${access_key_id_param}" emptyValue="empty"/></strong>
     </div>
-    <
 </c:if>
 
 <div class="parameter">
