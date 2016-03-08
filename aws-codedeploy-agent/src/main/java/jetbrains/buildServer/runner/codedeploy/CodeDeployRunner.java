@@ -123,7 +123,7 @@ public class CodeDeployRunner implements AgentBuildRunner {
         regionName
       ) :
       new AWSClient(accessKeyId, secretAccessKey, regionName))
-      .withDescription("TeamCity build " + runningBuild.getBuildTypeName() + " #" + runningBuild.getBuildNumber())
+      .withDescription("TeamCity build \"" + runningBuild.getBuildTypeName() + "\" #" + runningBuild.getBuildNumber())
       .withListener(new AWSClient.Listener() {
         @Override
         void uploadRevisionStarted(@NotNull File revision, @NotNull String s3BucketName, @NotNull String key) {
