@@ -77,6 +77,9 @@ public interface CodeDeployConstants {
   String S3_BUCKET_NAME_PARAM = "codedeploy_s3_bucket_name";
   String S3_BUCKET_NAME_LABEL = "S3 bucket";
 
+  String S3_OBJECT_KEY_PARAM = "codedeploy_s3_object_key";
+  String S3_OBJECT_KEY_LABEL = "S3 object key";
+
   String APP_NAME_PARAM = "codedeploy_application_name";
   String APP_NAME_LABEL = "Application name";
   String REGION_NAME_PARAM = "codedeploy_region_name";

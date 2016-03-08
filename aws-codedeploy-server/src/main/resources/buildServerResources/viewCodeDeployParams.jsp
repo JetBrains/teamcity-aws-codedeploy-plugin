@@ -17,19 +17,17 @@
 <%@include file="paramsConstants.jspf"%>
 
 <c:set var="region" value="${allRegions[propertiesBean.properties[region_name_param]]}"/>
-
 <div class="parameter">
     ${region_name_label}: <strong><c:out value="${empty region ? 'empty' : region}"/></strong>
 </div>
 
 <c:set var="cred_type" value="${propertiesBean.properties[credentials_type_param]}"/>
-
 <c:if test="${temp_credentials_option eq cred_type}">
     <div class="parameter">
-            ${iam_role_arn_label}: <strong><props:displayValue name="${iam_role_arn_param}" emptyValue="empty"/></strong>
+            ${iam_role_arn_label}: <props:displayValue name="${iam_role_arn_param}" emptyValue="empty"/>
     </div>
     <div class="parameter">
-            ${external_id_label}: <strong><props:displayValue name="${external_id_param}" emptyValue="empty"/></strong>
+            ${external_id_label}: <props:displayValue name="${external_id_param}" emptyValue="empty"/>
     </div>
 </c:if>
 
@@ -40,28 +38,35 @@
 <c:set var="use_default" value="${propertiesBean.properties[use_default_cred_chain_param]}"/>
 <c:if test="${empty use_default or ('false' eq use_default)}">
     <div class="parameter">
-        ${access_key_id_label}: <strong><props:displayValue name="${access_key_id_param}" emptyValue="empty"/></strong>
+        ${access_key_id_label}: <props:displayValue name="${access_key_id_param}" emptyValue="empty"/>
     </div>
 </c:if>
 
 <div class="parameter">
-    ${revision_path_label}: <strong><props:displayValue name="${revision_path_param}" emptyValue="empty"/></strong>
+    ${revision_path_label}: <props:displayValue name="${revision_path_param}" emptyValue="empty"/>
 </div>
 
 <div class="parameter">
-    ${bucket_name_label}: <strong><props:displayValue name="${bucket_name_param}" emptyValue="empty"/></strong>
+    ${bucket_name_label}: <props:displayValue name="${bucket_name_param}" emptyValue="empty"/>
+</div>
+
+<c:set var="s3_object_key" value="${propertiesBean.properties[s3_object_key_param]}"/>
+<c:if test="${not empty s3_object_key}">
+    <div class="parameter">
+            ${s3_object_key_label}: <props:displayValue name="${s3_object_key_param}" emptyValue="empty"/>
+    </div>
+</c:if>
+
+<div class="parameter">
+    ${app_name_label}: <props:displayValue name="${app_name_param}" emptyValue="empty"/>
 </div>
 
 <div class="parameter">
-    ${app_name_label}: <strong><props:displayValue name="${app_name_param}" emptyValue="empty"/></strong>
+    ${dep_group_name_label}: <props:displayValue name="${dep_group_name_param}" emptyValue="empty"/>
 </div>
 
 <div class="parameter">
-    ${dep_group_name_label}: <strong><props:displayValue name="${dep_group_name_param}" emptyValue="empty"/></strong>
-</div>
-
-<div class="parameter">
-    ${dep_config_name_label}: <strong><props:displayValue name="${dep_config_name_param}" emptyValue="default"/></strong>
+    ${dep_config_name_label}: <props:displayValue name="${dep_config_name_param}" emptyValue="default"/>
 </div>
 
 <div class="parameter">
@@ -71,7 +76,7 @@
 <c:set var="wait_flag" value="${propertiesBean.properties[wait_flag_param]}"/>
 <c:if test="${empty wait_flag or ('true' eq wait_flag)}">
     <div class="parameter">
-        ${wait_timeout_label}: <strong><props:displayValue name="${wait_timeout_param}" emptyValue="empty"/></strong>
+        ${wait_timeout_label}: <props:displayValue name="${wait_timeout_param}" emptyValue="empty"/>
     </div>
 </c:if>
 

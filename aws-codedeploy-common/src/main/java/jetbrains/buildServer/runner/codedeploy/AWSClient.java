@@ -127,41 +127,42 @@ public class AWSClient {
    *
    * @param revision             application revision
    * @param s3BucketName         valid S3 bucket name
+   * @param s3ObjectKey          valid S3 object key
    * @param applicationName      CodeDeploy application name
    * @param deploymentGroupName  deployment group name
    * @param deploymentConfigName deployment configuration name or null for default deployment configuration
    * @param waitTimeoutSec       seconds to wait for the created deployment finish or fail
    * @param waitIntervalSec      seconds between polling CodeDeploy for the created deployment status
    */
-  public void uploadRegisterDeployRevisionAndWait(@NotNull File revision, @NotNull String s3BucketName,
+  public void uploadRegisterDeployRevisionAndWait(@NotNull File revision, @NotNull String s3BucketName, @NotNull String s3ObjectKey,
                                                   @NotNull String applicationName,
                                                   @NotNull String deploymentGroupName,
                                                   @Nullable String deploymentConfigName,
                                                   int waitTimeoutSec,
                                                   int waitIntervalSec) {
-    uploadRegisterDeployWait(revision, s3BucketName, applicationName, true, deploymentGroupName, deploymentConfigName, true, waitTimeoutSec, waitIntervalSec);
+    uploadRegisterDeployWait(revision, s3BucketName, s3ObjectKey, applicationName, true, deploymentGroupName, deploymentConfigName, true, waitTimeoutSec, waitIntervalSec);
   }
 
 
   /**
    * The same as uploadRegisterDeployRevisionAndWait but without waiting
    */
-  public void uploadRegisterAndDeployRevision(@NotNull File revision, @NotNull String s3BucketName,
+  public void uploadRegisterAndDeployRevision(@NotNull File revision, @NotNull String s3BucketName, @NotNull String s3ObjectKey,
                                               @NotNull String applicationName,
                                               @NotNull String deploymentGroupName,
                                               @Nullable String deploymentConfigName) {
-    uploadRegisterDeployWait(revision, s3BucketName, applicationName, true, deploymentGroupName, deploymentConfigName, false, null, null);
+    uploadRegisterDeployWait(revision, s3BucketName, s3ObjectKey, applicationName, true, deploymentGroupName, deploymentConfigName, false, null, null);
   }
 
   /**
    * The same as uploadRegisterAndDeployRevision but without creating deployment
    */
-  public void uploadAndRegisterRevision(@NotNull File revision, @NotNull String s3BucketName, @NotNull String applicationName) {
-    uploadRegisterDeployWait(revision, s3BucketName, applicationName, false, null, null, false, null, null);
+  public void uploadAndRegisterRevision(@NotNull File revision, @NotNull String s3BucketName, @NotNull String s3ObjectKey, @NotNull String applicationName) {
+    uploadRegisterDeployWait(revision, s3BucketName, s3ObjectKey, applicationName, false, null, null, false, null, null);
   }
 
   @SuppressWarnings("ConstantConditions")
-  private void uploadRegisterDeployWait(@NotNull File revision, @NotNull String s3BucketName,
+  private void uploadRegisterDeployWait(@NotNull File revision, @NotNull String s3BucketName, @NotNull String s3ObjectKey,
                                         @NotNull String applicationName,
                                         boolean deploy,
                                         @Nullable String deploymentGroupName,
@@ -169,10 +170,9 @@ public class AWSClient {
                                         boolean wait,
                                         @Nullable Integer waitTimeoutSec,
                                         @Nullable Integer waitIntervalSec) {
-    final String key = revision.getName();
     try {
 
-      final RevisionLocation revisionLocation = uploadRevision(revision, s3BucketName, key);
+      final RevisionLocation revisionLocation = uploadRevision(revision, s3BucketName, s3ObjectKey);
       registerRevision(revisionLocation, applicationName);
 
       if (deploy) {

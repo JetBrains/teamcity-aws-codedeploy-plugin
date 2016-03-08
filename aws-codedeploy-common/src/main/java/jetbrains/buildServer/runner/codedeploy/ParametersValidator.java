@@ -116,6 +116,11 @@ public final class ParametersValidator {
       invalids.put(CodeDeployConstants.S3_BUCKET_NAME_PARAM, CodeDeployConstants.S3_BUCKET_NAME_LABEL + " mustn't contain / characters");
     }
 
+    final String s3ObjectKey = runnerParams.get(CodeDeployConstants.S3_OBJECT_KEY_PARAM);
+    if (StringUtil.isNotEmpty(s3ObjectKey)) {
+      validateS3Key(invalids, s3ObjectKey, CodeDeployConstants.S3_OBJECT_KEY_PARAM, CodeDeployConstants.S3_OBJECT_KEY_LABEL, runtime);
+    }
+
     if (StringUtil.isEmptyOrSpaces(runnerParams.get(CodeDeployConstants.APP_NAME_PARAM))) {
       invalids.put(CodeDeployConstants.APP_NAME_PARAM, CodeDeployConstants.APP_NAME_LABEL + " mustn't be empty");
     }
@@ -145,6 +150,14 @@ public final class ParametersValidator {
         }
       } catch (NumberFormatException e) {
         invalids.put(key, name + " must be a positive integer value");
+      }
+    }
+  }
+
+  private static void validateS3Key(@NotNull Map<String, String> invalids, @NotNull String param, @NotNull String key, @NotNull String name, boolean runtime) {
+    if (!isReference(param, runtime)) {
+      if (!param.matches("[a-zA-Z_0-9!\\-\\.*'()/]*")) {
+        invalids.put(key, name + " must contain only safe characters");
       }
     }
   }

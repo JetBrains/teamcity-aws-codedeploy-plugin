@@ -52,6 +52,9 @@
 <c:set var="bucket_name_param" value="<%=CodeDeployConstants.S3_BUCKET_NAME_PARAM%>"/>
 <c:set var="bucket_name_label" value="<%=CodeDeployConstants.S3_BUCKET_NAME_LABEL%>"/>
 
+<c:set var="s3_object_key_param" value="<%=CodeDeployConstants.S3_OBJECT_KEY_PARAM%>"/>
+<c:set var="s3_object_key_label" value="<%=CodeDeployConstants.S3_OBJECT_KEY_LABEL%>"/>
+
 <c:set var="app_name_param" value="<%=CodeDeployConstants.APP_NAME_PARAM%>"/>
 <c:set var="app_name_label" value="<%=CodeDeployConstants.APP_NAME_LABEL%>"/>
 

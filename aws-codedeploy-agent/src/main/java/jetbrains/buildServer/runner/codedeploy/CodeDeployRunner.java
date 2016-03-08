@@ -53,6 +53,9 @@ public class CodeDeployRunner implements AgentBuildRunner {
         final File revision = FileUtil.resolvePath(runningBuild.getCheckoutDirectory(), runnerParameters.get(CodeDeployConstants.READY_REVISION_PATH_PARAM));
 
         final String s3BucketName = runnerParameters.get(CodeDeployConstants.S3_BUCKET_NAME_PARAM);
+        final String s3ObjectKey =
+          runnerParameters.containsKey(CodeDeployConstants.S3_OBJECT_KEY_PARAM) ? runnerParameters.get(CodeDeployConstants.S3_OBJECT_KEY_PARAM) : revision.getName();
+
         final String applicationName = runnerParameters.get(CodeDeployConstants.APP_NAME_PARAM);
         final String deploymentGroupName = runnerParameters.get(CodeDeployConstants.DEPLOYMENT_GROUP_NAME_PARAM);
         final String deploymentConfigName = StringUtil.nullIfEmpty(runnerParameters.get(CodeDeployConstants.DEPLOYMENT_CONFIG_NAME_PARAM));
@@ -61,12 +64,12 @@ public class CodeDeployRunner implements AgentBuildRunner {
         if (StringUtil.isEmptyOrSpaces(waitParam) || Boolean.parseBoolean(waitParam)) {
           awsClient.uploadRegisterDeployRevisionAndWait(
             revision,
-            s3BucketName, applicationName,
-            deploymentGroupName, deploymentConfigName,
+            s3BucketName, s3ObjectKey,
+            applicationName, deploymentGroupName, deploymentConfigName,
             Integer.parseInt(runnerParameters.get(CodeDeployConstants.WAIT_TIMEOUT_SEC_PARAM)),
             getIntegerOrDefault(context.getConfigParameters().get(CodeDeployConstants.WAIT_POLL_INTERVAL_SEC_CONFIG_PARAM), CodeDeployConstants.WAIT_POLL_INTERVAL_SEC_DEFAULT));
         } else {
-          awsClient.uploadRegisterAndDeployRevision(revision, s3BucketName, applicationName, deploymentGroupName, deploymentConfigName);
+          awsClient.uploadRegisterAndDeployRevision(revision, s3BucketName, s3ObjectKey, applicationName, deploymentGroupName, deploymentConfigName);
         }
       }
 

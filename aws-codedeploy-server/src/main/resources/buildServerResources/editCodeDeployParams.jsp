@@ -93,6 +93,12 @@
             <span class="smallNote">Existing S3 bucket name</span><span class="error" id="error_${bucket_name_param}"></span>
         </td>
     </tr>
+    <tr class="advancedSetting">
+        <th><label for="${s3_object_key_param}">${s3_object_key_label}: </label></th>
+        <td><props:textProperty name="${s3_object_key_param}" className="longField" maxlength="256"/>
+            <span class="smallNote">Leave empty to use application revision archive name as a key</span><span class="error" id="error_${s3_object_key_param}"></span>
+        </td>
+    </tr>
 </l:settingsGroup>
 
 <l:settingsGroup title="CodeDeploy Application">
