@@ -100,4 +100,6 @@ public interface CodeDeployConstants {
     WAIT_FLAG_PARAM, "true",
     USE_DEFAULT_CREDENTIAL_PROVIDER_CHAIN_PARAM, "false"
   );
+
+  String STATUS_IS_UNKNOWN = "status is unknown";
 }

@@ -328,7 +328,7 @@ public class AWSClient {
     if (dInfo.getStatus() == null || dInfo.getDeploymentOverview() == null) return null;
 
     final Listener.InstancesStatus instancesStatus = new Listener.InstancesStatus();
-    instancesStatus.status = dInfo.getStatus();
+    instancesStatus.status = getHumanReadableStatus(dInfo.getStatus());
 
     final DeploymentOverview overview = dInfo.getDeploymentOverview();
     instancesStatus.succeeded = overview.getSucceeded();
@@ -338,6 +338,17 @@ public class AWSClient {
     instancesStatus.pending = overview.getPending();
 
     return instancesStatus;
+  }
+
+  @NotNull
+  private String getHumanReadableStatus(@NotNull String status) {
+    if (DeploymentStatus.Created.toString().equals(status)) return "created";
+    if (DeploymentStatus.Queued.toString().equals(status)) return "queued";
+    if (DeploymentStatus.InProgress.toString().equals(status)) return "in progress";
+    if (DeploymentStatus.Succeeded.toString().equals(status)) return "succeeded";
+    if (DeploymentStatus.Failed.toString().equals(status)) return "failed";
+    if (DeploymentStatus.Stopped.toString().equals(status)) return "stopped";
+    return CodeDeployConstants.STATUS_IS_UNKNOWN;
   }
 
   @Contract("null -> null")

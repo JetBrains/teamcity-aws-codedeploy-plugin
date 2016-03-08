@@ -165,15 +165,15 @@ public class CodeDeployRunner implements AgentBuildRunner {
 
         @Override
         void deploymentInProgress(@NotNull String deploymentId, @Nullable InstancesStatus instancesStatus) {
-          debug("Deployment " + deploymentDescription(instancesStatus, true));
+          progress(deploymentDescription(instancesStatus, false));
         }
 
         @Override
         void deploymentFailed(@NotNull String deploymentId, @Nullable Integer timeoutSec, @Nullable ErrorInfo errorInfo, @Nullable InstancesStatus instancesStatus) {
-          String msg = "Deployment" + (timeoutSec == null ? " " : " timeout " + timeoutSec + "sec exceeded, ");
+          String msg = (timeoutSec == null ? "" : "Timeout " + timeoutSec + "sec exceeded, ");
 
-          err(msg + deploymentDescription(instancesStatus, true));
-          msg += deploymentDescription(instancesStatus, false);
+          err(msg + deploymentDescription(instancesStatus, true).toLowerCase());
+          msg += deploymentDescription(instancesStatus, false).toLowerCase();
 
           if (errorInfo != null) {
             if (StringUtil.isNotEmpty(errorInfo.message)) {
@@ -192,10 +192,8 @@ public class CodeDeployRunner implements AgentBuildRunner {
 
         @Override
         void deploymentSucceeded(@NotNull String deploymentId, @Nullable InstancesStatus instancesStatus) {
-          final String msg = "Deployment " + deploymentId + " ";
-
-          log(msg + deploymentDescription(instancesStatus, true));
-          statusText(msg + deploymentDescription(instancesStatus, false));
+          log(deploymentDescription(instancesStatus, true));
+          statusText(deploymentDescription(instancesStatus, false));
 
           close(DEPLOY_APPLICATION);
         }
@@ -218,11 +216,11 @@ public class CodeDeployRunner implements AgentBuildRunner {
 
         @NotNull
         private String deploymentDescription(@Nullable InstancesStatus instancesStatus, boolean detailed) {
-          final StringBuilder sb = new StringBuilder("status is");
+          final StringBuilder sb = new StringBuilder("Deployment ");
 
-          if (instancesStatus == null) sb.append(" unknown");
+          if (instancesStatus == null) sb.append(CodeDeployConstants.STATUS_IS_UNKNOWN);
           else {
-            sb.append(" ").append(StringUtil.isEmptyOrSpaces(instancesStatus.status) ? "unknown" : instancesStatus.status);
+            sb.append(StringUtil.isEmptyOrSpaces(instancesStatus.status) ? CodeDeployConstants.STATUS_IS_UNKNOWN : instancesStatus.status);
             sb.append(", instances succeeded: ").append(instancesStatus.succeeded);
             if (instancesStatus.failed > 0 || detailed) sb.append(", failed: ").append(instancesStatus.failed);
             if (instancesStatus.pending > 0 || detailed) sb.append(", pending: ").append(instancesStatus.pending);
@@ -285,6 +283,10 @@ public class CodeDeployRunner implements AgentBuildRunner {
 
         private void debug(@NotNull String message) {
           buildLogger.message(String.format("##teamcity[message text='%s' tc:tags='tc:internal']", escape(message)));
+        }
+
+        private void progress(@NotNull String message) {
+          buildLogger.message(String.format("##teamcity[progressMessage '%s']", escape(message)));
         }
 
         private void problem(int identity, @NotNull String type, @NotNull String descr) {
