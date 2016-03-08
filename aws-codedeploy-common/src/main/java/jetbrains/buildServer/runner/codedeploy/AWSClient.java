@@ -301,12 +301,12 @@ public class AWSClient {
         "Request ID:          " + ase.getRequestId();
 
       myListener.exception(
-        "AWS request failure: " + ase.getErrorMessage(),
+        "AWS error: " + ase.getErrorMessage(),
         details, CodeDeployConstants.SERVICE_PROBLEM_TYPE,
         ase.getServiceName() + ase.getErrorType().name() + String.valueOf(ase.getStatusCode()) + ase.getErrorCode());
 
     } else if (t instanceof AmazonClientException) {
-      myListener.exception("Internal error while trying to communicate with AWS: " + t.getMessage(), null, CodeDeployConstants.CLIENT_PROBLEM_TYPE, null);
+      myListener.exception("Error while trying to communicate with AWS: " + t.getMessage(), null, CodeDeployConstants.CLIENT_PROBLEM_TYPE, null);
     } else {
       myListener.exception("Unexpected error during deployment: " + t.getMessage(), null, null, null);
     }
