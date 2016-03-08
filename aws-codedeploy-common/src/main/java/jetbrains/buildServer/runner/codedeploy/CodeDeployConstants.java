@@ -34,8 +34,12 @@ public interface CodeDeployConstants {
 
 
 
+  String EDIT_PARAMS_HTML = "editCodeDeployParams.html";
+  String VIEW_PARAMS_HTML = "viewCodeDeployParams.html";
   String EDIT_PARAMS_JSP = "editCodeDeployParams.jsp";
   String VIEW_PARAMS_JSP = "viewCodeDeployParams.jsp";
+
+  String ALL_REGIONS = "allRegions";
 
 
   String TIMEOUT_BUILD_PROBLEM_TYPE = "CODEDEPLOY_TIMEOUT";

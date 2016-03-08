@@ -14,15 +14,12 @@
   ~ limitations under the License.
   --%>
 
-<%@ taglib prefix="props" tagdir="/WEB-INF/tags/props" %>
-<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
-
-<jsp:useBean id="propertiesBean" scope="request" type="jetbrains.buildServer.controllers.BasePropertiesBean"/>
-
 <%@include file="paramsConstants.jspf"%>
 
+<c:set var="region" value="${allRegions[propertiesBean.properties[region_name_param]]}"/>
+
 <div class="parameter">
-    ${region_name_label}: <strong><props:displayValue name="${region_name_param}" emptyValue="empty"/></strong>
+    ${region_name_label}: <strong><c:out value="${empty region ? 'empty' : region}"/></strong>
 </div>
 
 <c:set var="cred_type" value="${propertiesBean.properties[credentials_type_param]}"/>

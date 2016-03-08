@@ -16,14 +16,19 @@
 
 package jetbrains.buildServer.runner.codedeploy;
 
+import jetbrains.buildServer.controllers.BaseController;
 import jetbrains.buildServer.serverSide.*;
 import jetbrains.buildServer.util.CollectionsUtil;
 import jetbrains.buildServer.util.Converter;
 import jetbrains.buildServer.util.StringUtil;
 import jetbrains.buildServer.web.openapi.PluginDescriptor;
+import jetbrains.buildServer.web.openapi.WebControllerManager;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.springframework.web.servlet.ModelAndView;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -33,14 +38,40 @@ import java.util.Map;
  */
 public class CodeDeployRunType extends RunType {
   @NotNull
-  private final PluginDescriptor myDescriptor;
+  private final String myEditParamsPath;
+  @NotNull
+  private final String myViewParamsPath;
   @NotNull
   private final ServerSettings myServerSettings;
 
-  public CodeDeployRunType(@NotNull RunTypeRegistry registry, @NotNull PluginDescriptor descriptor, @NotNull ServerSettings serverSettings) {
+  public CodeDeployRunType(@NotNull RunTypeRegistry registry,
+                           @NotNull final PluginDescriptor descriptor,
+                           @NotNull WebControllerManager controllerManager,
+                           @NotNull ServerSettings serverSettings) {
     registry.registerRunType(this);
-    myDescriptor = descriptor;
+
     myServerSettings = serverSettings;
+
+    myEditParamsPath = registerController(descriptor, controllerManager, CodeDeployConstants.EDIT_PARAMS_JSP, CodeDeployConstants.EDIT_PARAMS_HTML);
+    myViewParamsPath = registerController(descriptor, controllerManager, CodeDeployConstants.VIEW_PARAMS_JSP, CodeDeployConstants.VIEW_PARAMS_HTML);
+  }
+
+  @NotNull
+  private static String registerController(@NotNull final PluginDescriptor descriptor,
+                                           @NotNull WebControllerManager controllerManager,
+                                           @NotNull final String jspPath,
+                                           @NotNull String htmlPath) {
+    final String resolvedHtmlPath = descriptor.getPluginResourcesPath(htmlPath);
+    controllerManager.registerController(resolvedHtmlPath, new BaseController() {
+      @Nullable
+      @Override
+      protected ModelAndView doHandle(@NotNull HttpServletRequest request, @NotNull HttpServletResponse response) throws Exception {
+        final ModelAndView mv = new ModelAndView(descriptor.getPluginResourcesPath(jspPath));
+        mv.getModel().put(CodeDeployConstants.ALL_REGIONS, AWSUtil.getAllRegions());
+        return mv;
+      }
+    });
+    return resolvedHtmlPath;
   }
 
   @Nullable
@@ -91,13 +122,13 @@ public class CodeDeployRunType extends RunType {
   @Nullable
   @Override
   public String getEditRunnerParamsJspFilePath() {
-    return myDescriptor.getPluginResourcesPath(CodeDeployConstants.EDIT_PARAMS_JSP);
+    return myEditParamsPath;
   }
 
   @Nullable
   @Override
   public String getViewRunnerParamsJspFilePath() {
-    return myDescriptor.getPluginResourcesPath(CodeDeployConstants.VIEW_PARAMS_JSP);
+    return myViewParamsPath;
   }
 
   @SuppressWarnings("StringBufferReplaceableByString")

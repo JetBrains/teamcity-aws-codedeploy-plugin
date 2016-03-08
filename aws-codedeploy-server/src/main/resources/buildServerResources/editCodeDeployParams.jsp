@@ -24,8 +24,13 @@
 
 <tr>
     <th><label for="${region_name_param}">${region_name_label}: <l:star/></label></th>
-    <td><props:textProperty name="${region_name_param}" maxlength="256"/>
-        <span class="smallNote">e.g. "us-east-1", "eu-west-1"</span><span class="error" id="error_${region_name_param}" ?></span>
+    <td><props:selectProperty name="${region_name_param}" className="longField" enableFilter="true">
+            <props:option value="${null}">-- Select region --</props:option>
+            <c:forEach var="region" items="${allRegions.keySet()}">
+                <props:option value="${region}"><c:out value="${allRegions[region]}"/></props:option>
+            </c:forEach>
+        </props:selectProperty>
+        <span class="smallNote">All deployment resources must be located in this region</span><span class="error" id="error_${region_name_param}"></span>
     </td>
 </tr>
 
