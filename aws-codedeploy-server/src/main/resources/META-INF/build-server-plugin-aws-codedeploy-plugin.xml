@@ -21,4 +21,5 @@
        default-autowire="constructor">
 
     <bean id="codeDeployRunnerRunType" class="jetbrains.buildServer.runner.codedeploy.CodeDeployRunType"/>
+    <bean id="codeDeployBuildProblemTypes" class="jetbrains.buildServer.runner.codedeploy.CodeDeployBuildProblemTypes"/>
 </beans>
