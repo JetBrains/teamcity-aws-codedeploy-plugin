@@ -11,9 +11,9 @@ import org.jetbrains.annotations.NotNull;
 public class CodeDeployBuildProblemTypes {
 
   public CodeDeployBuildProblemTypes(@NotNull ExtensionHolder extensionHolder) {
-    register(CodeDeployConstants.TIMEOUT_BUILD_PROBLEM_TYPE, "Deployment timeout", extensionHolder);
-    register(CodeDeployConstants.FAILURE_BUILD_PROBLEM_TYPE, "Deployment failure", extensionHolder);
-    register(CodeDeployConstants.EXCEPTION_BUILD_PROBLEM_TYPE, "Deployment unexpected failure", extensionHolder);
+    register(CodeDeployConstants.TIMEOUT_BUILD_PROBLEM_TYPE, "CodeDeploy timeout", extensionHolder);
+    register(CodeDeployConstants.FAILURE_BUILD_PROBLEM_TYPE, "CodeDeploy failure", extensionHolder);
+    register(CodeDeployConstants.EXCEPTION_BUILD_PROBLEM_TYPE, "AWS unexpected exception", extensionHolder);
     register(CodeDeployConstants.SERVICE_PROBLEM_TYPE, "AWS service exception", extensionHolder);
     register(CodeDeployConstants.CLIENT_PROBLEM_TYPE, "AWS client exception", extensionHolder);
   }
