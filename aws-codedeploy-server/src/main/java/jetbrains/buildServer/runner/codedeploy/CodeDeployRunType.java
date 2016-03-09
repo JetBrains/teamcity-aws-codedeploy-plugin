@@ -45,7 +45,7 @@ public class CodeDeployRunType extends RunType {
   private final ServerSettings myServerSettings;
 
   public CodeDeployRunType(@NotNull RunTypeRegistry registry,
-                           @NotNull final PluginDescriptor descriptor,
+                           @NotNull PluginDescriptor descriptor,
                            @NotNull WebControllerManager controllerManager,
                            @NotNull ServerSettings serverSettings) {
     registry.registerRunType(this);
