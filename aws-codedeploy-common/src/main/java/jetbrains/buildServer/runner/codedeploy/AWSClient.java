@@ -307,14 +307,14 @@ public class AWSClient {
         "Request ID:          " + ase.getRequestId();
 
       myListener.exception(
-        "AWS error: " + ase.getErrorMessage(),
+        "AWS error: " + removeTrailingDot(ase.getErrorMessage()),
         details, CodeDeployConstants.SERVICE_PROBLEM_TYPE,
         ase.getServiceName() + ase.getErrorType().name() + String.valueOf(ase.getStatusCode()) + ase.getErrorCode());
 
     } else if (t instanceof AmazonClientException) {
-      myListener.exception("Error while trying to communicate with AWS: " + t.getMessage(), null, CodeDeployConstants.CLIENT_PROBLEM_TYPE, null);
+      myListener.exception("Error while trying to communicate with AWS: " + removeTrailingDot(t.getMessage()), null, CodeDeployConstants.CLIENT_PROBLEM_TYPE, null);
     } else {
-      myListener.exception("Unexpected error during deployment: " + t.getMessage(), null, null, null);
+      myListener.exception("Unexpected error during deployment: " + removeTrailingDot(t.getMessage()), null, null, null);
     }
   }
 
@@ -366,9 +366,15 @@ public class AWSClient {
     if (errorInformation == null) return null;
 
     final Listener.ErrorInfo errorInfo = new Listener.ErrorInfo();
-    errorInfo.message = errorInformation.getMessage();
+    errorInfo.message = removeTrailingDot(errorInformation.getMessage());
     errorInfo.code = errorInformation.getCode();
     return errorInfo;
+  }
+
+  @Contract("null -> null")
+  @Nullable
+  private String removeTrailingDot(@Nullable String msg) {
+    return (msg != null && msg.endsWith(".")) ? msg.substring(0, msg.length() - 1) : msg;
   }
 
   public static class Listener {
