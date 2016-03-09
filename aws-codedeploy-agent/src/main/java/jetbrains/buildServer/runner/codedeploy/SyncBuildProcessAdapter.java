@@ -18,76 +18,48 @@ package jetbrains.buildServer.runner.codedeploy;
 
 import jetbrains.buildServer.RunBuildException;
 import jetbrains.buildServer.agent.BuildFinishedStatus;
-import jetbrains.buildServer.agent.BuildProcessAdapter;
-import jetbrains.buildServer.agent.BuildProgressLogger;
-import jetbrains.buildServer.log.Loggers;
+import jetbrains.buildServer.agent.BuildProcess;
 import org.jetbrains.annotations.NotNull;
+
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * @author vbedrosova
- * a copy of jetbrains.buildServer.deployer.agent.SyncBuildProcessAdapter in teamcity-deployer-plugin
  */
-public abstract class SyncBuildProcessAdapter extends BuildProcessAdapter {
-  protected final BuildProgressLogger myLogger;
-  private volatile boolean hasFinished;
-  private volatile boolean hasFailed;
-  private volatile boolean isInterrupted;
+public abstract class SyncBuildProcessAdapter implements BuildProcess {
+  @NotNull
+  private final AtomicBoolean myIsInterrupted = new AtomicBoolean();
+  @NotNull
+  private final AtomicBoolean myIsFinished = new AtomicBoolean();
 
-
-  public SyncBuildProcessAdapter(@NotNull final BuildProgressLogger logger) {
-    myLogger = logger;
-    hasFinished = false;
-    hasFailed = false;
+  public final boolean isInterrupted() {
+    return myIsInterrupted.get();
   }
 
-
-  @Override
-  public void interrupt() {
-    isInterrupted = true;
+  public final boolean isFinished() {
+    return myIsFinished.get();
   }
 
-  @Override
-  public boolean isInterrupted() {
-    return isInterrupted;
+  public final void interrupt() {
+    myIsInterrupted.set(true);
+    interruptImpl();
   }
 
-  @Override
-  public boolean isFinished() {
-    return hasFinished;
+  public void start() throws RunBuildException { }
+
+  @NotNull
+  public final BuildFinishedStatus waitFor() throws RunBuildException {
+    try {
+      if (isInterrupted()) return BuildFinishedStatus.INTERRUPTED;
+      final BuildFinishedStatus status = runImpl();
+      if (isInterrupted()) return BuildFinishedStatus.INTERRUPTED;
+      return status;
+    } finally {
+      myIsFinished.set(true);
+    }
   }
 
   @NotNull
-  @Override
-  public BuildFinishedStatus waitFor() throws RunBuildException {
-    while (!isInterrupted() && !hasFinished) {
-      try {
-        Thread.sleep(1000);
-      } catch (InterruptedException e) {
-        throw new RunBuildException(e);
-      }
-    }
-    return hasFinished ?
-      hasFailed ? BuildFinishedStatus.FINISHED_FAILED :
-        BuildFinishedStatus.FINISHED_SUCCESS :
-      BuildFinishedStatus.INTERRUPTED;
-  }
-
-  @Override
-  public void start() throws RunBuildException {
-    try {
-      runProcess();
-    } catch (RunBuildException e) {
-      myLogger.buildFailureDescription(e.getMessage());
-      Loggers.AGENT.error(e);
-      hasFailed = true;
-    } finally {
-      hasFinished = true;
-    }
-  }
-
-  protected abstract void runProcess() throws RunBuildException;
-
-  protected void checkIsInterrupted() throws UploadInterruptedException {
-    if (isInterrupted()) throw new UploadInterruptedException();
-  }
+  protected abstract BuildFinishedStatus runImpl() throws RunBuildException;
+  protected void interruptImpl() { }
 }

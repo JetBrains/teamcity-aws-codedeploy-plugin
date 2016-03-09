@@ -59,7 +59,13 @@ public class AWSClient {
                    @Nullable String accessKeyId, @Nullable String secretAccessKey,
                    @NotNull String sessionName, int sessionDuration,
                    @NotNull String regionName) {
-    this(getTempCredentials(iamRoleARN, externalID, accessKeyId, secretAccessKey, patchSessionName(sessionName), sessionDuration), getRegion(regionName));
+    this(new LazyCredentials() {
+      @NotNull
+      @Override
+      protected AWSCredentials createCredentials() {
+        return getTempCredentials(iamRoleARN, externalID, accessKeyId, secretAccessKey, patchSessionName(sessionName), sessionDuration);
+      }
+    }, getRegion(regionName));
   }
 
   @NotNull
@@ -394,6 +400,17 @@ public class AWSClient {
       @Nullable
       String message;
     }
+  }
+
+  private static abstract class LazyCredentials implements AWSCredentials {
+    @Nullable private AWSCredentials myDelegate = null;
+    @Override public String getAWSAccessKeyId() { return getDelegate().getAWSAccessKeyId(); }
+    @Override public String getAWSSecretKey() { return getDelegate().getAWSSecretKey(); }
+    @NotNull private AWSCredentials getDelegate() {
+      if (myDelegate == null) myDelegate = createCredentials();
+      return myDelegate;
+    }
+    @NotNull protected abstract AWSCredentials createCredentials();
   }
 
   //  @NotNull
