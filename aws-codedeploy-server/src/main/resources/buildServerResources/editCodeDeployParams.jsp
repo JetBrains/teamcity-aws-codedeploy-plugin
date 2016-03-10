@@ -26,7 +26,7 @@
                 <props:option value="${region}"><c:out value="${allRegions[region]}"/></props:option>
             </c:forEach>
         </props:selectProperty>
-        <span class="smallNote">All deployment resources must be located in this region</span><span class="error" id="error_${region_name_param}"></span>
+        <span class="smallNote">All CodeDeploy and S3 resources must be located in this region</span><span class="error" id="error_${region_name_param}"></span>
     </td>
 </tr>
 
