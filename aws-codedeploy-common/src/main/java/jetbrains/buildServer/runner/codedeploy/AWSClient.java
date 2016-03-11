@@ -281,8 +281,7 @@ public class AWSClient {
     final S3Location s3Location = revisionLocation.getS3Location();
     myListener.registerRevisionStarted(applicationName, s3Location.getBucket(), s3Location.getKey(), s3Location.getBundleType(), s3Location.getVersion());
 
-    final AmazonCodeDeployClient client = createCodeDeployClient();
-    client.registerApplicationRevision(
+    createCodeDeployClient().registerApplicationRevision(
       new RegisterApplicationRevisionRequest()
         .withRevision(revisionLocation)
         .withApplicationName(applicationName)
