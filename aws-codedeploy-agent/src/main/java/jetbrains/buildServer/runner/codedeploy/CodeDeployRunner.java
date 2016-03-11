@@ -41,6 +41,8 @@ public class CodeDeployRunner implements AgentBuildRunner {
       protected BuildFinishedStatus runImpl() throws RunBuildException {
 
         final Map<String, String> runnerParameters = validateParams();
+        final Map<String, String> configParameters = context.getConfigParameters();
+
         final AtomicBoolean problemOccurred = new AtomicBoolean();
 
         final AWSClient awsClient = createAWSClient(runnerParameters, runningBuild).withListener(
@@ -52,26 +54,45 @@ public class CodeDeployRunner implements AgentBuildRunner {
             }
           });
 
-        final File revision = FileUtil.resolvePath(runningBuild.getCheckoutDirectory(), runnerParameters.get(CodeDeployConstants.READY_REVISION_PATH_PARAM));
+        final boolean isUploadStepEnabled = CodeDeployConstants.isUploadStepEnabled(runnerParameters);
+        final boolean isRegisterStepEnabled = CodeDeployConstants.isRegisterStepEnabled(runnerParameters);
+        final boolean isDeployStepEnabled = CodeDeployConstants.isDeployStepEnabled(runnerParameters);
 
+        final String revisionPath = runnerParameters.get(CodeDeployConstants.READY_REVISION_PATH_PARAM);
         final String s3BucketName = runnerParameters.get(CodeDeployConstants.S3_BUCKET_NAME_PARAM);
-        final String s3ObjectKey =
-          runnerParameters.containsKey(CodeDeployConstants.S3_OBJECT_KEY_PARAM) ? runnerParameters.get(CodeDeployConstants.S3_OBJECT_KEY_PARAM) : revision.getName();
+
+        String s3ObjectKey = runnerParameters.get(CodeDeployConstants.S3_OBJECT_KEY_PARAM);
+        if (isUploadStepEnabled && StringUtil.isEmptyOrSpaces(s3ObjectKey)) {
+          s3ObjectKey = new File(revisionPath).getName();
+        }
+
+        if (isUploadStepEnabled) {
+          awsClient.uploadRevision(FileUtil.resolvePath(runningBuild.getCheckoutDirectory(), revisionPath), s3BucketName, s3ObjectKey);
+        }
 
         final String applicationName = runnerParameters.get(CodeDeployConstants.APP_NAME_PARAM);
-        final String deploymentGroupName = runnerParameters.get(CodeDeployConstants.DEPLOYMENT_GROUP_NAME_PARAM);
-        final String deploymentConfigName = StringUtil.nullIfEmpty(runnerParameters.get(CodeDeployConstants.DEPLOYMENT_CONFIG_NAME_PARAM));
+        final String bundleType = AWSClient.getBundleType(s3ObjectKey);
+        final String s3ObjectVersion = StringUtil.nullIfEmpty(configParameters.get(CodeDeployConstants.S3_OBJECT_VERSION_CONFIG_PARAM));
 
-        final String waitParam = runnerParameters.get(CodeDeployConstants.WAIT_FLAG_PARAM);
-        if (StringUtil.isEmptyOrSpaces(waitParam) || Boolean.parseBoolean(waitParam)) {
-          awsClient.uploadRegisterDeployRevisionAndWait(
-            revision,
-            s3BucketName, s3ObjectKey,
-            applicationName, deploymentGroupName, deploymentConfigName,
-            Integer.parseInt(runnerParameters.get(CodeDeployConstants.WAIT_TIMEOUT_SEC_PARAM)),
-            getIntegerOrDefault(context.getConfigParameters().get(CodeDeployConstants.WAIT_POLL_INTERVAL_SEC_CONFIG_PARAM), CodeDeployConstants.WAIT_POLL_INTERVAL_SEC_DEFAULT));
-        } else {
-          awsClient.uploadRegisterAndDeployRevision(revision, s3BucketName, s3ObjectKey, applicationName, deploymentGroupName, deploymentConfigName);
+        if (isRegisterStepEnabled) {
+          awsClient.registerRevision(s3BucketName, s3ObjectKey, bundleType, s3ObjectVersion, applicationName);
+        }
+
+        if (isDeployStepEnabled) {
+          final String deploymentGroupName = runnerParameters.get(CodeDeployConstants.DEPLOYMENT_GROUP_NAME_PARAM);
+          final String deploymentConfigName = StringUtil.nullIfEmpty(runnerParameters.get(CodeDeployConstants.DEPLOYMENT_CONFIG_NAME_PARAM));
+
+          if (CodeDeployConstants.isDeploymentWaitEnabled(runnerParameters)) {
+            awsClient.deployRevisionAndWait(
+              s3BucketName, s3ObjectKey, bundleType, s3ObjectVersion,
+              applicationName, deploymentGroupName, deploymentConfigName,
+              Integer.parseInt(runnerParameters.get(CodeDeployConstants.WAIT_TIMEOUT_SEC_PARAM)),
+              Integer.parseInt(configParameters.getOrDefault(CodeDeployConstants.WAIT_POLL_INTERVAL_SEC_CONFIG_PARAM, CodeDeployConstants.WAIT_POLL_INTERVAL_SEC_DEFAULT)));
+          } else {
+            awsClient.deployRevision(
+              s3BucketName, s3ObjectKey, bundleType, s3ObjectVersion,
+              applicationName, deploymentGroupName, deploymentConfigName);
+          }
         }
 
         return problemOccurred.get() ? BuildFinishedStatus.FINISHED_WITH_PROBLEMS : BuildFinishedStatus.FINISHED_SUCCESS;
@@ -86,11 +107,6 @@ public class CodeDeployRunner implements AgentBuildRunner {
         final RunBuildException runBuildException = new RunBuildException(invalids.values().iterator().next(), null, ErrorData.BUILD_RUNNER_ERROR_TYPE);
         runBuildException.setLogStacktrace(false);
         throw runBuildException;
-      }
-
-      @NotNull
-      private Integer getIntegerOrDefault(@Nullable String parameter, @NotNull Integer defaultVal) {
-        return StringUtil.isEmptyOrSpaces(parameter) ? defaultVal : Integer.parseInt(parameter);
       }
     };
   }

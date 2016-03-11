@@ -16,16 +16,40 @@
 
 <%@ taglib prefix="l" tagdir="/WEB-INF/tags/layout" %>
 
+<style type="text/css">
+    .runnerFormTable span.stepNote {
+        display: none;
+    }
+</style>
+
+
 <%@include file="paramsConstants.jspf"%>
 
 <tr>
+    <th><label for="${deployment_steps_param}">${deployment_steps_label}: <l:star/></label></th>
+    <td><props:selectProperty name="${deployment_steps_param}" className="longField" enableFilter="true" onchange="codeDeployUpdateStepNote();codeDeployUpdateVisibility()">
+            <props:option id="${upload_register_deploy_steps}" value="${upload_register_deploy_steps}">${deploymentScenarios[upload_register_deploy_steps]}</props:option>
+            <props:option id="${upload_register_steps}" value="${upload_register_steps}">${deploymentScenarios[upload_register_steps]}</props:option>
+            <props:option id="${register_deploy_steps}" value="${register_deploy_steps}">${deploymentScenarios[register_deploy_steps]}</props:option>
+            <props:option id="${deploy_step}" value="${deploy_step}">${deploymentScenarios[deploy_step]}</props:option>
+            <props:option id="${upload_step}" value="${upload_step}">${deploymentScenarios[upload_step]}</props:option>
+        </props:selectProperty>
+        <span class="smallNote stepNote" id="${upload_register_deploy_steps}_note">Upload revision to S3, register it in CodeDeploy application and start deployment</span>
+        <span class="smallNote stepNote" id="${upload_register_steps}_note">Upload revision to S3 and register it in CodeDeploy application</span>
+        <span class="smallNote stepNote" id="${register_deploy_steps}_note">Register previously uploaded revision in CodeDeploy application and starts deployment</span>
+        <span class="smallNote stepNote" id="${deploy_step}_note">Deploy previously uploaded and registered application revision</span>
+        <span class="smallNote stepNote" id="${upload_step}_note">Upload application revision to S3</span>
+        <span class="error" id="error_${deployment_steps_param}"></span>
+    </td>
+</tr>
+<tr>
     <th><label for="${region_name_param}">${region_name_label}: <l:star/></label></th>
     <td><props:selectProperty name="${region_name_param}" className="longField" enableFilter="true">
-            <props:option value="${null}">-- Select region --</props:option>
-            <c:forEach var="region" items="${allRegions.keySet()}">
-                <props:option value="${region}"><c:out value="${allRegions[region]}"/></props:option>
-            </c:forEach>
-        </props:selectProperty>
+        <props:option value="${null}">-- Select region --</props:option>
+        <c:forEach var="region" items="${allRegions.keySet()}">
+            <props:option value="${region}"><c:out value="${allRegions[region]}"/></props:option>
+        </c:forEach>
+    </props:selectProperty>
         <span class="smallNote">All CodeDeploy and S3 resources must be located in this region</span><span class="error" id="error_${region_name_param}"></span>
     </td>
 </tr>
@@ -77,10 +101,10 @@
 </l:settingsGroup>
 
 <l:settingsGroup title="Revision Location">
-    <tr>
+    <tr class="${upload_step}">
         <th><label for="${revision_path_param}">${revision_path_label}: <l:star/></label></th>
         <td><props:textProperty name="${revision_path_param}" className="longField" maxlength="256"/>
-            <span class="smallNote">Path to a valid application revision archive (including appspec.yml) that should be deployed</span><span class="error" id="error_${revision_path_param}"></span>
+            <span class="smallNote">Path to a valid application revision archive (including appspec.yml) that should be uploaded, registered or deployed</span><span class="error" id="error_${revision_path_param}"></span>
         </td>
     </tr>
     <tr>
@@ -97,61 +121,83 @@
     </tr>
 </l:settingsGroup>
 
-<l:settingsGroup title="CodeDeploy Application">
-    <tr>
-        <th><label for="${app_name_param}">${app_name_label}: <l:star/></label></th>
-        <td><props:textProperty name="${app_name_param}" className="longField" maxlength="256"/><a href="http://console.aws.amazon.com/codedeploy" target="_blank">Open CodeDeploy Console</a>
-            <span class="smallNote">Pre-configured CodeDeploy application name</span><span class="error" id="error_${app_name_param}"></span>
-        </td>
-    </tr>
-    <tr>
-        <th><label for="${dep_group_name_param}">${dep_group_name_label}: <l:star/></label></th>
-        <td><props:textProperty name="${dep_group_name_param}" className="longField" maxlength="256"/>
-            <span class="smallNote">Pre-configured EC2 instances, must be running for deployment to succeed</span><span class="error" id="error_${dep_group_name_param}"></span>
-        </td>
-    </tr>
-    <tr>
-        <th><label for="${dep_config_name_param}">${dep_config_name_label}: </label></th>
-        <td><props:textProperty name="${dep_config_name_param}" className="longField" maxlength="256"/>
-            <span class="smallNote">e.g. "CodeDeployDefault.OneAtATime", "CodeDeployDefault.AllAtOnce" or a custom one, leave blank for default configuration</span><span class="error" id="error_${dep_config_name_param}"></span>
-        </td>
-    </tr>
-</l:settingsGroup>
-<l:settingsGroup title="Deployment">
-    <tr>
-        <th><label for="${wait_flag_param}">${wait_flag_label}: </label></th>
-        <td><props:checkboxProperty name="${wait_flag_param}" onclick="codeDeployUpdateVisibility()"/></td>
-    </tr>
-    <tr id="${wait_timeout_param}_row">
-        <th><label for="${wait_timeout_param}">${wait_timeout_label}: <l:star/></label></th>
-        <td><props:textProperty name="${wait_timeout_param}" maxlength="256"/>
-            <span class="smallNote">Build will fail if timeout is exceeded</span><span class="error" id="error_${wait_timeout_param}"></span>
-        </td>
-    </tr>
-</l:settingsGroup>
+<tr class="groupingTitle" data-steps="${register_deploy_steps}">
+    <td colspan="2">CodeDeploy Application</td>
+</tr>
+<tr data-steps="${register_deploy_steps}">
+    <th><label for="${app_name_param}">${app_name_label}: <l:star/></label></th>
+    <td><props:textProperty name="${app_name_param}" className="longField" maxlength="256"/><a href="http://console.aws.amazon.com/codedeploy" target="_blank">Open CodeDeploy Console</a>
+        <span class="smallNote">Pre-configured CodeDeploy application name</span><span class="error" id="error_${app_name_param}"></span>
+    </td>
+</tr>
+<tr data-steps="${deploy_step}">
+    <th><label for="${dep_group_name_param}">${dep_group_name_label}: <l:star/></label></th>
+    <td><props:textProperty name="${dep_group_name_param}" className="longField" maxlength="256"/>
+        <span class="smallNote">Pre-configured EC2 instances, must be running for deployment to succeed</span><span class="error" id="error_${dep_group_name_param}"></span>
+    </td>
+</tr>
+<tr data-steps="${deploy_step}">
+    <th><label for="${dep_config_name_param}">${dep_config_name_label}: </label></th>
+    <td><props:textProperty name="${dep_config_name_param}" className="longField" maxlength="256"/>
+        <span class="smallNote">e.g. "CodeDeployDefault.OneAtATime", "CodeDeployDefault.AllAtOnce" or a custom one, leave blank for default configuration</span><span class="error" id="error_${dep_config_name_param}"></span>
+    </td>
+</tr>
+<tr data-steps="${deploy_step}">
+    <th><label for="${wait_flag_param}">${wait_flag_label}: </label></th>
+    <td><props:checkboxProperty name="${wait_flag_param}" onclick="codeDeployUpdateVisibility()"/></td>
+</tr>
+<tr id="${wait_timeout_param}_row" data-steps="${deploy_step}">
+    <th><label for="${wait_timeout_param}">${wait_timeout_label}: <l:star/></label></th>
+    <td><props:textProperty name="${wait_timeout_param}" maxlength="256"/>
+        <span class="smallNote">Build will fail if timeout is exceeded</span><span class="error" id="error_${wait_timeout_param}"></span>
+    </td>
+</tr>
 
 <script type="application/javascript">
-    window.codeDeployUpdateVisibility = function () {
-        if ($('${wait_flag_param}').checked) {
-            BS.Util.show('${wait_timeout_param}_row');
-        } else {
-            BS.Util.hide('${wait_timeout_param}_row');
-        }
+    window.codeDeployUpdateStepNote = function () {
+        $j('#runnerParams .stepNote').each(function() {
+            BS.Util.hide(this);
+        });
+        BS.Util.show($j('#${deployment_steps_param} option:selected').attr('id') + '_note');
+    };
 
-        if ($('${access_keys_option}').checked) {
+    window.codeDeployUpdateVisibility = function () {
+        if ($j('#${access_keys_option}').is(':checked')) {
             BS.Util.hide('${iam_role_arn_param}_row', '${external_id_param}_row');
         } else {
             BS.Util.show('${iam_role_arn_param}_row', '${external_id_param}_row');
         }
 
-        if ($('${use_default_cred_chain_param}').checked) {
+        if ($j('#${use_default_cred_chain_param}').is(':checked')) {
             BS.Util.hide('${access_key_id_param}_row', '${secret_access_key_param}_row');
         } else {
             BS.Util.show('${access_key_id_param}_row', '${secret_access_key_param}_row');
         }
 
-        BS.VisibilityHandlers.updateVisibility($('runnerParams'))
+        if ($j('#${wait_flag_param}').is(':checked')) {
+            BS.Util.show('${wait_timeout_param}_row');
+        } else {
+            BS.Util.hide('${wait_timeout_param}_row');
+        }
+
+        // hide all and then show necessary
+        $j('#runnerParams tr[data-steps]').each(function() {
+            BS.Util.hide(this);
+        });
+
+        var deploySteps = $j('#${deployment_steps_param} option:selected').val();
+        $j.each(deploySteps.split('${step_separator}'), function(i, val) {
+            if (val) {
+                $j("#runnerParams tr[data-steps*='" + val + "']").each(function() {
+                    BS.Util.show(this);
+                });
+            }
+        });
+
+        BS.VisibilityHandlers.updateVisibility('runnerParams');
     };
+
+    codeDeployUpdateStepNote();
     codeDeployUpdateVisibility();
 </script>
 

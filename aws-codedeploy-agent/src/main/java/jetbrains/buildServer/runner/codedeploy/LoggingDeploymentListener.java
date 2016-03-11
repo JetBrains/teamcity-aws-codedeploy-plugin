@@ -55,18 +55,24 @@ public class LoggingDeploymentListener extends AWSClient.Listener {
 
   @Override
   void uploadRevisionFinished(@NotNull File revision, @NotNull String s3BucketName, @NotNull String key, @NotNull String url) {
-    log("Uploaded application revision S3 URL : " + url);
+    log("Uploaded application revision " + url);
+    if (!CodeDeployConstants.isRegisterStepEnabled(myRunnerParameters)) {
+      statusText("Uploaded revision " + url);
+    }
     close(UPLOAD_REVISION);
   }
 
   @Override
-  void registerRevisionStarted(@NotNull String applicationName, @NotNull String s3BucketName, @NotNull String key, @NotNull String bundleType) {
+  void registerRevisionStarted(@NotNull String applicationName, @NotNull String s3BucketName, @NotNull String s3ObjectKey, @NotNull String s3BundleType, @Nullable String s3ObjectVersion) {
     open(REGISTER_REVISION);
-    log(String.format("Registering application %s revision from S3 bucket %s with key %s and bundle type %s", applicationName, s3BucketName, key, bundleType));
+    log(String.format("Registering application %s revision from S3 bucket %s with key %s, bundle type %s and %s version", applicationName, s3BucketName, s3ObjectKey, s3BundleType, StringUtil.isEmptyOrSpaces(s3ObjectVersion) ? "latest" : s3ObjectVersion));
   }
 
   @Override
-  void registerRevisionFinished(@NotNull String applicationName, @NotNull String s3BucketName, @NotNull String key, @NotNull String bundleType) {
+  void registerRevisionFinished(@NotNull String applicationName, @NotNull String s3BucketName, @NotNull String s3ObjectKey, @NotNull String s3BundleType, @Nullable String s3ObjectVersion) {
+    if (!CodeDeployConstants.isDeployStepEnabled(myRunnerParameters)) {
+      statusText("Registered revision");
+    }
     close(REGISTER_REVISION);
   }
 

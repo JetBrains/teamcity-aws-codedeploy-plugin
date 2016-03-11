@@ -17,7 +17,10 @@
 package jetbrains.buildServer.runner.codedeploy;
 
 import jetbrains.buildServer.util.CollectionsUtil;
+import jetbrains.buildServer.util.StringUtil;
+import org.jetbrains.annotations.NotNull;
 
+import java.util.Collections;
 import java.util.Map;
 import java.util.UUID;
 
@@ -31,7 +34,7 @@ public interface CodeDeployConstants {
 
 
   String DEPLOYMENT_ID_BUILD_CONFIG_PARAM = "codedeploy.deploment.id";
-
+  String S3_OBJECT_VERSION_CONFIG_PARAM = "codedeploy.revision.s3.version";
 
 
   String EDIT_PARAMS_HTML = "editCodeDeployParams.html";
@@ -40,6 +43,7 @@ public interface CodeDeployConstants {
   String VIEW_PARAMS_JSP = "viewCodeDeployParams.jsp";
 
   String ALL_REGIONS = "allRegions";
+  String DEPLOYMENT_SCENARIOS = "deploymentScenarios";
 
 
   String TIMEOUT_BUILD_PROBLEM_TYPE = "CODEDEPLOY_TIMEOUT";
@@ -49,6 +53,9 @@ public interface CodeDeployConstants {
   String CLIENT_PROBLEM_TYPE = "CODEDEPLOY_CLIENT";
 
 
+
+  String DEPLOYMENT_STEPS_PARAM = "codedeploy_deployment_steps";
+  String DEPLOYMENT_STEPS_LABEL = "Deployment steps";
 
   String CREDENTIALS_TYPE_PARAM = "codedeploy_credentials_type";
   String CREDENTIALS_TYPE_LABEL = "Credentials type";
@@ -95,14 +102,58 @@ public interface CodeDeployConstants {
   String WAIT_TIMEOUT_SEC_PARAM = "codedeploy_wait_timeout_sec";
   String WAIT_TIMEOUT_SEC_LABEL = "Timeout (seconds)";
   String WAIT_POLL_INTERVAL_SEC_CONFIG_PARAM = "codedeploy.wait.poll.interval.sec";
-  int WAIT_POLL_INTERVAL_SEC_DEFAULT = 20;
+  String WAIT_POLL_INTERVAL_SEC_DEFAULT = "20";
 
-  Map<String, String> DEFAULTS = CollectionsUtil.asMap(
+  String UPLOAD_STEP = "s3uploadstep";
+  String REGISTER_STEP = "registerstep";
+  String DEPLOY_STEP = "deploystep";
+  String STEP_SEPARATOR = "_";
+
+  String UPLOAD_REGISTER_DEPLOY_STEPS = UPLOAD_STEP + STEP_SEPARATOR + REGISTER_STEP + STEP_SEPARATOR + DEPLOY_STEP;
+  String REGISTER_DEPLOY_STEPS = REGISTER_STEP + STEP_SEPARATOR + DEPLOY_STEP;
+  String UPLOAD_REGISTER_STEPS = UPLOAD_STEP + STEP_SEPARATOR + REGISTER_STEP;
+
+  Map<String, String> STEP_LABELS = Collections.unmodifiableMap(CollectionsUtil.asMap(
+    UPLOAD_REGISTER_DEPLOY_STEPS, "Upload, register and deploy",
+    REGISTER_DEPLOY_STEPS, "Register and deploy",
+    UPLOAD_REGISTER_STEPS, "Upload and register",
+    UPLOAD_STEP, "Upload",
+    REGISTER_STEP, "Register",
+    DEPLOY_STEP, "Deploy"
+  ));
+
+  Map<String, String> DEFAULTS = Collections.unmodifiableMap(CollectionsUtil.asMap(
     CREDENTIALS_TYPE_PARAM, ACCESS_KEYS_OPTION,
     EXTERNAL_ID_PARAM, UUID.randomUUID().toString(), // see jetbrains.buildServer.runner.codedeploy.CodeDeployRunType#getDefaultRunnerProperties
     WAIT_FLAG_PARAM, "true",
-    USE_DEFAULT_CREDENTIAL_PROVIDER_CHAIN_PARAM, "false"
-  );
+    USE_DEFAULT_CREDENTIAL_PROVIDER_CHAIN_PARAM, "false",
+    DEPLOYMENT_STEPS_PARAM, UPLOAD_REGISTER_DEPLOY_STEPS
+  ));
 
   String STATUS_IS_UNKNOWN = "status is unknown";
+
+  static boolean isUploadStepEnabled(@NotNull Map<String, String> params) {
+    return isStepEnabled(UPLOAD_STEP, params);
+  }
+
+  static boolean isRegisterStepEnabled(@NotNull Map<String, String> params) {
+    return isStepEnabled(REGISTER_STEP, params);
+  }
+
+  static boolean isDeployStepEnabled(@NotNull Map<String, String> params) {
+    return isStepEnabled(DEPLOY_STEP, params);
+  }
+
+  static boolean isDeploymentWaitEnabled(@NotNull Map<String, String> params) {
+    if (isDeployStepEnabled(params)) {
+      final String waitParam = params.get(CodeDeployConstants.WAIT_FLAG_PARAM);
+      return StringUtil.isEmptyOrSpaces(waitParam) || Boolean.parseBoolean(waitParam);
+    }
+    return false;
+  }
+
+  static boolean isStepEnabled(@NotNull String step, @NotNull Map<String, String> params) {
+    final String steps = params.get(DEPLOYMENT_STEPS_PARAM);
+    return steps != null && steps.contains(step);
+  }
 }

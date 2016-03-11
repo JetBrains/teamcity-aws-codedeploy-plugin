@@ -68,6 +68,7 @@ public class CodeDeployRunType extends RunType {
       protected ModelAndView doHandle(@NotNull HttpServletRequest request, @NotNull HttpServletResponse response) throws Exception {
         final ModelAndView mv = new ModelAndView(descriptor.getPluginResourcesPath(jspPath));
         mv.getModel().put(CodeDeployConstants.ALL_REGIONS, AWSUtil.getAllRegions());
+        mv.getModel().put(CodeDeployConstants.DEPLOYMENT_SCENARIOS, CodeDeployConstants.STEP_LABELS);
         return mv;
       }
     });
@@ -131,19 +132,13 @@ public class CodeDeployRunType extends RunType {
     return myViewParamsPath;
   }
 
-  @SuppressWarnings("StringBufferReplaceableByString")
   @NotNull
   @Override
   public String describeParameters(@NotNull Map<String, String> parameters) {
-    final StringBuilder descr = new StringBuilder();
-    descr
-      .append("Deploy ")
-      .append(parameters.get(CodeDeployConstants.READY_REVISION_PATH_PARAM))
-      .append(" to deployment group ")
-      .append(parameters.get(CodeDeployConstants.DEPLOYMENT_GROUP_NAME_PARAM))
-      .append(" in scope of ")
-      .append(parameters.get(CodeDeployConstants.APP_NAME_PARAM))
-      .append(" application");
-    return descr.toString();
+    final Map<String, String> invalids = ParametersValidator.validateSettings(parameters);
+    return
+      invalids.isEmpty() ?
+      CodeDeployConstants.STEP_LABELS.get(parameters.get(CodeDeployConstants.DEPLOYMENT_STEPS_PARAM)) + " application revision" :
+      invalids.values().iterator().next();
   }
 }

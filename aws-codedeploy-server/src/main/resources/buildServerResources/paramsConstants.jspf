@@ -21,6 +21,7 @@
 
 <jsp:useBean id="propertiesBean" scope="request" type="jetbrains.buildServer.controllers.BasePropertiesBean"/>
 <jsp:useBean id="allRegions" scope="request" type="java.util.Map<java.lang.String, java.lang.String>"/>
+<jsp:useBean id="deploymentScenarios" scope="request" type="java.util.Map<java.lang.String, java.lang.String>"/>
 
 <c:set var="revision_path_param" value="<%=CodeDeployConstants.READY_REVISION_PATH_PARAM%>"/>
 <c:set var="revision_path_label" value="<%=CodeDeployConstants.READY_REVISION_PATH_LABEL%>"/>
@@ -72,3 +73,14 @@
 
 <c:set var="use_default_cred_chain_param" value="<%=CodeDeployConstants.USE_DEFAULT_CREDENTIAL_PROVIDER_CHAIN_PARAM%>"/>
 <c:set var="use_default_cred_chain_label" value="<%=CodeDeployConstants.USE_DEFAULT_CREDENTIAL_PROVIDER_CHAIN_LABEL%>"/>
+
+<c:set var="deployment_steps_param" value="<%=CodeDeployConstants.DEPLOYMENT_STEPS_PARAM%>"/>
+<c:set var="deployment_steps_label" value="<%=CodeDeployConstants.DEPLOYMENT_STEPS_LABEL%>"/>
+
+<c:set var="upload_register_deploy_steps" value="<%=CodeDeployConstants.UPLOAD_REGISTER_DEPLOY_STEPS%>"/>
+<c:set var="register_deploy_steps" value="<%=CodeDeployConstants.REGISTER_DEPLOY_STEPS%>"/>
+<c:set var="upload_register_steps" value="<%=CodeDeployConstants.UPLOAD_REGISTER_STEPS%>"/>
+<c:set var="upload_step" value="<%=CodeDeployConstants.UPLOAD_STEP%>"/>
+<c:set var="register_step" value="<%=CodeDeployConstants.REGISTER_STEP%>"/>
+<c:set var="deploy_step" value="<%=CodeDeployConstants.DEPLOY_STEP%>"/>
+<c:set var="step_separator" value="<%=CodeDeployConstants.STEP_SEPARATOR%>"/>

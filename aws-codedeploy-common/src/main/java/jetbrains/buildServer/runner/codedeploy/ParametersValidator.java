@@ -21,6 +21,8 @@ import jetbrains.buildServer.util.FileUtil;
 import jetbrains.buildServer.util.StringUtil;
 import org.jetbrains.annotations.NotNull;
 
+import static jetbrains.buildServer.runner.codedeploy.CodeDeployConstants.*;
+
 import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
@@ -37,16 +39,18 @@ public final class ParametersValidator {
   public static Map<String, String> validateRuntime(@NotNull Map<String, String> runnerParams, @NotNull Map<String, String> configParams, @NotNull File checkoutDir) {
     final Map<String, String> invalids = new HashMap<String, String>(validate(runnerParams, true));
 
-    if (!invalids.containsKey(CodeDeployConstants.READY_REVISION_PATH_PARAM)) {
-      final String revisionPath = runnerParams.get(CodeDeployConstants.READY_REVISION_PATH_PARAM);
+    if (!invalids.containsKey(READY_REVISION_PATH_PARAM) && isUploadStepEnabled(runnerParams)) {
+      final String revisionPath = runnerParams.get(READY_REVISION_PATH_PARAM);
       if (!FileUtil.resolvePath(checkoutDir, revisionPath).exists()) {
-        invalids.put(CodeDeployConstants.READY_REVISION_PATH_PARAM, "Application revision " + revisionPath + " doesn't exist");
+        invalids.put(READY_REVISION_PATH_PARAM, READY_REVISION_PATH_LABEL + " " + revisionPath + " doesn't exist");
       }
     }
 
-    final String waitIntervalSec = configParams.get(CodeDeployConstants.WAIT_POLL_INTERVAL_SEC_CONFIG_PARAM);
-    if (StringUtil.isNotEmpty(waitIntervalSec)) {
-      validatePositiveInteger(invalids, waitIntervalSec, CodeDeployConstants.WAIT_POLL_INTERVAL_SEC_CONFIG_PARAM, CodeDeployConstants.WAIT_POLL_INTERVAL_SEC_CONFIG_PARAM, true);
+    if (isDeploymentWaitEnabled(runnerParams)) {
+      final String waitIntervalSec = configParams.get(WAIT_POLL_INTERVAL_SEC_CONFIG_PARAM);
+      if (StringUtil.isNotEmpty(waitIntervalSec)) {
+        validatePositiveInteger(invalids, waitIntervalSec, WAIT_POLL_INTERVAL_SEC_CONFIG_PARAM, WAIT_POLL_INTERVAL_SEC_CONFIG_PARAM, true);
+      }
     }
 
     return invalids;
@@ -63,79 +67,103 @@ public final class ParametersValidator {
   private static Map<String, String> validate(@NotNull Map<String, String> runnerParams, boolean runtime) {
     final Map<String, String> invalids = new HashMap<String, String>();
 
-    final String regionName = runnerParams.get(CodeDeployConstants.REGION_NAME_PARAM);
+    final String regionName = runnerParams.get(REGION_NAME_PARAM);
     if (StringUtil.isEmptyOrSpaces(regionName)) {
-      invalids.put(CodeDeployConstants.REGION_NAME_PARAM, CodeDeployConstants.REGION_NAME_LABEL + " mustn't be empty");
+      invalids.put(REGION_NAME_PARAM, REGION_NAME_LABEL + " mustn't be empty");
     } else {
       if (!isReference(regionName, runtime)) {
         try {
           AWSClient.getRegion(regionName);
         } catch (IllegalArgumentException e) {
-          invalids.put(CodeDeployConstants.REGION_NAME_PARAM, e.getMessage());
+          invalids.put(REGION_NAME_PARAM, e.getMessage());
         }
       }
     }
 
-    if (!Boolean.parseBoolean(runnerParams.get(CodeDeployConstants.USE_DEFAULT_CREDENTIAL_PROVIDER_CHAIN_PARAM))) {
-      if (StringUtil.isEmptyOrSpaces(runnerParams.get(CodeDeployConstants.ACCESS_KEY_ID_PARAM))) {
-        invalids.put(CodeDeployConstants.ACCESS_KEY_ID_PARAM, CodeDeployConstants.ACCESS_KEY_ID_PARAM + " mustn't be empty");
-      }
-      if (StringUtil.isEmptyOrSpaces(runnerParams.get(CodeDeployConstants.SECRET_ACCESS_KEY_PARAM))) {
-        invalids.put(CodeDeployConstants.SECRET_ACCESS_KEY_PARAM, CodeDeployConstants.SECRET_ACCESS_KEY_LABEL + " mustn't be empty");
+    boolean uploadStepEnabled = false;
+    boolean registerStepEnabled = false;
+    boolean deployStepEnabled = false;
+
+    final String deploymentSteps = runnerParams.get(DEPLOYMENT_STEPS_PARAM);
+    if (StringUtil.isEmptyOrSpaces(deploymentSteps)) {
+      invalids.put(DEPLOYMENT_STEPS_PARAM, DEPLOYMENT_STEPS_LABEL + " mustn't be empty");
+    } else {
+      uploadStepEnabled = isUploadStepEnabled(runnerParams);
+      registerStepEnabled = isRegisterStepEnabled(runnerParams);
+      deployStepEnabled = isDeployStepEnabled(runnerParams);
+
+      if (!uploadStepEnabled && !registerStepEnabled && !deployStepEnabled) {
+        invalids.put(DEPLOYMENT_STEPS_PARAM, DEPLOYMENT_STEPS_LABEL + " has unexpected value " + deploymentSteps);
       }
     }
 
-    final String credentialsType = runnerParams.get(CodeDeployConstants.CREDENTIALS_TYPE_PARAM);
-    if (CodeDeployConstants.TEMP_CREDENTIALS_OPTION.equals(credentialsType)) {
-      if (StringUtil.isEmptyOrSpaces(runnerParams.get(CodeDeployConstants.IAM_ROLE_ARN_PARAM))) {
-        invalids.put(CodeDeployConstants.IAM_ROLE_ARN_PARAM, CodeDeployConstants.IAM_ROLE_ARN_LABEL + " mustn't be empty");
+    if (!Boolean.parseBoolean(runnerParams.get(USE_DEFAULT_CREDENTIAL_PROVIDER_CHAIN_PARAM))) {
+          if (StringUtil.isEmptyOrSpaces(runnerParams.get(ACCESS_KEY_ID_PARAM))) {
+            invalids.put(ACCESS_KEY_ID_PARAM, ACCESS_KEY_ID_PARAM + " mustn't be empty");
+          }
+          if (StringUtil.isEmptyOrSpaces(runnerParams.get(SECRET_ACCESS_KEY_PARAM))) {
+            invalids.put(SECRET_ACCESS_KEY_PARAM, SECRET_ACCESS_KEY_LABEL + " mustn't be empty");
+          }
+        }
+
+    final String credentialsType = runnerParams.get(CREDENTIALS_TYPE_PARAM);
+    if (TEMP_CREDENTIALS_OPTION.equals(credentialsType)) {
+      if (StringUtil.isEmptyOrSpaces(runnerParams.get(IAM_ROLE_ARN_PARAM))) {
+        invalids.put(IAM_ROLE_ARN_PARAM, IAM_ROLE_ARN_LABEL + " mustn't be empty");
       }
     } else if (StringUtil.isEmptyOrSpaces(credentialsType)) {
-      invalids.put(CodeDeployConstants.CREDENTIALS_TYPE_PARAM, CodeDeployConstants.CREDENTIALS_TYPE_LABEL + " mustn't be empty");
-    } else if (!CodeDeployConstants.ACCESS_KEYS_OPTION.equals(credentialsType)) {
-      invalids.put(CodeDeployConstants.CREDENTIALS_TYPE_PARAM, "Unexpected " + CodeDeployConstants.CREDENTIALS_TYPE_LABEL + " " + credentialsType);
+      invalids.put(CREDENTIALS_TYPE_PARAM, CREDENTIALS_TYPE_LABEL + " mustn't be empty");
+    } else if (!ACCESS_KEYS_OPTION.equals(credentialsType)) {
+      invalids.put(CREDENTIALS_TYPE_PARAM, CREDENTIALS_TYPE_LABEL + " has unexpected value " + credentialsType);
     }
 
-    final String revisionPath = runnerParams.get(CodeDeployConstants.READY_REVISION_PATH_PARAM);
-    if (StringUtil.isEmptyOrSpaces(revisionPath)) {
-      invalids.put(CodeDeployConstants.READY_REVISION_PATH_PARAM, CodeDeployConstants.READY_REVISION_PATH_LABEL + " mustn't be empty");
-    } else {
-      if (!isReference(revisionPath, runtime)) {
-        try {
-          AWSClient.getBundleType(revisionPath);
-        } catch (IllegalArgumentException e) {
-          invalids.put(CodeDeployConstants.READY_REVISION_PATH_PARAM, e.getMessage());
-        }
+    if (uploadStepEnabled) {
+      final String revisionPath = runnerParams.get(READY_REVISION_PATH_PARAM);
+      if (StringUtil.isEmptyOrSpaces(revisionPath)) {
+        invalids.put(READY_REVISION_PATH_PARAM, READY_REVISION_PATH_LABEL + " mustn't be empty");
+      } else {
+        validateBundleType(invalids, revisionPath, READY_REVISION_PATH_PARAM, READY_REVISION_PATH_LABEL, runtime);
       }
     }
 
-    final String s3BucketName = runnerParams.get(CodeDeployConstants.S3_BUCKET_NAME_PARAM);
+    final String s3BucketName = runnerParams.get(S3_BUCKET_NAME_PARAM);
     if (StringUtil.isEmptyOrSpaces(s3BucketName)) {
-      invalids.put(CodeDeployConstants.S3_BUCKET_NAME_PARAM, CodeDeployConstants.S3_BUCKET_NAME_LABEL + " mustn't be empty");
+      invalids.put(S3_BUCKET_NAME_PARAM, S3_BUCKET_NAME_LABEL + " mustn't be empty");
     } else if (s3BucketName.contains("/")) {
-      invalids.put(CodeDeployConstants.S3_BUCKET_NAME_PARAM, CodeDeployConstants.S3_BUCKET_NAME_LABEL + " mustn't contain / characters");
+      invalids.put(S3_BUCKET_NAME_PARAM, S3_BUCKET_NAME_LABEL + " mustn't contain / characters. For addressing folders use " + S3_OBJECT_KEY_LABEL + " parameter");
     }
 
-    final String s3ObjectKey = runnerParams.get(CodeDeployConstants.S3_OBJECT_KEY_PARAM);
-    if (StringUtil.isNotEmpty(s3ObjectKey)) {
-      validateS3Key(invalids, s3ObjectKey, CodeDeployConstants.S3_OBJECT_KEY_PARAM, CodeDeployConstants.S3_OBJECT_KEY_LABEL, runtime);
+    final String s3ObjectKey = runnerParams.get(S3_OBJECT_KEY_PARAM);
+    if (StringUtil.isEmptyOrSpaces(s3ObjectKey)) {
+      if (!uploadStepEnabled) {
+        invalids.put(S3_OBJECT_KEY_PARAM, S3_OBJECT_KEY_LABEL + " mustn't be empty");
+      }
+    } else {
+      validateS3Key(invalids, s3ObjectKey, S3_OBJECT_KEY_PARAM, S3_OBJECT_KEY_LABEL, runtime);
+      if (!uploadStepEnabled) {
+        validateBundleType(invalids, s3ObjectKey, S3_OBJECT_KEY_PARAM, S3_OBJECT_KEY_LABEL, runtime);
+      }
     }
 
-    if (StringUtil.isEmptyOrSpaces(runnerParams.get(CodeDeployConstants.APP_NAME_PARAM))) {
-      invalids.put(CodeDeployConstants.APP_NAME_PARAM, CodeDeployConstants.APP_NAME_LABEL + " mustn't be empty");
+    if (registerStepEnabled || deployStepEnabled) {
+      if (StringUtil.isEmptyOrSpaces(runnerParams.get(APP_NAME_PARAM))) {
+        invalids.put(APP_NAME_PARAM, APP_NAME_LABEL + " mustn't be empty");
+      }
     }
 
-    if (StringUtil.isEmptyOrSpaces(runnerParams.get(CodeDeployConstants.DEPLOYMENT_GROUP_NAME_PARAM))) {
-      invalids.put(CodeDeployConstants.DEPLOYMENT_GROUP_NAME_PARAM, CodeDeployConstants.DEPLOYMENT_GROUP_NAME_LABEL + " mustn't be empty");
-    }
+    if (deployStepEnabled) {
+      if (StringUtil.isEmptyOrSpaces(runnerParams.get(DEPLOYMENT_GROUP_NAME_PARAM))) {
+        invalids.put(DEPLOYMENT_GROUP_NAME_PARAM, DEPLOYMENT_GROUP_NAME_LABEL + " mustn't be empty");
+      }
 
-    final String waitParam = runnerParams.get(CodeDeployConstants.WAIT_FLAG_PARAM);
-    if (StringUtil.isEmptyOrSpaces(waitParam) || Boolean.parseBoolean(waitParam)) {
-      final String waitTimeoutSec = runnerParams.get(CodeDeployConstants.WAIT_TIMEOUT_SEC_PARAM);
-      if (StringUtil.isEmptyOrSpaces(waitTimeoutSec)) {
-        invalids.put(CodeDeployConstants.WAIT_TIMEOUT_SEC_PARAM, CodeDeployConstants.WAIT_TIMEOUT_SEC_LABEL + " mustn't be empty");
-      } else {
-        validatePositiveInteger(invalids, waitTimeoutSec, CodeDeployConstants.WAIT_TIMEOUT_SEC_PARAM, CodeDeployConstants.WAIT_TIMEOUT_SEC_LABEL, runtime);
+      final String waitParam = runnerParams.get(WAIT_FLAG_PARAM);
+      if (StringUtil.isEmptyOrSpaces(waitParam) || Boolean.parseBoolean(waitParam)) {
+        final String waitTimeoutSec = runnerParams.get(WAIT_TIMEOUT_SEC_PARAM);
+        if (StringUtil.isEmptyOrSpaces(waitTimeoutSec)) {
+          invalids.put(WAIT_TIMEOUT_SEC_PARAM, WAIT_TIMEOUT_SEC_LABEL + " mustn't be empty");
+        } else {
+          validatePositiveInteger(invalids, waitTimeoutSec, WAIT_TIMEOUT_SEC_PARAM, WAIT_TIMEOUT_SEC_LABEL, runtime);
+        }
       }
     }
     return invalids;
@@ -158,6 +186,16 @@ public final class ParametersValidator {
     if (!isReference(param, runtime)) {
       if (!param.matches("[a-zA-Z_0-9!\\-\\.*'()/]*")) {
         invalids.put(key, name + " must contain only safe characters");
+      }
+    }
+  }
+
+  private static void validateBundleType(@NotNull Map<String, String> invalids, @NotNull String param, @NotNull String key, @NotNull String name, boolean runtime) {
+    if (!isReference(param, runtime)) {
+      try {
+        AWSClient.getBundleType(param);
+      } catch (IllegalArgumentException e) {
+        invalids.put(key, name + " provides invalid bundle type " + ", " + e.getMessage());
       }
     }
   }

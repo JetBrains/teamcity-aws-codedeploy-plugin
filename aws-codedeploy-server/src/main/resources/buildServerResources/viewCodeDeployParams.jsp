@@ -16,9 +16,14 @@
 
 <%@include file="paramsConstants.jspf"%>
 
+<c:set var="deploymentSteps" value="${deploymentScenarios[propertiesBean.properties[deployment_steps_param]]}"/>
+<div class="parameter">
+    ${deployment_steps_label}: <strong>${empty deploymentSteps ? 'empty' : deploymentSteps}</strong>
+</div>
+
 <c:set var="region" value="${allRegions[propertiesBean.properties[region_name_param]]}"/>
 <div class="parameter">
-    ${region_name_label}: <strong><c:out value="${empty region ? 'empty' : region}"/></strong>
+    ${region_name_label}: <strong>${empty region ? 'empty' : region}</strong>
 </div>
 
 <c:set var="cred_type" value="${propertiesBean.properties[credentials_type_param]}"/>
