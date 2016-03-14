@@ -353,13 +353,17 @@ public class AWSClient {
     instancesStatus.status = getHumanReadableStatus(dInfo.getStatus());
 
     final DeploymentOverview overview = dInfo.getDeploymentOverview();
-    instancesStatus.succeeded = overview.getSucceeded();
-    instancesStatus.failed = overview.getFailed();
-    instancesStatus.inProgress = overview.getInProgress();
-    instancesStatus.skipped = overview.getSkipped();
-    instancesStatus.pending = overview.getPending();
+    instancesStatus.succeeded = getInt(overview.getSucceeded());
+    instancesStatus.failed = getInt(overview.getFailed());
+    instancesStatus.inProgress = getInt(overview.getInProgress());
+    instancesStatus.skipped = getInt(overview.getSkipped());
+    instancesStatus.pending = getInt(overview.getPending());
 
     return instancesStatus;
+  }
+
+  private static int getInt(@Nullable Long l) {
+    return l == null ? 0 : l.intValue();
   }
 
   @NotNull
@@ -407,11 +411,11 @@ public class AWSClient {
     void exception(@NotNull String message, @Nullable String details, @Nullable String type, @Nullable String identity) {}
 
     public static class InstancesStatus {
-      long pending;
-      long inProgress;
-      long succeeded;
-      long failed;
-      long skipped;
+      int pending;
+      int inProgress;
+      int succeeded;
+      int failed;
+      int skipped;
       @Nullable
       String status;
     }

@@ -57,7 +57,7 @@ public class LoggingDeploymentListener extends AWSClient.Listener {
   void uploadRevisionFinished(@NotNull File revision, @NotNull String s3BucketName, @NotNull String key, @NotNull String url) {
     log("Uploaded application revision " + url);
     if (!CodeDeployConstants.isRegisterStepEnabled(myRunnerParameters)) {
-      statusText("Uploaded revision " + url);
+      statusText("Uploaded " + url);
     }
     close(UPLOAD_REVISION);
   }
@@ -96,15 +96,15 @@ public class LoggingDeploymentListener extends AWSClient.Listener {
 
   @Override
   void deploymentInProgress(@NotNull String deploymentId, @Nullable InstancesStatus instancesStatus) {
-    progress(deploymentDescription(instancesStatus, false));
+    progress(deploymentDescription(instancesStatus, null, false));
   }
 
   @Override
   void deploymentFailed(@NotNull String deploymentId, @Nullable Integer timeoutSec, @Nullable ErrorInfo errorInfo, @Nullable InstancesStatus instancesStatus) {
     String msg = (timeoutSec == null ? "" : "Timeout " + timeoutSec + "sec exceeded, ");
 
-    err(msg + deploymentDescription(instancesStatus, true).toLowerCase());
-    msg += deploymentDescription(instancesStatus, false).toLowerCase();
+    err(msg + deploymentDescription(instancesStatus, deploymentId, true).toLowerCase());
+    msg += deploymentDescription(instancesStatus, deploymentId, false).toLowerCase();
 
     if (errorInfo != null) {
       if (StringUtil.isNotEmpty(errorInfo.message)) {
@@ -123,8 +123,8 @@ public class LoggingDeploymentListener extends AWSClient.Listener {
 
   @Override
   void deploymentSucceeded(@NotNull String deploymentId, @Nullable InstancesStatus instancesStatus) {
-    log(deploymentDescription(instancesStatus, true));
-    statusText(deploymentDescription(instancesStatus, false));
+    log(deploymentDescription(instancesStatus, deploymentId, true));
+    statusText(deploymentDescription(instancesStatus, deploymentId, false));
 
     close(DEPLOY_APPLICATION);
   }
@@ -146,17 +146,21 @@ public class LoggingDeploymentListener extends AWSClient.Listener {
   }
 
   @NotNull
-  private String deploymentDescription(@Nullable InstancesStatus instancesStatus, boolean detailed) {
+  private String deploymentDescription(@Nullable InstancesStatus instancesStatus, @Nullable String deploymentId, boolean detailed) {
     final StringBuilder sb = new StringBuilder("Deployment ");
+
+    if (StringUtil.isNotEmpty(deploymentId)) {
+      sb.append(deploymentId).append(" ");
+    }
 
     if (instancesStatus == null) sb.append(CodeDeployConstants.STATUS_IS_UNKNOWN);
     else {
       sb.append(StringUtil.isEmptyOrSpaces(instancesStatus.status) ? CodeDeployConstants.STATUS_IS_UNKNOWN : instancesStatus.status);
-      sb.append(", instances succeeded: ").append(instancesStatus.succeeded);
-      if (instancesStatus.failed > 0 || detailed) sb.append(", failed: ").append(instancesStatus.failed);
-      if (instancesStatus.pending > 0 || detailed) sb.append(", pending: ").append(instancesStatus.pending);
-      if (instancesStatus.skipped > 0 || detailed) sb.append(", skipped: ").append(instancesStatus.skipped);
-      if (instancesStatus.inProgress > 0 || detailed) sb.append(", in progress: ").append(instancesStatus.inProgress);
+      sb.append(", ").append(instancesStatus.succeeded).append(" ").append(StringUtil.pluralize("instance", instancesStatus.succeeded)).append(" succeeded");
+      if (instancesStatus.failed > 0 || detailed) sb.append(", ").append(instancesStatus.failed).append(" failed");
+      if (instancesStatus.pending > 0 || detailed) sb.append(", ").append(instancesStatus.pending).append(" pending");
+      if (instancesStatus.skipped > 0 || detailed) sb.append(", ").append(instancesStatus.skipped).append(" skipped");
+      if (instancesStatus.inProgress > 0 || detailed) sb.append(", ").append(instancesStatus.inProgress).append(" in progress");
     }
 
     return sb.toString();
