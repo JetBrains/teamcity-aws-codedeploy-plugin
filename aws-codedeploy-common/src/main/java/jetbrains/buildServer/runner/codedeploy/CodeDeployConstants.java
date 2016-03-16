@@ -19,10 +19,9 @@ package jetbrains.buildServer.runner.codedeploy;
 import jetbrains.buildServer.util.CollectionsUtil;
 import jetbrains.buildServer.util.StringUtil;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
-import java.util.Collections;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 /**
  * @author vbedrosova
@@ -78,7 +77,7 @@ public interface CodeDeployConstants {
   String EXTERNAL_ID_LABEL = "External ID";
   int TEMP_CREDENTIALS_DURATION_SEC_DEFAULT = 1800;
 
-  String READY_REVISION_PATH_PARAM = "codedeploy_ready_revision_path";
+  String REVISION_PATHS_PARAM = "codedeploy_revision_paths";
   String READY_REVISION_PATH_LABEL = "Application revision";
 
   String S3_BUCKET_NAME_PARAM = "codedeploy_s3_bucket_name";
@@ -132,6 +131,10 @@ public interface CodeDeployConstants {
 
   String STATUS_IS_UNKNOWN = "status is unknown";
 
+  String SPLIT_REGEX = " *[,\n\r] *";
+  String APPSPEC_YML = "appspec.yml";
+
+
   static boolean isUploadStepEnabled(@NotNull Map<String, String> params) {
     return isStepEnabled(UPLOAD_STEP, params);
   }
@@ -155,5 +158,26 @@ public interface CodeDeployConstants {
   static boolean isStepEnabled(@NotNull String step, @NotNull Map<String, String> params) {
     final String steps = params.get(DEPLOYMENT_STEPS_PARAM);
     return steps != null && steps.contains(step);
+  }
+
+  @Nullable
+  static String getReadyRevision(@NotNull String revisionPathsParam) {
+    final String[] split = revisionPathsParam.split(SPLIT_REGEX);
+    if (split.length == 1) {
+      final String revisionPath = split[0];
+      if (revisionPath.contains("*")) return null;
+      if (null == AWSClient.getBundleType(revisionPath)) return null;
+      return revisionPath;
+    }
+    return null;
+  }
+
+  @Nullable
+  static List<String> getRevisionPaths(@NotNull String revisionPathsParam) {
+    final String readyRevision = getReadyRevision(revisionPathsParam);
+    if (readyRevision == null) {
+      return Arrays.asList(revisionPathsParam.split(SPLIT_REGEX));
+    }
+    return null;
   }
 }

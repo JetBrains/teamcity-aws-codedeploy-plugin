@@ -258,13 +258,12 @@ public class AWSClient {
     return new RevisionLocation().withRevisionType(RevisionLocationType.S3).withS3Location(loc);
   }
 
-  @NotNull
+  @Nullable
   public static String getBundleType(@NotNull String revision) throws IllegalArgumentException {
     if (revision.endsWith(".zip")) return BundleType.Zip.name();
     if (revision.endsWith(".tar")) return BundleType.Tar.name();
     if (revision.endsWith(".tar.gz")) return BundleType.Tgz.name();
-
-    throw new IllegalArgumentException("supported bundle types are .zip, .tar and .tar.gz");
+    return null;
   }
 
   @NotNull

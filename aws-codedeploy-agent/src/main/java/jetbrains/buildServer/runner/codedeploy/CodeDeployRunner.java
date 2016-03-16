@@ -19,7 +19,6 @@ package jetbrains.buildServer.runner.codedeploy;
 import jetbrains.buildServer.RunBuildException;
 import jetbrains.buildServer.agent.*;
 import jetbrains.buildServer.messages.ErrorData;
-import jetbrains.buildServer.util.FileUtil;
 import jetbrains.buildServer.util.StringUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -34,11 +33,11 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public class CodeDeployRunner implements AgentBuildRunner {
   @NotNull
   @Override
-  public BuildProcess createBuildProcess(@NotNull final AgentRunningBuild runningBuild, @NotNull final BuildRunnerContext context) throws RunBuildException {
+  public BuildProcess createBuildProcess(@NotNull final AgentRunningBuild runningBuild, @NotNull final BuildRunnerContext context) throws jetbrains.buildServer.RunBuildException {
     return new SyncBuildProcessAdapter() {
       @NotNull
       @Override
-      protected BuildFinishedStatus runImpl() throws RunBuildException {
+      protected BuildFinishedStatus runImpl() throws jetbrains.buildServer.RunBuildException {
 
         final Map<String, String> runnerParameters = validateParams();
         final Map<String, String> configParameters = context.getConfigParameters();
@@ -58,20 +57,24 @@ public class CodeDeployRunner implements AgentBuildRunner {
         final boolean isRegisterStepEnabled = CodeDeployConstants.isRegisterStepEnabled(runnerParameters);
         final boolean isDeployStepEnabled = CodeDeployConstants.isDeployStepEnabled(runnerParameters);
 
-        final String revisionPath = runnerParameters.get(CodeDeployConstants.READY_REVISION_PATH_PARAM);
         final String s3BucketName = runnerParameters.get(CodeDeployConstants.S3_BUCKET_NAME_PARAM);
-
         String s3ObjectKey = runnerParameters.get(CodeDeployConstants.S3_OBJECT_KEY_PARAM);
-        if (isUploadStepEnabled && StringUtil.isEmptyOrSpaces(s3ObjectKey)) {
-          s3ObjectKey = new File(revisionPath).getName();
-        }
 
         if (isUploadStepEnabled) {
-          awsClient.uploadRevision(FileUtil.resolvePath(runningBuild.getCheckoutDirectory(), revisionPath), s3BucketName, s3ObjectKey);
+          final File readyRevision = new ApplicationRevision(
+            StringUtil.isEmptyOrSpaces(s3ObjectKey) ? runningBuild.getBuildTypeExternalId() : s3ObjectKey,
+            runnerParameters.get(CodeDeployConstants.REVISION_PATHS_PARAM),
+            runningBuild.getCheckoutDirectory(), runningBuild.getBuildTempDirectory(), myAppSpec).getArchive();
+
+          if (StringUtil.isEmptyOrSpaces(s3ObjectKey)) {
+            s3ObjectKey = readyRevision.getName();
+          }
+
+          awsClient.uploadRevision(readyRevision, s3BucketName, s3ObjectKey);
         }
 
         final String applicationName = runnerParameters.get(CodeDeployConstants.APP_NAME_PARAM);
-        final String bundleType = AWSClient.getBundleType(s3ObjectKey);
+        final String bundleType = "" + AWSClient.getBundleType(s3ObjectKey);
         final String s3ObjectVersion = StringUtil.nullIfEmpty(configParameters.get(CodeDeployConstants.S3_OBJECT_VERSION_CONFIG_PARAM));
 
         if (isRegisterStepEnabled) {
@@ -103,10 +106,7 @@ public class CodeDeployRunner implements AgentBuildRunner {
         final Map<String, String> runnerParameters = context.getRunnerParameters();
         final Map<String, String> invalids = ParametersValidator.validateRuntime(runnerParameters, context.getConfigParameters(), runningBuild.getCheckoutDirectory());
         if (invalids.isEmpty()) return runnerParameters;
-
-        final RunBuildException runBuildException = new RunBuildException(invalids.values().iterator().next(), null, ErrorData.BUILD_RUNNER_ERROR_TYPE);
-        runBuildException.setLogStacktrace(false);
-        throw runBuildException;
+        throw new CodeDeployRunnerException(invalids.values().iterator().next(), null);
       }
     };
   }
@@ -142,11 +142,18 @@ public class CodeDeployRunner implements AgentBuildRunner {
         runnerParameters.get(CodeDeployConstants.EXTERNAL_ID_PARAM),
         accessKeyId,
         secretAccessKey,
-        runningBuild.getBuildTypeName(),
+        runningBuild.getBuildTypeName() + runningBuild.getBuildId(),
         2 * Integer.getInteger(runnerParameters.get(CodeDeployConstants.WAIT_TIMEOUT_SEC_PARAM), CodeDeployConstants.TEMP_CREDENTIALS_DURATION_SEC_DEFAULT),
         regionName
       ) :
       new AWSClient(accessKeyId, secretAccessKey, regionName))
       .withDescription("TeamCity build \"" + runningBuild.getBuildTypeName() + "\" #" + runningBuild.getBuildNumber());
+  }
+
+  static class CodeDeployRunnerException extends RunBuildException {
+    public CodeDeployRunnerException(@NotNull String message, @Nullable Throwable cause) {
+      super(message, cause, ErrorData.BUILD_RUNNER_ERROR_TYPE);
+      this.setLogStacktrace(false);
+    }
   }
 }

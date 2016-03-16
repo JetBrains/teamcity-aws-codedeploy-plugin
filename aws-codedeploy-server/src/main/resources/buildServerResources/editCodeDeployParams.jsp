@@ -103,8 +103,10 @@
 <l:settingsGroup title="Revision Location">
     <tr data-steps="${upload_step}">
         <th><label for="${revision_path_param}">${revision_path_label}: <l:star/></label></th>
-        <td><props:textProperty name="${revision_path_param}" className="longField" maxlength="256"/>
-            <span class="smallNote">Path to a valid application revision archive (including appspec.yml) that should be uploaded, registered or deployed</span><span class="error" id="error_${revision_path_param}"></span>
+        <td><props:textProperty name="${revision_path_param}" className="longField" maxlength="256" expandable="true"/>
+            <span class="smallNote">Path to a ready revision archive or newline-separated list of files to package into revision</span>
+            <span class="smallNote">Must include appspec.yml. Ant-style wildcards supported</span>
+            <span class="error" id="error_${revision_path_param}"></span>
         </td>
     </tr>
     <tr>

@@ -39,10 +39,10 @@ public final class ParametersValidator {
   public static Map<String, String> validateRuntime(@NotNull Map<String, String> runnerParams, @NotNull Map<String, String> configParams, @NotNull File checkoutDir) {
     final Map<String, String> invalids = new HashMap<String, String>(validate(runnerParams, true));
 
-    if (!invalids.containsKey(READY_REVISION_PATH_PARAM) && isUploadStepEnabled(runnerParams)) {
-      final String revisionPath = runnerParams.get(READY_REVISION_PATH_PARAM);
-      if (!FileUtil.resolvePath(checkoutDir, revisionPath).exists()) {
-        invalids.put(READY_REVISION_PATH_PARAM, READY_REVISION_PATH_LABEL + " " + revisionPath + " doesn't exist");
+    if (!invalids.containsKey(REVISION_PATHS_PARAM) && isUploadStepEnabled(runnerParams)) {
+      final String revisionPath = getReadyRevision(runnerParams.get(REVISION_PATHS_PARAM));
+      if (revisionPath != null && !FileUtil.resolvePath(checkoutDir, revisionPath).exists()) {
+        invalids.put(REVISION_PATHS_PARAM, READY_REVISION_PATH_LABEL + " " + revisionPath + " doesn't exist");
       }
     }
 
@@ -117,12 +117,10 @@ public final class ParametersValidator {
       invalids.put(CREDENTIALS_TYPE_PARAM, CREDENTIALS_TYPE_LABEL + " has unexpected value " + credentialsType);
     }
 
+    final String revisionPaths = runnerParams.get(REVISION_PATHS_PARAM);
     if (uploadStepEnabled) {
-      final String revisionPath = runnerParams.get(READY_REVISION_PATH_PARAM);
-      if (StringUtil.isEmptyOrSpaces(revisionPath)) {
-        invalids.put(READY_REVISION_PATH_PARAM, READY_REVISION_PATH_LABEL + " mustn't be empty");
-      } else {
-        validateBundleType(invalids, revisionPath, READY_REVISION_PATH_PARAM, READY_REVISION_PATH_LABEL, runtime);
+      if (StringUtil.isEmptyOrSpaces(revisionPaths)) {
+        invalids.put(REVISION_PATHS_PARAM, READY_REVISION_PATH_LABEL + " mustn't be empty");
       }
     }
 
@@ -192,10 +190,8 @@ public final class ParametersValidator {
 
   private static void validateBundleType(@NotNull Map<String, String> invalids, @NotNull String param, @NotNull String key, @NotNull String name, boolean runtime) {
     if (!isReference(param, runtime)) {
-      try {
-        AWSClient.getBundleType(param);
-      } catch (IllegalArgumentException e) {
-        invalids.put(key, name + " provides invalid bundle type " + ", " + e.getMessage());
+      if (null == AWSClient.getBundleType(param)) {
+        invalids.put(key, name + " provides invalid bundle type, supported bundle types are .zip, .tar and .tar.gz");
       }
     }
   }
