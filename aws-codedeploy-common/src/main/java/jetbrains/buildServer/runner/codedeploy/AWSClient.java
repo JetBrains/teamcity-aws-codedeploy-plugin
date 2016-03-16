@@ -55,9 +55,9 @@ public class AWSClient {
     this(getBasicCredentials(accessKeyId, secretAccessKey), getRegion(regionName));
   }
 
-  public AWSClient(@NotNull String iamRoleARN, @Nullable String externalID,
-                   @Nullable String accessKeyId, @Nullable String secretAccessKey,
-                   @NotNull String sessionName, int sessionDuration,
+  public AWSClient(@NotNull final String iamRoleARN, @Nullable final String externalID,
+                   @Nullable final String accessKeyId, @Nullable final String secretAccessKey,
+                   @NotNull final String sessionName, final int sessionDuration,
                    @NotNull String regionName) {
     this(new LazyCredentials() {
       @NotNull
