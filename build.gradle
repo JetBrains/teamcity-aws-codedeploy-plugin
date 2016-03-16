@@ -51,7 +51,7 @@ subprojects {
 configure(subprojects - project(':build')) {
     apply plugin: 'java'
 
-    sourceCompatibility = "1.8"
+    sourceCompatibility = javaVersion
     targetCompatibility = javaVersion
 
     tasks.withType(JavaCompile) {

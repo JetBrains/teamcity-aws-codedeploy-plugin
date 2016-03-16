@@ -91,7 +91,7 @@ public class CodeDeployRunner implements AgentBuildRunner {
               s3BucketName, s3ObjectKey, bundleType, s3ObjectVersion,
               applicationName, deploymentGroupName, deploymentConfigName,
               Integer.parseInt(runnerParameters.get(CodeDeployConstants.WAIT_TIMEOUT_SEC_PARAM)),
-              Integer.parseInt(configParameters.getOrDefault(CodeDeployConstants.WAIT_POLL_INTERVAL_SEC_CONFIG_PARAM, CodeDeployConstants.WAIT_POLL_INTERVAL_SEC_DEFAULT)));
+              Integer.parseInt(getOrDefault(configParameters.get(CodeDeployConstants.WAIT_POLL_INTERVAL_SEC_CONFIG_PARAM), CodeDeployConstants.WAIT_POLL_INTERVAL_SEC_DEFAULT)));
           } else {
             awsClient.deployRevision(
               s3BucketName, s3ObjectKey, bundleType, s3ObjectVersion,
@@ -100,6 +100,11 @@ public class CodeDeployRunner implements AgentBuildRunner {
         }
 
         return problemOccurred.get() ? BuildFinishedStatus.FINISHED_WITH_PROBLEMS : BuildFinishedStatus.FINISHED_SUCCESS;
+      }
+
+      @NotNull
+      private String getOrDefault(@Nullable String val, @NotNull String defaultVal) {
+        return val == null ? defaultVal : val;
       }
 
       @NotNull
