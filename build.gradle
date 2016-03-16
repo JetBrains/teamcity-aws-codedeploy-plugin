@@ -34,7 +34,7 @@ ext.teamcityJavaHome = System.properties['java.home']
 
 ext.awsSDKVersion = hasProperty('aws.sdk.version') ? property('aws.sdk.version') : '1.10.51'
 
-ext.javaVersion = hasProperty('plugin.java.version') ? property('plugin.java.version') : '1.8'
+ext.javaVersion = hasProperty('plugin.java.version') ? property('plugin.java.version') : '1.7'
 
 
 apply plugin: 'idea'
@@ -51,7 +51,7 @@ subprojects {
 configure(subprojects - project(':build')) {
     apply plugin: 'java'
 
-    sourceCompatibility = javaVersion
+    sourceCompatibility = "1.8"
     targetCompatibility = javaVersion
 
     tasks.withType(JavaCompile) {
