@@ -64,7 +64,8 @@ public class CodeDeployRunner implements AgentBuildRunner {
           final File readyRevision = new ApplicationRevision(
             StringUtil.isEmptyOrSpaces(s3ObjectKey) ? runningBuild.getBuildTypeExternalId() : s3ObjectKey,
             runnerParameters.get(CodeDeployConstants.REVISION_PATHS_PARAM),
-            runningBuild.getCheckoutDirectory(), runningBuild.getBuildTempDirectory(), null).getArchive();
+            runningBuild.getCheckoutDirectory(), runningBuild.getBuildTempDirectory(),
+            configParameters.get(CodeDeployConstants.CUSTOM_APPSPEC_YML_CONFIG_PARAM)).withLogger(runningBuild.getBuildLogger()).getArchive();
 
           if (StringUtil.isEmptyOrSpaces(s3ObjectKey)) {
             s3ObjectKey = readyRevision.getName();
