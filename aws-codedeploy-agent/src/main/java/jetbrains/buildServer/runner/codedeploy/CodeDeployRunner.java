@@ -53,9 +53,9 @@ public class CodeDeployRunner implements AgentBuildRunner {
             }
           });
 
-        final boolean isUploadStepEnabled = CodeDeployConstants.isUploadStepEnabled(runnerParameters);
-        final boolean isRegisterStepEnabled = CodeDeployConstants.isRegisterStepEnabled(runnerParameters);
-        final boolean isDeployStepEnabled = CodeDeployConstants.isDeployStepEnabled(runnerParameters);
+        final boolean isUploadStepEnabled = CodeDeployUtil.isUploadStepEnabled(runnerParameters);
+        final boolean isRegisterStepEnabled = CodeDeployUtil.isRegisterStepEnabled(runnerParameters);
+        final boolean isDeployStepEnabled = CodeDeployUtil.isDeployStepEnabled(runnerParameters);
 
         final String s3BucketName = runnerParameters.get(CodeDeployConstants.S3_BUCKET_NAME_PARAM);
         String s3ObjectKey = runnerParameters.get(CodeDeployConstants.S3_OBJECT_KEY_PARAM);
@@ -86,7 +86,7 @@ public class CodeDeployRunner implements AgentBuildRunner {
           final String deploymentGroupName = runnerParameters.get(CodeDeployConstants.DEPLOYMENT_GROUP_NAME_PARAM);
           final String deploymentConfigName = StringUtil.nullIfEmpty(runnerParameters.get(CodeDeployConstants.DEPLOYMENT_CONFIG_NAME_PARAM));
 
-          if (CodeDeployConstants.isDeploymentWaitEnabled(runnerParameters)) {
+          if (CodeDeployUtil.isDeploymentWaitEnabled(runnerParameters)) {
             awsClient.deployRevisionAndWait(
               s3BucketName, s3ObjectKey, bundleType, s3ObjectVersion,
               applicationName, deploymentGroupName, deploymentConfigName,

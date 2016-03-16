@@ -22,6 +22,7 @@ import jetbrains.buildServer.util.StringUtil;
 import org.jetbrains.annotations.NotNull;
 
 import static jetbrains.buildServer.runner.codedeploy.CodeDeployConstants.*;
+import static jetbrains.buildServer.runner.codedeploy.CodeDeployUtil.*;
 
 import java.io.File;
 import java.util.HashMap;

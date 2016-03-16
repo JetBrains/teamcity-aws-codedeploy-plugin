@@ -58,14 +58,14 @@ public class ApplicationRevision {
 
   @NotNull
   public File getArchive() throws CodeDeployRunner.CodeDeployRunnerException {
-    final String readyRevisionPath = CodeDeployConstants.getReadyRevision(myPaths);
+    final String readyRevisionPath = CodeDeployUtil.getReadyRevision(myPaths);
     return readyRevisionPath == null ? packZip() : FileUtil.resolvePath(myBaseDir, readyRevisionPath);
   }
 
   @NotNull
   private File packZip() throws CodeDeployRunner.CodeDeployRunnerException {
     @SuppressWarnings("ConstantConditions") final List<File> files =
-      new ArrayList<File>(AntPatternFileCollector.scanDir(myBaseDir, CollectionsUtil.toStringArray(CodeDeployConstants.getRevisionPaths(myPaths)), null));
+      new ArrayList<File>(AntPatternFileCollector.scanDir(myBaseDir, CollectionsUtil.toStringArray(CodeDeployUtil.getRevisionPaths(myPaths)), null));
 
     if (files.isEmpty()) {
       throw new CodeDeployRunner.CodeDeployRunnerException("No " + CodeDeployConstants.REVISION_PATHS_PARAM + " files found", null);

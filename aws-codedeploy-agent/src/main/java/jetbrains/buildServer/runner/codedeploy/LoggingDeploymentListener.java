@@ -56,7 +56,7 @@ public class LoggingDeploymentListener extends AWSClient.Listener {
   @Override
   void uploadRevisionFinished(@NotNull File revision, @NotNull String s3BucketName, @NotNull String key, @NotNull String url) {
     log("Uploaded application revision " + url);
-    if (!CodeDeployConstants.isRegisterStepEnabled(myRunnerParameters)) {
+    if (!CodeDeployUtil.isRegisterStepEnabled(myRunnerParameters)) {
       statusText("Uploaded " + url);
     }
     close(UPLOAD_REVISION);
@@ -70,7 +70,7 @@ public class LoggingDeploymentListener extends AWSClient.Listener {
 
   @Override
   void registerRevisionFinished(@NotNull String applicationName, @NotNull String s3BucketName, @NotNull String s3ObjectKey, @NotNull String s3BundleType, @Nullable String s3ObjectVersion) {
-    if (!CodeDeployConstants.isDeployStepEnabled(myRunnerParameters)) {
+    if (!CodeDeployUtil.isDeployStepEnabled(myRunnerParameters)) {
       statusText("Registered revision");
     }
     close(REGISTER_REVISION);
