@@ -17,9 +17,6 @@
 package jetbrains.buildServer.runner.codedeploy;
 
 import jetbrains.buildServer.util.CollectionsUtil;
-import jetbrains.buildServer.util.StringUtil;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 
