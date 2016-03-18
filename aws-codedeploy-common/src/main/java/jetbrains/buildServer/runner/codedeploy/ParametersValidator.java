@@ -25,25 +25,26 @@ import static jetbrains.buildServer.runner.codedeploy.CodeDeployConstants.*;
 import static jetbrains.buildServer.runner.codedeploy.CodeDeployUtil.*;
 
 import java.io.File;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
 /**
  * @author vbedrosova
  */
-public final class ParametersValidator {
+final class ParametersValidator {
   /**
    * Must be used for parameters validation during the build
    * Returns map from parameter name to invalidity reason
    */
   @NotNull
-  public static Map<String, String> validateRuntime(@NotNull Map<String, String> runnerParams, @NotNull Map<String, String> configParams, @NotNull File checkoutDir) {
+  static Map<String, String> validateRuntime(@NotNull Map<String, String> runnerParams, @NotNull Map<String, String> configParams, @NotNull File checkoutDir) {
     final Map<String, String> invalids = new HashMap<String, String>(validate(runnerParams, true));
 
     if (!invalids.containsKey(REVISION_PATHS_PARAM) && isUploadStepEnabled(runnerParams)) {
       final String revisionPath = getReadyRevision(runnerParams.get(REVISION_PATHS_PARAM));
       if (revisionPath != null && !FileUtil.resolvePath(checkoutDir, revisionPath).exists()) {
-        invalids.put(REVISION_PATHS_PARAM, READY_REVISION_PATH_LABEL + " " + revisionPath + " doesn't exist");
+        invalids.put(REVISION_PATHS_PARAM, REVISION_PATHS_PARAM + " " + revisionPath + " doesn't exist");
       }
     }
 
@@ -54,14 +55,14 @@ public final class ParametersValidator {
       }
     }
 
-    return invalids;
+    return Collections.unmodifiableMap(invalids);
   }
 
   /**
    * Returns map from parameter name to invalidity reason
    */
   @NotNull
-  public static Map<String, String> validateSettings(@NotNull Map<String, String> params) {
+  static Map<String, String> validateSettings(@NotNull Map<String, String> params) {
     return validate(params, false);
   }
 
@@ -121,7 +122,16 @@ public final class ParametersValidator {
     final String revisionPaths = runnerParams.get(REVISION_PATHS_PARAM);
     if (uploadStepEnabled) {
       if (StringUtil.isEmptyOrSpaces(revisionPaths)) {
-        invalids.put(REVISION_PATHS_PARAM, READY_REVISION_PATH_LABEL + " mustn't be empty");
+        invalids.put(REVISION_PATHS_PARAM, REVISION_PATHS_LABEL + " mustn't be empty");
+      } else if (!isReference(revisionPaths, runtime)) {
+        final String readyRevision = getReadyRevision(revisionPaths);
+        if (readyRevision == null) {
+          if (getRevisionPathMappings(revisionPaths).isEmpty()) {
+            invalids.put(REVISION_PATHS_PARAM, REVISION_PATHS_LABEL + " has unexpected value, " + REVISION_PATHS_NOTE);
+          }
+        } else {
+          validateBundleType(invalids, revisionPaths, REVISION_PATHS_PARAM, REVISION_PATHS_LABEL, runtime);
+        }
       }
     }
 

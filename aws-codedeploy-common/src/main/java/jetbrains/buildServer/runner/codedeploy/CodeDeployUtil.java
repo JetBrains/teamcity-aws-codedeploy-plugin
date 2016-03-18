@@ -16,33 +16,32 @@
 
 package jetbrains.buildServer.runner.codedeploy;
 
+import jetbrains.buildServer.util.FileUtil;
 import jetbrains.buildServer.util.StringUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static jetbrains.buildServer.runner.codedeploy.CodeDeployConstants.*;
 
 /**
  * @author vbedrosova
  */
-public abstract class CodeDeployUtil {
-  public static boolean isUploadStepEnabled(@NotNull Map<String, String> params) {
+abstract class CodeDeployUtil {
+  static boolean isUploadStepEnabled(@NotNull Map<String, String> params) {
     return isStepEnabled(UPLOAD_STEP, params);
   }
 
-  public static boolean isRegisterStepEnabled(@NotNull Map<String, String> params) {
+  static boolean isRegisterStepEnabled(@NotNull Map<String, String> params) {
     return isStepEnabled(REGISTER_STEP, params);
   }
 
-  public static boolean isDeployStepEnabled(@NotNull Map<String, String> params) {
+  static boolean isDeployStepEnabled(@NotNull Map<String, String> params) {
     return isStepEnabled(DEPLOY_STEP, params);
   }
 
-  public static boolean isDeploymentWaitEnabled(@NotNull Map<String, String> params) {
+  static boolean isDeploymentWaitEnabled(@NotNull Map<String, String> params) {
     if (isDeployStepEnabled(params)) {
       final String waitParam = params.get(WAIT_FLAG_PARAM);
       return StringUtil.isEmptyOrSpaces(waitParam) || Boolean.parseBoolean(waitParam);
@@ -50,14 +49,14 @@ public abstract class CodeDeployUtil {
     return false;
   }
 
-  public static boolean isStepEnabled(@NotNull String step, @NotNull Map<String, String> params) {
+  static boolean isStepEnabled(@NotNull String step, @NotNull Map<String, String> params) {
     final String steps = params.get(DEPLOYMENT_STEPS_PARAM);
     return steps != null && steps.contains(step);
   }
 
   @Nullable
-  public static String getReadyRevision(@NotNull String revisionPathsParam) {
-    final String[] split = revisionPathsParam.split(SPLIT_REGEX);
+  static String getReadyRevision(@NotNull String revisionPathsParam) {
+    final String[] split = revisionPathsParam.split(MULTILINE_SPLIT_REGEX);
     if (split.length == 1) {
       final String revisionPath = split[0];
       if (revisionPath.contains("*")) return null;
@@ -67,12 +66,19 @@ public abstract class CodeDeployUtil {
     return null;
   }
 
-  @Nullable
-  public static List<String> getRevisionPaths(@NotNull String revisionPathsParam) {
+  @NotNull
+  static Map<String, String> getRevisionPathMappings(@NotNull String revisionPathsParam) {
     final String readyRevision = getReadyRevision(revisionPathsParam);
     if (readyRevision == null) {
-      return Arrays.asList(revisionPathsParam.split(SPLIT_REGEX));
+      final Map<String, String> dest = new LinkedHashMap<String, String>();
+      for (String path : revisionPathsParam.split(MULTILINE_SPLIT_REGEX)) {
+        final String[] parts = path.split(PATH_SPLIT_REGEX);
+        dest.put(
+          StringUtil.removeTailingSlash(FileUtil.toSystemIndependentName(parts[0])),
+          parts.length == 1 ? StringUtil.EMPTY : StringUtil.removeLeadingAndTailingSlash(FileUtil.toSystemIndependentName(parts[1])));
+      }
+      return Collections.unmodifiableMap(dest);
     }
-    return null;
+    return Collections.<String, String>emptyMap();
   }
 }

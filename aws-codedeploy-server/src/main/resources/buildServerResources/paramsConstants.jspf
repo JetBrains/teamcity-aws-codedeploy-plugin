@@ -24,7 +24,8 @@
 <jsp:useBean id="deploymentScenarios" scope="request" type="java.util.Map<java.lang.String, java.lang.String>"/>
 
 <c:set var="revision_path_param" value="<%=CodeDeployConstants.REVISION_PATHS_PARAM%>"/>
-<c:set var="revision_path_label" value="<%=CodeDeployConstants.READY_REVISION_PATH_LABEL%>"/>
+<c:set var="revision_path_label" value="<%=CodeDeployConstants.REVISION_PATHS_LABEL%>"/>
+<c:set var="revision_path_note" value="<%=CodeDeployConstants.REVISION_PATHS_NOTE%>"/>
 
 <c:set var="region_name_param" value="<%=CodeDeployConstants.REGION_NAME_PARAM%>"/>
 <c:set var="region_name_label" value="<%=CodeDeployConstants.REGION_NAME_LABEL%>"/>

@@ -21,13 +21,11 @@ import jetbrains.buildServer.util.CollectionsUtil;
 import jetbrains.buildServer.util.FileUtil;
 import jetbrains.buildServer.util.StringUtil;
 import jetbrains.buildServer.util.filters.Filter;
-import jetbrains.buildServer.util.pathMatcher.AntPatternFileCollector;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.*;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -44,75 +42,85 @@ public class ApplicationRevision {
   @NotNull
   private final File myTempDir;
   @Nullable
-  private final String myCustomAppSpecContent;
+  private final String myCustomAppSpec;
+  @NotNull
+  private final PathMappings myPathMappings;
   @Nullable
   private BuildProgressLogger myLogger;
 
-  public ApplicationRevision(@NotNull String name, @NotNull String paths, @NotNull File baseDir, @NotNull File tempDir, @Nullable String customAppSpecContent) {
+  ApplicationRevision(@NotNull String name, @NotNull String paths, @NotNull File baseDir, @NotNull File tempDir, @Nullable String customAppSpecContent) {
     myName = name;
     myPaths = paths;
     myBaseDir = baseDir;
     myTempDir = tempDir;
-    myCustomAppSpecContent = customAppSpecContent;
+    myCustomAppSpec = customAppSpecContent;
+
+    myPathMappings = new PathMappings(myBaseDir, CodeDeployUtil.getRevisionPathMappings(myPaths));
   }
 
   @NotNull
-  public File getArchive() throws CodeDeployRunner.CodeDeployRunnerException {
+  File getArchive() throws CodeDeployRunner.CodeDeployRunnerException {
     final String readyRevisionPath = CodeDeployUtil.getReadyRevision(myPaths);
     return readyRevisionPath == null ? packZip() : FileUtil.resolvePath(myBaseDir, readyRevisionPath);
   }
 
   @NotNull
   private File packZip() throws CodeDeployRunner.CodeDeployRunnerException {
-    @SuppressWarnings("ConstantConditions") final List<File> files =
-      new ArrayList<File>(AntPatternFileCollector.scanDir(myBaseDir, CollectionsUtil.toStringArray(CodeDeployUtil.getRevisionPaths(myPaths)), null));
+    final List<File> files = new ArrayList<File>(myPathMappings.collectFiles());
 
     if (files.isEmpty()) {
-      throw new CodeDeployRunner.CodeDeployRunnerException("No " + CodeDeployConstants.REVISION_PATHS_PARAM + " files found", null);
+      throw new CodeDeployRunner.CodeDeployRunnerException("No " + CodeDeployConstants.REVISION_PATHS_LABEL.toLowerCase() + " files found", null);
     }
-    return zipFiles(patchAppspecYml(files), new File(myTempDir, myName.endsWith(".zip") ? myName : myName + ".zip"));
+    return zipFiles(patchAppSpecYml(files), new File(myTempDir, myName.endsWith(".zip") ? myName : myName + ".zip"));
   }
 
   @NotNull
-  private List<File> patchAppspecYml(@NotNull List<File> files) throws CodeDeployRunner.CodeDeployRunnerException {
+  private List<File> patchAppSpecYml(@NotNull List<File> files) throws CodeDeployRunner.CodeDeployRunnerException {
     final File appSpecYml = CollectionsUtil.<File>findFirst(files, new Filter<File>() {
       @Override
       public boolean accept(@NotNull File data) {
-        return CodeDeployConstants.APPSPEC_YML.equals(FileUtil.getRelativePath(myBaseDir, data));
+        return CodeDeployConstants.APPSPEC_YML.equals(myPathMappings.mapPath(data));
       }
     });
 
-    if (StringUtil.isNotEmpty(myCustomAppSpecContent)) {
-      final File customAppSpecYml = customAppSpecYmlFile();
-
-      try {
-        FileUtil.writeFile(customAppSpecYml, myCustomAppSpecContent, "UTF-8");
-      } catch (IOException e) {
-        throw new CodeDeployRunner.CodeDeployRunnerException("Failed to write custom " + CodeDeployConstants.APPSPEC_YML, e);
-      }
-
+    final File customAppSpecYml = getCustomAppSpecYmlFile();
+    if (customAppSpecYml != null) {
       if (null == appSpecYml) {
-        log("Will use custom " + CodeDeployConstants.APPSPEC_YML + " " + customAppSpecYml);
+        log("Will use custom AppSpec file " + customAppSpecYml);
       } else {
-        log("Will replace existing " + CodeDeployConstants.APPSPEC_YML + " " + appSpecYml + " with custom " + customAppSpecYml);
+        log("Will replace existing AppSpec file " + appSpecYml + " with custom " + customAppSpecYml);
         files.remove(appSpecYml);
       }
       files.add(customAppSpecYml);
 
     } else if (null == appSpecYml) {
-      throw new CodeDeployRunner.CodeDeployRunnerException("No " + CodeDeployConstants.APPSPEC_YML + " file found among " + CodeDeployConstants.REVISION_PATHS_PARAM + " files", null);
+      throw new CodeDeployRunner.CodeDeployRunnerException("No " + CodeDeployConstants.APPSPEC_YML + " file found among " + CodeDeployConstants.REVISION_PATHS_LABEL.toLowerCase() + " files and no custom AppSpec file provided", null);
     }
     return files;
   }
 
-  @NotNull
-  private File customAppSpecYmlFile() {
-    return new File(myTempDir, CodeDeployConstants.APPSPEC_YML);
+  @Nullable
+  private File getCustomAppSpecYmlFile() throws CodeDeployRunner.CodeDeployRunnerException {
+    if (StringUtil.isEmptyOrSpaces(myCustomAppSpec)) return null;
+
+    if (myCustomAppSpec.endsWith(CodeDeployConstants.APPSPEC_YML)) {
+      return FileUtil.resolvePath(myBaseDir, myCustomAppSpec);
+    }
+
+    final File customAppSpecYml = new File(myTempDir, CodeDeployConstants.APPSPEC_YML);
+    if (!customAppSpecYml.isFile()) {
+      try {
+        FileUtil.writeFile(customAppSpecYml, "" + myCustomAppSpec, "UTF-8");
+      } catch (IOException e) {
+        throw new CodeDeployRunner.CodeDeployRunnerException("Failed to write custom " + CodeDeployConstants.APPSPEC_YML, e);
+      }
+    }
+    return customAppSpecYml;
   }
 
   @NotNull
   private File zipFiles(@NotNull List<File> files, @NotNull File destZip) throws CodeDeployRunner.CodeDeployRunnerException {
-    log("Adding " + files.size() + " files to application revision " + destZip);
+    log("Packaging " + files.size() + " files to application revision " + destZip);
 
     ZipOutputStream zipOutput = null;
     try {
@@ -134,7 +142,7 @@ public class ApplicationRevision {
             zipOutput.write(buffer, 0, Math.max(read, 0));
           } while (read == buffer.length);
         } catch (IOException e) {
-          throw new CodeDeployRunner.CodeDeployRunnerException("Failed to add file " + f + " to application revision " + destZip, e);
+          throw new CodeDeployRunner.CodeDeployRunnerException("Failed to package file " + f + " to application revision " + destZip, e);
         } finally {
           FileUtil.close(input);
           zipOutput.closeEntry();
@@ -144,7 +152,7 @@ public class ApplicationRevision {
       if (t instanceof CodeDeployRunner.CodeDeployRunnerException) {
         throw (CodeDeployRunner.CodeDeployRunnerException) t;
       }
-      throw new CodeDeployRunner.CodeDeployRunnerException("Failed to package files to application revision " + destZip, t);
+      throw new CodeDeployRunner.CodeDeployRunnerException("Failed to package application revision " + destZip, t);
     } finally {
       FileUtil.close(zipOutput);
     }
@@ -153,15 +161,15 @@ public class ApplicationRevision {
 
   @NotNull
   private String getZipPath(@NotNull File f) throws CodeDeployRunner.CodeDeployRunnerException {
-    if (customAppSpecYmlFile().equals(f)) return CodeDeployConstants.APPSPEC_YML;
+    if (f.equals(getCustomAppSpecYmlFile())) return CodeDeployConstants.APPSPEC_YML;
 
-    final String relativePath = FileUtil.getRelativePath(myBaseDir, f);
-    if(relativePath  == null) throw new CodeDeployRunner.CodeDeployRunnerException("Unexpected application revision file " + f, null);
-    return relativePath;
+    final String zipPath = myPathMappings.mapPath(f);
+    if(zipPath  == null) throw new CodeDeployRunner.CodeDeployRunnerException("Unexpected application revision file " + f, null);
+    return zipPath;
   }
 
   @NotNull
-  public ApplicationRevision withLogger(@Nullable BuildProgressLogger logger) {
+  ApplicationRevision withLogger(@Nullable BuildProgressLogger logger) {
     myLogger = logger;
     return this;
   }

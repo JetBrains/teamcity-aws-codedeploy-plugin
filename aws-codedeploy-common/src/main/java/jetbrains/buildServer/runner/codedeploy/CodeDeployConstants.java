@@ -80,6 +80,7 @@ public interface CodeDeployConstants {
 
   String S3_BUCKET_NAME_PARAM = "codedeploy_s3_bucket_name";
   String S3_BUCKET_NAME_LABEL = "S3 bucket";
+  String REVISION_PATHS_NOTE = "Ant-style wildcards as well as target directories like out/**/*.zip => dist supported";
 
   String S3_OBJECT_KEY_PARAM = "codedeploy_s3_object_key";
   String S3_OBJECT_KEY_LABEL = "S3 object key";
@@ -129,6 +130,8 @@ public interface CodeDeployConstants {
 
   String STATUS_IS_UNKNOWN = "status is unknown";
 
-  String SPLIT_REGEX = " *[,\n\r] *";
+  String MULTILINE_SPLIT_REGEX = " *[,\n\r] *";
+  String PATH_SPLIT_SIGN = "=>";
+  String PATH_SPLIT_REGEX = " *" + PATH_SPLIT_SIGN + " *";
   String APPSPEC_YML = "appspec.yml";
 }
