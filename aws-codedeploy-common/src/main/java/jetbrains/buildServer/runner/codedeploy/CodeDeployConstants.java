@@ -29,7 +29,7 @@ public interface CodeDeployConstants {
   String RUNNER_DESCR = "Prepare, upload, register and deploy application revision using CodeDeploy";
 
 
-  String DEPLOYMENT_ID_BUILD_CONFIG_PARAM = "codedeploy.deploment.id";
+  String DEPLOYMENT_ID_BUILD_CONFIG_PARAM = "codedeploy.deployment.id";
   String S3_OBJECT_VERSION_CONFIG_PARAM = "codedeploy.revision.s3.version";
   String CUSTOM_APPSPEC_YML_CONFIG_PARAM = "codedeploy.custom.appspec.yml";
 
@@ -76,7 +76,7 @@ public interface CodeDeployConstants {
   int TEMP_CREDENTIALS_DURATION_SEC_DEFAULT = 1800;
 
   String REVISION_PATHS_PARAM = "codedeploy_revision_paths";
-  String READY_REVISION_PATH_LABEL = "Application revision";
+  String REVISION_PATHS_LABEL = "Application revision";
 
   String S3_BUCKET_NAME_PARAM = "codedeploy_s3_bucket_name";
   String S3_BUCKET_NAME_LABEL = "S3 bucket";
