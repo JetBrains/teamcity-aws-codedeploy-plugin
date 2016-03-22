@@ -32,7 +32,7 @@ import java.util.zip.ZipOutputStream;
 /**
  * @author vbedrosova
  */
-public class ApplicationRevision {
+class ApplicationRevision {
   @NotNull
   private final String myName;
   @NotNull
