@@ -73,9 +73,11 @@ abstract class CodeDeployUtil {
       final Map<String, String> dest = new LinkedHashMap<String, String>();
       for (String path : revisionPathsParam.trim().split(MULTILINE_SPLIT_REGEX)) {
         final String[] parts = path.split(PATH_SPLIT_REGEX);
-        dest.put(
-          normalize(parts[0], true),
-          parts.length == 1 ? StringUtil.EMPTY : normalize(parts[1], false));
+        if (parts.length > 0) {
+          dest.put(
+            normalize(parts[0], true),
+            parts.length == 1 ? StringUtil.EMPTY : normalize(parts[1], false));
+        }
       }
       return Collections.unmodifiableMap(dest);
     }
@@ -92,5 +94,13 @@ abstract class CodeDeployUtil {
 
   static boolean isWildcard(@NotNull String path) {
     return path.contains("*") || path.contains("?");
+  }
+
+  @NotNull
+  static String printStrings(@NotNull Collection<String> strings) {
+    if (strings.isEmpty()) return StringUtil.EMPTY;
+    final StringBuilder sb = new StringBuilder();
+    for (String s : strings) sb.append(s).append("\n");
+    return sb.toString();
   }
 }

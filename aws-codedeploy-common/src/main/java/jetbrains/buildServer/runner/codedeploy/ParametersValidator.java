@@ -44,7 +44,7 @@ final class ParametersValidator {
     if (!invalids.containsKey(REVISION_PATHS_PARAM) && isUploadStepEnabled(runnerParams)) {
       final String revisionPath = getReadyRevision(runnerParams.get(REVISION_PATHS_PARAM));
       if (revisionPath != null && !FileUtil.resolvePath(checkoutDir, revisionPath).exists()) {
-        invalids.put(REVISION_PATHS_PARAM, REVISION_PATHS_PARAM + " " + revisionPath + " doesn't exist");
+        invalids.put(REVISION_PATHS_PARAM, REVISION_PATHS_LABEL + " " + revisionPath + " doesn't exist");
       }
     }
 
@@ -100,13 +100,13 @@ final class ParametersValidator {
     }
 
     if (!Boolean.parseBoolean(runnerParams.get(USE_DEFAULT_CREDENTIAL_PROVIDER_CHAIN_PARAM))) {
-          if (StringUtil.isEmptyOrSpaces(runnerParams.get(ACCESS_KEY_ID_PARAM))) {
-            invalids.put(ACCESS_KEY_ID_PARAM, ACCESS_KEY_ID_PARAM + " mustn't be empty");
-          }
-          if (StringUtil.isEmptyOrSpaces(runnerParams.get(SECRET_ACCESS_KEY_PARAM))) {
-            invalids.put(SECRET_ACCESS_KEY_PARAM, SECRET_ACCESS_KEY_LABEL + " mustn't be empty");
-          }
-        }
+      if (StringUtil.isEmptyOrSpaces(runnerParams.get(ACCESS_KEY_ID_PARAM))) {
+        invalids.put(ACCESS_KEY_ID_PARAM, ACCESS_KEY_ID_LABEL + " mustn't be empty");
+      }
+      if (StringUtil.isEmptyOrSpaces(runnerParams.get(SECRET_ACCESS_KEY_PARAM))) {
+        invalids.put(SECRET_ACCESS_KEY_PARAM, SECRET_ACCESS_KEY_LABEL + " mustn't be empty");
+      }
+    }
 
     final String credentialsType = runnerParams.get(CREDENTIALS_TYPE_PARAM);
     if (TEMP_CREDENTIALS_OPTION.equals(credentialsType)) {
@@ -119,8 +119,8 @@ final class ParametersValidator {
       invalids.put(CREDENTIALS_TYPE_PARAM, CREDENTIALS_TYPE_LABEL + " has unexpected value " + credentialsType);
     }
 
-    final String revisionPaths = runnerParams.get(REVISION_PATHS_PARAM);
     if (uploadStepEnabled) {
+      final String revisionPaths = runnerParams.get(REVISION_PATHS_PARAM);
       if (StringUtil.isEmptyOrSpaces(revisionPaths)) {
         invalids.put(REVISION_PATHS_PARAM, REVISION_PATHS_LABEL + " mustn't be empty");
       } else if (!isReference(revisionPaths, runtime)) {
@@ -129,29 +129,30 @@ final class ParametersValidator {
           if (getRevisionPathMappings(revisionPaths).isEmpty()) {
             invalids.put(REVISION_PATHS_PARAM, REVISION_PATHS_LABEL + " has unexpected value, " + REVISION_PATHS_NOTE);
           }
-        } else {
-          validateBundleType(invalids, revisionPaths, REVISION_PATHS_PARAM, REVISION_PATHS_LABEL, runtime);
         }
       }
     }
 
-    final String s3BucketName = runnerParams.get(S3_BUCKET_NAME_PARAM);
-    if (StringUtil.isEmptyOrSpaces(s3BucketName)) {
-      invalids.put(S3_BUCKET_NAME_PARAM, S3_BUCKET_NAME_LABEL + " mustn't be empty");
-    } else if (s3BucketName.contains("/")) {
-      invalids.put(S3_BUCKET_NAME_PARAM, S3_BUCKET_NAME_LABEL + " mustn't contain / characters. For addressing folders use " + S3_OBJECT_KEY_LABEL + " parameter");
-    }
+    if (uploadStepEnabled || registerStepEnabled || deployStepEnabled) {
+      final String s3BucketName = runnerParams.get(S3_BUCKET_NAME_PARAM);
+      if (StringUtil.isEmptyOrSpaces(s3BucketName)) {
+        invalids.put(S3_BUCKET_NAME_PARAM, S3_BUCKET_NAME_LABEL + " mustn't be empty");
+      } else if (s3BucketName.contains("/")) {
+        invalids.put(S3_BUCKET_NAME_PARAM, S3_BUCKET_NAME_LABEL + " mustn't contain / characters. For addressing folders use " + S3_OBJECT_KEY_LABEL + " parameter");
+      }
 
-    final String s3ObjectKey = runnerParams.get(S3_OBJECT_KEY_PARAM);
-    if (StringUtil.isEmptyOrSpaces(s3ObjectKey)) {
-      if (!uploadStepEnabled) {
-        invalids.put(S3_OBJECT_KEY_PARAM, S3_OBJECT_KEY_LABEL + " mustn't be empty");
+      final String s3ObjectKey = runnerParams.get(S3_OBJECT_KEY_PARAM);
+      if (StringUtil.isEmptyOrSpaces(s3ObjectKey)) {
+        if (registerStepEnabled || deployStepEnabled) {
+          invalids.put(S3_OBJECT_KEY_PARAM, S3_OBJECT_KEY_LABEL + " mustn't be empty");
+        }
+      } else {
+        validateS3Key(invalids, s3ObjectKey, S3_OBJECT_KEY_PARAM, S3_OBJECT_KEY_LABEL, runtime);
+        if (registerStepEnabled || deployStepEnabled) {
+          validateBundleType(invalids, s3ObjectKey, S3_OBJECT_KEY_PARAM, S3_OBJECT_KEY_LABEL, runtime);
+        }
       }
-    } else {
-      validateS3Key(invalids, s3ObjectKey, S3_OBJECT_KEY_PARAM, S3_OBJECT_KEY_LABEL, runtime);
-      if (!uploadStepEnabled) {
-        validateBundleType(invalids, s3ObjectKey, S3_OBJECT_KEY_PARAM, S3_OBJECT_KEY_LABEL, runtime);
-      }
+
     }
 
     if (registerStepEnabled || deployStepEnabled) {
@@ -165,8 +166,7 @@ final class ParametersValidator {
         invalids.put(DEPLOYMENT_GROUP_NAME_PARAM, DEPLOYMENT_GROUP_NAME_LABEL + " mustn't be empty");
       }
 
-      final String waitParam = runnerParams.get(WAIT_FLAG_PARAM);
-      if (StringUtil.isEmptyOrSpaces(waitParam) || Boolean.parseBoolean(waitParam)) {
+      if (isDeploymentWaitEnabled(runnerParams)) {
         final String waitTimeoutSec = runnerParams.get(WAIT_TIMEOUT_SEC_PARAM);
         if (StringUtil.isEmptyOrSpaces(waitTimeoutSec)) {
           invalids.put(WAIT_TIMEOUT_SEC_PARAM, WAIT_TIMEOUT_SEC_LABEL + " mustn't be empty");

@@ -139,6 +139,6 @@ public class CodeDeployRunType extends RunType {
     return
       invalids.isEmpty() ?
       CodeDeployConstants.STEP_LABELS.get(parameters.get(CodeDeployConstants.DEPLOYMENT_STEPS_PARAM)) + " application revision" :
-      invalids.values().iterator().next();
+      CodeDeployUtil.printStrings(invalids.values());
   }
 }

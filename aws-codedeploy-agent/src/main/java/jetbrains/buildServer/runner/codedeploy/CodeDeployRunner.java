@@ -112,7 +112,7 @@ public class CodeDeployRunner implements AgentBuildRunner {
         final Map<String, String> runnerParameters = context.getRunnerParameters();
         final Map<String, String> invalids = ParametersValidator.validateRuntime(runnerParameters, context.getConfigParameters(), runningBuild.getCheckoutDirectory());
         if (invalids.isEmpty()) return runnerParameters;
-        throw new CodeDeployRunnerException(invalids.values().iterator().next(), null);
+        throw new CodeDeployRunnerException(CodeDeployUtil.printStrings(invalids.values()), null);
       }
     };
   }
