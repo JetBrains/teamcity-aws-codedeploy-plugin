@@ -49,17 +49,17 @@ abstract class CodeDeployUtil {
     return false;
   }
 
-  static boolean isStepEnabled(@NotNull String step, @NotNull Map<String, String> params) {
+  private static boolean isStepEnabled(@NotNull String step, @NotNull Map<String, String> params) {
     final String steps = params.get(DEPLOYMENT_STEPS_PARAM);
     return steps != null && steps.contains(step);
   }
 
   @Nullable
   static String getReadyRevision(@NotNull String revisionPathsParam) {
-    final String[] split = revisionPathsParam.split(MULTILINE_SPLIT_REGEX);
+    final String[] split = revisionPathsParam.trim().split(MULTILINE_SPLIT_REGEX);
     if (split.length == 1) {
       final String revisionPath = split[0];
-      if (revisionPath.contains("*")) return null;
+      if (isWildcard(revisionPath)) return null;
       if (null == AWSClient.getBundleType(revisionPath)) return null;
       return revisionPath;
     }
@@ -71,14 +71,26 @@ abstract class CodeDeployUtil {
     final String readyRevision = getReadyRevision(revisionPathsParam);
     if (readyRevision == null) {
       final Map<String, String> dest = new LinkedHashMap<String, String>();
-      for (String path : revisionPathsParam.split(MULTILINE_SPLIT_REGEX)) {
+      for (String path : revisionPathsParam.trim().split(MULTILINE_SPLIT_REGEX)) {
         final String[] parts = path.split(PATH_SPLIT_REGEX);
         dest.put(
-          StringUtil.removeTailingSlash(FileUtil.toSystemIndependentName(parts[0])),
-          parts.length == 1 ? StringUtil.EMPTY : StringUtil.removeLeadingAndTailingSlash(FileUtil.toSystemIndependentName(parts[1])));
+          normalize(parts[0], true),
+          parts.length == 1 ? StringUtil.EMPTY : normalize(parts[1], false));
       }
       return Collections.unmodifiableMap(dest);
     }
     return Collections.<String, String>emptyMap();
+  }
+
+  @NotNull
+  private static String normalize(@NotNull String path, boolean isFromPart) {
+    path = StringUtil.removeLeadingSlash(FileUtil.toSystemIndependentName(path));
+    final String suffix = isFromPart && path.endsWith("/") ? "/" : StringUtil.EMPTY;
+    path = FileUtil.normalizeRelativePath(path);
+    return StringUtil.isEmpty(path) && isFromPart ? "**" : path + suffix;
+  }
+
+  static boolean isWildcard(@NotNull String path) {
+    return path.contains("*") || path.contains("?");
   }
 }

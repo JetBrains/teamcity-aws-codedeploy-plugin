@@ -131,7 +131,6 @@ public interface CodeDeployConstants {
   String STATUS_IS_UNKNOWN = "status is unknown";
 
   String MULTILINE_SPLIT_REGEX = " *[,\n\r] *";
-  String PATH_SPLIT_SIGN = "=>";
-  String PATH_SPLIT_REGEX = " *" + PATH_SPLIT_SIGN + " *";
+  String PATH_SPLIT_REGEX = " *=> *";
   String APPSPEC_YML = "appspec.yml";
 }

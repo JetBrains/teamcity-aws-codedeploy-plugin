@@ -79,7 +79,7 @@ public class ApplicationRevision {
     final File appSpecYml = CollectionsUtil.<File>findFirst(files, new Filter<File>() {
       @Override
       public boolean accept(@NotNull File data) {
-        return CodeDeployConstants.APPSPEC_YML.equals(myPathMappings.mapPath(data));
+        return CodeDeployConstants.APPSPEC_YML.equals(data.getName()) && CodeDeployConstants.APPSPEC_YML.equals(myPathMappings.mapPath(data));
       }
     });
 
