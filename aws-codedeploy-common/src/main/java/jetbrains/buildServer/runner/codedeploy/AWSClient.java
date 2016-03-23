@@ -329,7 +329,7 @@ public class AWSClient {
     } else if (t instanceof AmazonClientException) {
       myListener.exception("Error while trying to communicate with AWS: " + removeTrailingDot(t.getMessage()), null, CodeDeployConstants.CLIENT_PROBLEM_TYPE, null);
     } else {
-      myListener.exception("Unexpected error during deployment: " + removeTrailingDot(t.getMessage()), null, null, null);
+      myListener.exception("Unexpected error during the deployment: " + removeTrailingDot(t.getMessage()), null, null, null);
     }
   }
 
