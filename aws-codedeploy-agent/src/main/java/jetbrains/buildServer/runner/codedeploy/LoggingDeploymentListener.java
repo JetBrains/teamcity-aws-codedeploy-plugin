@@ -29,10 +29,10 @@ import java.util.*;
 /**
  * @author vbedrosova
  */
-public class LoggingDeploymentListener extends AWSClient.Listener {
-  public static final String DEPLOY_APPLICATION = "deploy application";
-  public static final String REGISTER_REVISION = "register revision";
-  public static final String UPLOAD_REVISION = "upload revision";
+class LoggingDeploymentListener extends AWSClient.Listener {
+  static final String DEPLOY_APPLICATION = "deploy application";
+  static final String REGISTER_REVISION = "register revision";
+  static final String UPLOAD_REVISION = "upload revision";
 
   @NotNull
   private final Map<String, String> myRunnerParameters;
@@ -41,7 +41,7 @@ public class LoggingDeploymentListener extends AWSClient.Listener {
   @NotNull
   private final String myCheckoutDir;
 
-  public LoggingDeploymentListener(@NotNull Map<String, String> runnerParameters, @NotNull BuildProgressLogger buildLogger, @NotNull String checkoutDir) {
+  LoggingDeploymentListener(@NotNull Map<String, String> runnerParameters, @NotNull BuildProgressLogger buildLogger, @NotNull String checkoutDir) {
     myRunnerParameters = runnerParameters;
     myBuildLogger = buildLogger;
     myCheckoutDir = checkoutDir;
@@ -103,8 +103,8 @@ public class LoggingDeploymentListener extends AWSClient.Listener {
   void deploymentFailed(@NotNull String deploymentId, @Nullable Integer timeoutSec, @Nullable ErrorInfo errorInfo, @Nullable InstancesStatus instancesStatus) {
     String msg = (timeoutSec == null ? "" : "Timeout " + timeoutSec + "sec exceeded, ");
 
-    err(msg + deploymentDescription(instancesStatus, deploymentId, true).toLowerCase());
-    msg += deploymentDescription(instancesStatus, deploymentId, false).toLowerCase();
+    err(msg + StringUtil.decapitalize(deploymentDescription(instancesStatus, deploymentId, true)));
+    msg += StringUtil.decapitalize(deploymentDescription(instancesStatus, deploymentId, false));
 
     if (errorInfo != null) {
       if (StringUtil.isNotEmpty(errorInfo.message)) {
