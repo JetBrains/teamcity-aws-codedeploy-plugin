@@ -58,6 +58,10 @@ configure(subprojects - project(':build')) {
         options.encoding = 'UTF-8'
     }
 
+    test {
+        useTestNG()
+    }
+
     repositories {
         mavenCentral()
     }

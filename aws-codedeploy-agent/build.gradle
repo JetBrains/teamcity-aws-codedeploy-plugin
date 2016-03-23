@@ -19,6 +19,8 @@ apply plugin: 'com.github.rodm.teamcity-agent'
 dependencies {
     compile project(':aws-codedeploy-common')
     provided files("${teamcityDir}/buildAgent/lib/common-impl.jar")
+
+    testCompile "org.jetbrains.teamcity:tests-support:${teamcityVersion}"
 }
 
 teamcity {
