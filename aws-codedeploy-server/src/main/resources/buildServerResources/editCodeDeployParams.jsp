@@ -177,12 +177,6 @@
             BS.Util.show('${access_key_id_param}_row', '${secret_access_key_param}_row');
         }
 
-        if ($j('#${wait_flag_param}').is(':checked')) {
-            BS.Util.show('${wait_timeout_param}_row');
-        } else {
-            BS.Util.hide('${wait_timeout_param}_row');
-        }
-
         // hide all and then show necessary
         $j('#runnerParams tr[data-steps]').each(function() {
             BS.Util.hide(this);
@@ -196,6 +190,14 @@
                 });
             }
         });
+
+        if (deploySteps.indexOf('${deploy_step}') >= 0) {
+            if ($j('#${wait_flag_param}').is(':checked')) {
+                BS.Util.show('${wait_timeout_param}_row');
+            } else {
+                BS.Util.hide('${wait_timeout_param}_row');
+            }
+        }
 
         BS.VisibilityHandlers.updateVisibility('runnerParams');
     };
