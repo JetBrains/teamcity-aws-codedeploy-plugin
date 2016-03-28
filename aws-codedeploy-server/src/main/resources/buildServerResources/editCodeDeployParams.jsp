@@ -147,7 +147,7 @@
 </tr>
 <tr data-steps="${deploy_step}">
     <th><label for="${wait_flag_param}">${wait_flag_label}: </label></th>
-    <td><props:checkboxProperty name="${wait_flag_param}" onclick="codeDeployUpdateVisibility()"/></td>
+    <td><props:checkboxProperty name="${wait_flag_param}" uncheckedValue="false" onclick="codeDeployUpdateVisibility()"/></td>
 </tr>
 <tr id="${wait_timeout_param}_row" data-steps="${deploy_step}">
     <th><label for="${wait_timeout_param}">${wait_timeout_label}: <l:star/></label></th>
