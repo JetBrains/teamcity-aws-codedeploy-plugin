@@ -36,9 +36,6 @@ class PathMappings {
   private final Map<String, String> myPathMappings;
 
   PathMappings(@NotNull File baseDir, @NotNull Map<String, String> pathMappings) {
-    assert baseDir != null;
-    assert pathMappings != null;
-
     myBaseDir = baseDir;
     myPathMappings = pathMappings;
   }
