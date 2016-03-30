@@ -38,14 +38,14 @@ abstract class LoggingTestCase extends BaseTestCase {
   private File myTempDir;
   private File myBaseDir;
 
-  @BeforeMethod
+  @BeforeMethod(alwaysRun = true)
   public void setUp() throws Exception {
     super.setUp();
     myTempDir = createTempDir();
     myBaseDir = createTempDir();
   }
 
-  @AfterMethod
+  @AfterMethod(alwaysRun = true)
   public void tearDown() throws Exception {
     myLog.clear();
     super.tearDown();
