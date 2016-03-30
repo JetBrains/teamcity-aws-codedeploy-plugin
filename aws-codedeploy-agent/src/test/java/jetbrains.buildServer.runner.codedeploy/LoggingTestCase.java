@@ -40,13 +40,19 @@ abstract class LoggingTestCase extends BaseTestCase {
 
   @BeforeMethod(alwaysRun = true)
   public void mySetUp() throws Exception {
+    System.out.print("entering set up");
     myTempDir = createTempDir();
     myBaseDir = createTempDir();
+    System.out.print("set up myTempDir=" + myTempDir);
+    System.out.print("set up myBaseDir=" + myBaseDir);
   }
 
   @AfterMethod(alwaysRun = true)
   public void myTearDown() throws Exception {
+    System.out.print("entering tear down");
     myLog.clear();
+    System.out.print("tear down myTempDir=" + myTempDir);
+    System.out.print("tear down myBaseDir=" + myBaseDir);
   }
 
   protected File getTempDir() {
