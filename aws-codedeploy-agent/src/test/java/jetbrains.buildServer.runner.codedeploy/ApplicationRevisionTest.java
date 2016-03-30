@@ -22,6 +22,8 @@ import jetbrains.buildServer.util.FileUtil;
 import org.assertj.core.api.Assertions;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.testng.annotations.AfterMethod;
+import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import static jetbrains.buildServer.runner.codedeploy.CodeDeployRunner.CodeDeployRunnerException;
@@ -35,6 +37,17 @@ import java.util.LinkedList;
  * @author vbedrosova
  */
 public class ApplicationRevisionTest extends LoggingTestCase {
+
+  @BeforeMethod(alwaysRun = true)
+  public void mySetUp() throws Exception {
+    super.mySetUp();
+  }
+
+  @AfterMethod(alwaysRun = true)
+  public void myTearDown() throws Exception {
+    super.myTearDown();
+  }
+
 
   @Test
   public void ready_revision_zip() throws Exception {
