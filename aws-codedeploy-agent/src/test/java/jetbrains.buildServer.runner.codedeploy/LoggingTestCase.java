@@ -34,7 +34,7 @@ import static org.assertj.core.api.BDDAssertions.*;
  */
 abstract class LoggingTestCase extends BaseTestCase {
   @NotNull
-  private final LinkedList<String> myLog = new LinkedList<>();
+  private final LinkedList<String> myLog = new LinkedList<String>();
   private File myTempDir;
   private File myBaseDir;
 
