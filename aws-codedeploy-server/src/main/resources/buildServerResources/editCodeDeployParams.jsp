@@ -21,7 +21,7 @@
         display: none;
     }
 
-    .runnerFormTable span.mandatoryAsterix.facultativeAsterix {
+    .runnerFormTable span.facultativeAsterix {
         display: none;
     }
 </style>
