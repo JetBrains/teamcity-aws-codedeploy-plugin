@@ -53,14 +53,10 @@ public class CodeDeployRunner implements AgentBuildRunner {
             }
           });
 
-        final boolean isUploadStepEnabled = CodeDeployUtil.isUploadStepEnabled(runnerParameters);
-        final boolean isRegisterStepEnabled = CodeDeployUtil.isRegisterStepEnabled(runnerParameters);
-        final boolean isDeployStepEnabled = CodeDeployUtil.isDeployStepEnabled(runnerParameters);
-
         final String s3BucketName = runnerParameters.get(CodeDeployConstants.S3_BUCKET_NAME_PARAM);
         String s3ObjectKey = runnerParameters.get(CodeDeployConstants.S3_OBJECT_KEY_PARAM);
 
-        if (isUploadStepEnabled && !problemOccurred.get() && !isInterrupted()) {
+        if (CodeDeployUtil.isUploadStepEnabled(runnerParameters) && !problemOccurred.get() && !isInterrupted()) {
           final File readyRevision = new ApplicationRevision(
             StringUtil.isEmptyOrSpaces(s3ObjectKey) ? runningBuild.getBuildTypeExternalId() : s3ObjectKey,
             runnerParameters.get(CodeDeployConstants.REVISION_PATHS_PARAM),
@@ -78,11 +74,11 @@ public class CodeDeployRunner implements AgentBuildRunner {
         final String bundleType = "" + AWSClient.getBundleType(s3ObjectKey);
         final String s3ObjectVersion = StringUtil.nullIfEmpty(configParameters.get(CodeDeployConstants.S3_OBJECT_VERSION_CONFIG_PARAM));
 
-        if (isRegisterStepEnabled && !problemOccurred.get() && !isInterrupted()) {
+        if (CodeDeployUtil.isRegisterStepEnabled(runnerParameters) && !problemOccurred.get() && !isInterrupted()) {
           awsClient.registerRevision(s3BucketName, s3ObjectKey, bundleType, s3ObjectVersion, applicationName);
         }
 
-        if (isDeployStepEnabled && !problemOccurred.get() && !isInterrupted()) {
+        if (CodeDeployUtil.isDeployStepEnabled(runnerParameters) && !problemOccurred.get() && !isInterrupted()) {
           final String deploymentGroupName = runnerParameters.get(CodeDeployConstants.DEPLOYMENT_GROUP_NAME_PARAM);
           final String deploymentConfigName = StringUtil.nullIfEmpty(runnerParameters.get(CodeDeployConstants.DEPLOYMENT_CONFIG_NAME_PARAM));
 
@@ -143,7 +139,7 @@ public class CodeDeployRunner implements AgentBuildRunner {
         runnerParameters.get(CodeDeployConstants.EXTERNAL_ID_PARAM),
         accessKeyId,
         secretAccessKey,
-        runningBuild.getBuildTypeName() + runningBuild.getBuildId(),
+        runningBuild.getBuildTypeExternalId() + runningBuild.getBuildId(),
         2 * getIntOrDefault(runnerParameters.get(CodeDeployConstants.WAIT_TIMEOUT_SEC_PARAM), CodeDeployConstants.TEMP_CREDENTIALS_DURATION_SEC_DEFAULT),
         regionName
       ) :
