@@ -42,11 +42,7 @@ abstract class CodeDeployUtil {
   }
 
   static boolean isDeploymentWaitEnabled(@NotNull Map<String, String> params) {
-    if (isDeployStepEnabled(params)) {
-      final String waitParam = params.get(WAIT_FLAG_PARAM);
-      return StringUtil.isEmptyOrSpaces(waitParam) || Boolean.parseBoolean(waitParam);
-    }
-    return false;
+    return isDeployStepEnabled(params) && Boolean.parseBoolean(params.get(WAIT_FLAG_PARAM));
   }
 
   private static boolean isStepEnabled(@NotNull String step, @NotNull Map<String, String> params) {
