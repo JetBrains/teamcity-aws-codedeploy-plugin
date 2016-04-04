@@ -83,7 +83,7 @@ public class ParametersValidatorTest extends BaseTestCase {
 
   @Test
   public void deploy_mandatory_params() {
-    then(validate(DEPLOYMENT_STEPS_PARAM, DEPLOY_STEP)).as("Must detect empty params").hasSize(9).
+    then(validate(DEPLOYMENT_STEPS_PARAM, DEPLOY_STEP)).as("Must detect empty params").hasSize(8).
       containsEntry(REGION_NAME_PARAM, "AWS region mustn't be empty").
       containsEntry(CREDENTIALS_TYPE_PARAM, "Credentials type mustn't be empty").
       containsEntry(ACCESS_KEY_ID_PARAM, "Access key ID mustn't be empty").
@@ -91,8 +91,7 @@ public class ParametersValidatorTest extends BaseTestCase {
       containsEntry(S3_BUCKET_NAME_PARAM, "S3 bucket mustn't be empty").
       containsEntry(S3_OBJECT_KEY_PARAM, "S3 object key mustn't be empty").
       containsEntry(APP_NAME_PARAM, "Application name mustn't be empty").
-      containsEntry(DEPLOYMENT_GROUP_NAME_PARAM, "Deployment group mustn't be empty").
-      containsEntry(WAIT_TIMEOUT_SEC_PARAM, "Timeout (seconds) mustn't be empty");
+      containsEntry(DEPLOYMENT_GROUP_NAME_PARAM, "Deployment group mustn't be empty");
   }
 
   @Test
@@ -121,7 +120,7 @@ public class ParametersValidatorTest extends BaseTestCase {
 
   @Test
   public void unexpected_wait_timeout() {
-    then(validate(DEPLOYMENT_STEPS_PARAM, DEPLOY_STEP, WAIT_TIMEOUT_SEC_PARAM, "10min")).as("Must detect unexpected wait timeout").
+    then(validate(DEPLOYMENT_STEPS_PARAM, DEPLOY_STEP, WAIT_FLAG_PARAM, "true", WAIT_TIMEOUT_SEC_PARAM, "10min")).as("Must detect unexpected wait timeout").
       containsEntry(WAIT_TIMEOUT_SEC_PARAM, "Timeout (seconds) must be a positive integer value");
   }
 
@@ -137,7 +136,7 @@ public class ParametersValidatorTest extends BaseTestCase {
   @Test
   public void unexpected_wait_poll_interval() throws Exception {
     then(validateRuntime(
-      params(DEPLOYMENT_STEPS_PARAM, DEPLOY_STEP),
+      params(DEPLOYMENT_STEPS_PARAM, DEPLOY_STEP, WAIT_FLAG_PARAM, "true"),
       params(WAIT_POLL_INTERVAL_SEC_CONFIG_PARAM, "50sec"))).
       as("Must detect unexpected wait poll interval").
       containsEntry(WAIT_POLL_INTERVAL_SEC_CONFIG_PARAM, "codedeploy.wait.poll.interval.sec must be a positive integer value");
