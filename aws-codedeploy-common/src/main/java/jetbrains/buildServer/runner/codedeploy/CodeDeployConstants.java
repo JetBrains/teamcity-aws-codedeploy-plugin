@@ -100,7 +100,7 @@ public interface CodeDeployConstants {
   String WAIT_TIMEOUT_SEC_PARAM = "codedeploy_wait_timeout_sec";
   String WAIT_TIMEOUT_SEC_LABEL = "Timeout (seconds)";
   String WAIT_POLL_INTERVAL_SEC_CONFIG_PARAM = "codedeploy.wait.poll.interval.sec";
-  String WAIT_POLL_INTERVAL_SEC_DEFAULT = "20";
+  int WAIT_POLL_INTERVAL_SEC_DEFAULT = 20;
 
   String UPLOAD_STEP = "s3uploadstep";
   String REGISTER_STEP = "registerstep";

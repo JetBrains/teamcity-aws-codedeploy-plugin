@@ -91,7 +91,7 @@ public class CodeDeployRunner implements AgentBuildRunner {
               s3BucketName, s3ObjectKey, bundleType, s3ObjectVersion,
               applicationName, deploymentGroupName, deploymentConfigName,
               Integer.parseInt(runnerParameters.get(CodeDeployConstants.WAIT_TIMEOUT_SEC_PARAM)),
-              Integer.parseInt(getOrDefault(configParameters.get(CodeDeployConstants.WAIT_POLL_INTERVAL_SEC_CONFIG_PARAM), CodeDeployConstants.WAIT_POLL_INTERVAL_SEC_DEFAULT)));
+              getIntOrDefault(configParameters.get(CodeDeployConstants.WAIT_POLL_INTERVAL_SEC_CONFIG_PARAM), CodeDeployConstants.WAIT_POLL_INTERVAL_SEC_DEFAULT)));
           } else {
             awsClient.deployRevision(
               s3BucketName, s3ObjectKey, bundleType, s3ObjectVersion,
@@ -100,11 +100,6 @@ public class CodeDeployRunner implements AgentBuildRunner {
         }
 
         return problemOccurred.get() ? BuildFinishedStatus.FINISHED_WITH_PROBLEMS : BuildFinishedStatus.FINISHED_SUCCESS;
-      }
-
-      @NotNull
-      private String getOrDefault(@Nullable String val, @NotNull String defaultVal) {
-        return val == null ? defaultVal : val;
       }
 
       @NotNull
@@ -149,7 +144,7 @@ public class CodeDeployRunner implements AgentBuildRunner {
         accessKeyId,
         secretAccessKey,
         runningBuild.getBuildTypeName() + runningBuild.getBuildId(),
-        2 * Integer.getInteger(runnerParameters.get(CodeDeployConstants.WAIT_TIMEOUT_SEC_PARAM), CodeDeployConstants.TEMP_CREDENTIALS_DURATION_SEC_DEFAULT),
+        2 * getIntOrDefault(runnerParameters.get(CodeDeployConstants.WAIT_TIMEOUT_SEC_PARAM), CodeDeployConstants.TEMP_CREDENTIALS_DURATION_SEC_DEFAULT),
         regionName
       ) :
       new AWSClient(accessKeyId, secretAccessKey, regionName))
@@ -161,5 +156,9 @@ public class CodeDeployRunner implements AgentBuildRunner {
       super(message, cause, ErrorData.BUILD_RUNNER_ERROR_TYPE);
       this.setLogStacktrace(false);
     }
+  }
+
+  private int getIntOrDefault(@Nullable String val, int defaultVal) {
+    return val == null ? defaultVal : Integer.parseInt(val);
   }
 }
