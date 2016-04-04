@@ -152,7 +152,6 @@ final class ParametersValidator {
           validateBundleType(invalids, s3ObjectKey, S3_OBJECT_KEY_PARAM, S3_OBJECT_KEY_LABEL, runtime);
         }
       }
-
     }
 
     if (registerStepEnabled || deployStepEnabled) {
