@@ -143,7 +143,7 @@ final class ParametersValidator {
 
       final String s3ObjectKey = runnerParams.get(S3_OBJECT_KEY_PARAM);
       if (StringUtil.isEmptyOrSpaces(s3ObjectKey)) {
-        if (registerStepEnabled || deployStepEnabled) {
+        if (!uploadStepEnabled) {
           invalids.put(S3_OBJECT_KEY_PARAM, S3_OBJECT_KEY_LABEL + " mustn't be empty");
         }
       } else {

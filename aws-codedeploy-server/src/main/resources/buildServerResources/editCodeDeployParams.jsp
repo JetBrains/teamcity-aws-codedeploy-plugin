@@ -17,7 +17,11 @@
 <%@ taglib prefix="l" tagdir="/WEB-INF/tags/layout" %>
 
 <style type="text/css">
-    .runnerFormTable span.stepNote {
+    .runnerFormTable span.facultativeNote {
+        display: none;
+    }
+
+    .runnerFormTable span.mandatoryAsterix.facultativeAsterix {
         display: none;
     }
 </style>
@@ -34,11 +38,11 @@
             <props:option id="${deploy_step}" value="${deploy_step}">${deploymentScenarios[deploy_step]}</props:option>
             <props:option id="${upload_step}" value="${upload_step}">${deploymentScenarios[upload_step]}</props:option>
         </props:selectProperty>
-        <span class="smallNote stepNote" id="${upload_register_deploy_steps}_note">Upload revision to S3, register it in CodeDeploy application and start deployment</span>
-        <span class="smallNote stepNote" id="${upload_register_steps}_note">Upload revision to S3 and register it in CodeDeploy application</span>
-        <span class="smallNote stepNote" id="${register_deploy_steps}_note">Register previously uploaded revision in CodeDeploy application and starts deployment</span>
-        <span class="smallNote stepNote" id="${deploy_step}_note">Deploy previously uploaded and registered application revision</span>
-        <span class="smallNote stepNote" id="${upload_step}_note">Upload application revision to S3</span>
+        <span class="smallNote stepNote facultativeNote" id="${upload_register_deploy_steps}_note">Upload revision to S3, register it in CodeDeploy application and start deployment</span>
+        <span class="smallNote stepNote facultativeNote" id="${upload_register_steps}_note">Upload revision to S3 and register it in CodeDeploy application</span>
+        <span class="smallNote stepNote facultativeNote" id="${register_deploy_steps}_note">Register previously uploaded revision in CodeDeploy application and starts deployment</span>
+        <span class="smallNote stepNote facultativeNote" id="${deploy_step}_note">Deploy previously uploaded and registered application revision</span>
+        <span class="smallNote stepNote facultativeNote" id="${upload_step}_note">Upload application revision to S3</span>
         <span class="error" id="error_${deployment_steps_param}"></span>
     </td>
 </tr>
@@ -117,9 +121,11 @@
         </td>
     </tr>
     <tr>
-        <th><label for="${s3_object_key_param}">${s3_object_key_label}: </label></th>
+        <th><label for="${s3_object_key_param}">${s3_object_key_label}: <span id="${s3_object_key_param}_star" class="mandatoryAsterix facultativeAsterix" title="Mandatory field">*</span></label></th>
         <td><props:textProperty name="${s3_object_key_param}" className="longField" maxlength="256"/>
-            <span class="smallNote">Leave empty to use application revision archive name as a key</span><span class="error" id="error_${s3_object_key_param}"></span>
+            <span id="${s3_object_key_param}_note" class="smallNote facultativeNote">Leave empty to use application revision archive name as a key</span>
+            <span id="${s3_object_key_param}_mandatory_note" class="smallNote facultativeNote">Unique path inside the bucket</span>
+            <span class="error" id="error_${s3_object_key_param}"></span>
         </td>
     </tr>
 </l:settingsGroup>
@@ -158,7 +164,7 @@
 
 <script type="application/javascript">
     window.codeDeployUpdateStepNote = function () {
-        $j('#runnerParams .stepNote').each(function() {
+        $j('#runnerParams .stepNote.facultativeNote').each(function() {
             BS.Util.hide(this);
         });
         BS.Util.show($j('#${deployment_steps_param} option:selected').attr('id') + '_note');
@@ -197,6 +203,16 @@
             } else {
                 BS.Util.hide('${wait_timeout_param}_row');
             }
+        }
+
+        if (deploySteps.indexOf('${upload_step}') < 0) {
+            BS.Util.show('${s3_object_key_param}_star');
+            BS.Util.show('${s3_object_key_param}_mandatory_note');
+            BS.Util.hide('${s3_object_key_param}_note');
+        } else {
+            BS.Util.hide('${s3_object_key_param}_star');
+            BS.Util.hide('${s3_object_key_param}_mandatory_note');
+            BS.Util.show('${s3_object_key_param}_note');
         }
 
         BS.VisibilityHandlers.updateVisibility('runnerParams');
