@@ -101,7 +101,7 @@ class LoggingDeploymentListener extends AWSClient.Listener {
 
   @Override
   void deploymentFailed(@NotNull String deploymentId, @Nullable Integer timeoutSec, @Nullable ErrorInfo errorInfo, @Nullable InstancesStatus instancesStatus) {
-    String msg = (timeoutSec == null ? "" : "Timeout " + timeoutSec + "sec exceeded, ");
+    String msg = (timeoutSec == null ? "" : "Timeout " + timeoutSec + " sec exceeded, ");
 
     err(msg + StringUtil.decapitalize(deploymentDescription(instancesStatus, deploymentId, true)));
     msg += StringUtil.decapitalize(deploymentDescription(instancesStatus, deploymentId, false));
