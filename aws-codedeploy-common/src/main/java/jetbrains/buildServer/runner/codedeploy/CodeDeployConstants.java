@@ -24,10 +24,9 @@ import java.util.*;
  * @author vbedrosova
  */
 public interface CodeDeployConstants {
-  String RUNNER_TYPE = "codedeploy";
+  String RUNNER_TYPE = "aws.codeDeploy";
   String RUNNER_DISPLAY_NAME = "AWS CodeDeploy";
-  String RUNNER_DESCR = "Prepare, upload, register and deploy application revision using CodeDeploy";
-
+  String RUNNER_DESCR = "Prepare, upload, register and deploy application revision using AWS CodeDeploy";
 
   String DEPLOYMENT_ID_BUILD_CONFIG_PARAM = "codedeploy.deployment.id";
   String S3_OBJECT_VERSION_CONFIG_PARAM = "codedeploy.revision.s3.version";
