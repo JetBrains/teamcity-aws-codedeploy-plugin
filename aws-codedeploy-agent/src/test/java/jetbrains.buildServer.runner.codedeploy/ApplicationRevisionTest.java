@@ -48,7 +48,6 @@ public class ApplicationRevisionTest extends LoggingTestCase {
     super.myTearDown();
   }
 
-
   @Test
   public void ready_revision_zip() throws Exception {
     ready_revision_arch(".zip");
