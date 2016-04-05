@@ -19,6 +19,7 @@ package jetbrains.buildServer.runner.codedeploy;
 import com.amazonaws.AmazonClientException;
 import com.amazonaws.AmazonServiceException;
 import com.amazonaws.auth.AWSCredentials;
+import com.amazonaws.auth.AWSSessionCredentials;
 import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.auth.BasicSessionCredentials;
 import com.amazonaws.regions.Region;
@@ -62,7 +63,7 @@ public class AWSClient {
     this(new LazyCredentials() {
       @NotNull
       @Override
-      protected AWSCredentials createCredentials() {
+      protected AWSSessionCredentials createCredentials() {
         return getTempCredentials(iamRoleARN, externalID, accessKeyId, secretAccessKey, patchSessionName(sessionName), sessionDuration);
       }
     }, getRegion(regionName));
@@ -70,7 +71,7 @@ public class AWSClient {
 
   @NotNull
   private static String patchSessionName(@NotNull String sessionName) {
-    return sessionName.replaceAll(UNSUPPORTED_SESSION_NAME_CHARS, "_");
+    return StringUtil.truncateStringValue(sessionName.replaceAll(UNSUPPORTED_SESSION_NAME_CHARS, "_"), 64);
   }
 
   @Nullable
@@ -81,7 +82,7 @@ public class AWSClient {
   }
 
   @NotNull
-  private static AWSCredentials getTempCredentials(@NotNull String iamRoleARN, @Nullable String externalID,
+  private static AWSSessionCredentials getTempCredentials(@NotNull String iamRoleARN, @Nullable String externalID,
                                                    @Nullable String accessKeyId, @Nullable String secretAccessKey,
                                                    @NotNull String sessionName, int sessionDuration) {
     final AssumeRoleRequest assumeRoleRequest = new AssumeRoleRequest().withRoleArn(iamRoleARN).withRoleSessionName(sessionName).withDurationSeconds(sessionDuration);
@@ -284,7 +285,7 @@ public class AWSClient {
       new RegisterApplicationRevisionRequest()
         .withRevision(revisionLocation)
         .withApplicationName(applicationName)
-        .withDescription("Application revision registered by " + getDescription()));
+        .withDescription(getDescription("Application revision registered by ", 100)));
 
     myListener.registerRevisionFinished(applicationName, s3Location.getBucket(), s3Location.getKey(), s3Location.getBundleType(), s3Location.getVersion());
   }
@@ -301,7 +302,7 @@ public class AWSClient {
         .withRevision(revisionLocation)
         .withApplicationName(applicationName)
         .withDeploymentGroupName(deploymentGroupName)
-        .withDescription("Deployment created by " + getDescription());
+        .withDescription(getDescription("Deployment created by ", 100));
 
     if (StringUtil.isNotEmpty(deploymentConfigName)) request.setDeploymentConfigName(deploymentConfigName);
 
@@ -338,8 +339,8 @@ public class AWSClient {
   }
 
   @NotNull
-  private String getDescription() {
-    return StringUtil.isEmptyOrSpaces(myDescription) ? getClass().getName() : myDescription;
+  private String getDescription(@NotNull String prefix, int threshold) {
+    return prefix + StringUtil.truncateStringValueWithDotsAtCenter(StringUtil.isEmptyOrSpaces(myDescription) ? getClass().getName() : myDescription, threshold - prefix.length());
   }
 
   @Contract("null -> null")
@@ -427,15 +428,17 @@ public class AWSClient {
     }
   }
 
-  private static abstract class LazyCredentials implements AWSCredentials {
-    @Nullable private AWSCredentials myDelegate = null;
+  private static abstract class LazyCredentials implements AWSSessionCredentials {
+    @Nullable private AWSSessionCredentials myDelegate = null;
     @Override public String getAWSAccessKeyId() { return getDelegate().getAWSAccessKeyId(); }
     @Override public String getAWSSecretKey() { return getDelegate().getAWSSecretKey(); }
-    @NotNull private AWSCredentials getDelegate() {
+    @Override public String getSessionToken() { return getDelegate().getSessionToken(); }
+
+    @NotNull private AWSSessionCredentials getDelegate() {
       if (myDelegate == null) myDelegate = createCredentials();
       return myDelegate;
     }
-    @NotNull protected abstract AWSCredentials createCredentials();
+    @NotNull protected abstract AWSSessionCredentials createCredentials();
   }
 
   //  @NotNull
