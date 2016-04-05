@@ -340,7 +340,7 @@ public class AWSClient {
 
   @NotNull
   private String getDescription(@NotNull String prefix, int threshold) {
-    return prefix + StringUtil.truncateStringValueWithDotsAtCenter(StringUtil.isEmptyOrSpaces(myDescription) ? getClass().getName() : myDescription, threshold - prefix.length());
+    return prefix + CodeDeployUtil.truncateStringValueWithDotsAtCenter(StringUtil.isEmptyOrSpaces(myDescription) ? getClass().getName() : myDescription, threshold - prefix.length());
   }
 
   @Contract("null -> null")

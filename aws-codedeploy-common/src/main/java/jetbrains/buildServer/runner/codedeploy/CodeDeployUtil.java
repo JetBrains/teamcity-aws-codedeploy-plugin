@@ -18,6 +18,7 @@ package jetbrains.buildServer.runner.codedeploy;
 
 import jetbrains.buildServer.util.FileUtil;
 import jetbrains.buildServer.util.StringUtil;
+import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -98,5 +99,20 @@ abstract class CodeDeployUtil {
     final StringBuilder sb = new StringBuilder();
     for (String s : strings) sb.append(s).append("\n");
     return sb.toString();
+  }
+
+  /* Borrowed from jetbrains.buildServer.util.StringUtil.truncateStringValueWithDotsAtCenter
+  * TODO: use the original util method */
+  @Contract("null, _ -> null")
+  public static String truncateStringValueWithDotsAtCenter(@Nullable final String str, final int maxLength) {
+    if (str == null) return null;
+    if (str.length() > maxLength) {
+      String start = str.substring(0, maxLength / 2);
+      String dots = "...";
+      String end = str.substring(str.length() - maxLength + start.length() + dots.length(), str.length());
+      return start + dots + end;
+    } else {
+      return str;
+    }
   }
 }
