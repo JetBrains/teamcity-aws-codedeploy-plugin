@@ -27,7 +27,7 @@ dependencies {
     server project(':aws-codedeploy-server')
 }
 
-def awsSDKFiles = {project(':aws-codedeploy-common').configurations.compile.files({it.group == 'com.amazonaws' && it.name == 'aws-java-sdk'})}
+def awsSDKFiles = {project(':amazon-util').configurations.compile.files({it.group == 'com.amazonaws' && it.name == 'aws-java-sdk'})}
 
 teamcity {
     agent {
