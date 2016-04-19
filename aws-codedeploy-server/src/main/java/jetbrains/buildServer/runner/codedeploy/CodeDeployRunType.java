@@ -21,6 +21,7 @@ import jetbrains.buildServer.serverSide.*;
 import jetbrains.buildServer.util.CollectionsUtil;
 import jetbrains.buildServer.util.Converter;
 import jetbrains.buildServer.util.StringUtil;
+import jetbrains.buildServer.util.amazon.AWSRegions;
 import jetbrains.buildServer.web.openapi.PluginDescriptor;
 import jetbrains.buildServer.web.openapi.WebControllerManager;
 import org.jetbrains.annotations.NotNull;
@@ -67,7 +68,7 @@ public class CodeDeployRunType extends RunType {
       @Override
       protected ModelAndView doHandle(@NotNull HttpServletRequest request, @NotNull HttpServletResponse response) throws Exception {
         final ModelAndView mv = new ModelAndView(descriptor.getPluginResourcesPath(jspPath));
-        mv.getModel().put(CodeDeployConstants.ALL_REGIONS, AWSUtil.getAllRegions());
+        mv.getModel().put(CodeDeployConstants.ALL_REGIONS, AWSRegions.getAllRegions());
         mv.getModel().put(CodeDeployConstants.DEPLOYMENT_SCENARIOS, CodeDeployConstants.STEP_LABELS);
         return mv;
       }

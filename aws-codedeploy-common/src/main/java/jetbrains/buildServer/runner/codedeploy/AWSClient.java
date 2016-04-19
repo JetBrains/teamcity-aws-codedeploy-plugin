@@ -18,20 +18,13 @@ package jetbrains.buildServer.runner.codedeploy;
 
 import com.amazonaws.AmazonClientException;
 import com.amazonaws.AmazonServiceException;
-import com.amazonaws.auth.AWSCredentials;
 import com.amazonaws.auth.AWSSessionCredentials;
-import com.amazonaws.auth.BasicAWSCredentials;
-import com.amazonaws.auth.BasicSessionCredentials;
-import com.amazonaws.regions.Region;
-import com.amazonaws.regions.Regions;
 import com.amazonaws.services.codedeploy.AmazonCodeDeployClient;
 import com.amazonaws.services.codedeploy.model.*;
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.model.PutObjectRequest;
-import com.amazonaws.services.securitytoken.AWSSecurityTokenServiceClient;
-import com.amazonaws.services.securitytoken.model.AssumeRoleRequest;
-import com.amazonaws.services.securitytoken.model.Credentials;
 import jetbrains.buildServer.util.StringUtil;
+import jetbrains.buildServer.util.amazon.AWSClients;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -42,63 +35,30 @@ import java.io.File;
  * @author vbedrosova
  */
 public class AWSClient {
-  public static final String UNSUPPORTED_SESSION_NAME_CHARS = "[^\\w+=,.@-]";
 
-  @Nullable private final AWSCredentials myCredentials;
-  @NotNull private final Region myRegion;
-
+  @NotNull private AmazonS3Client myS3Client;
+  @NotNull private AmazonCodeDeployClient myCodeDeployClient;
   @Nullable private String myDescription;
+  @NotNull private Listener myListener = new Listener();
 
-  @NotNull
-  private Listener myListener = new Listener();
-
-  public AWSClient(@Nullable String accessKeyId, @Nullable String secretAccessKey, @NotNull String regionName) {
-    this(getBasicCredentials(accessKeyId, secretAccessKey), getRegion(regionName));
+  public AWSClient(@NotNull AWSClients clients) {
+    myS3Client = clients.createS3Client();
+    myCodeDeployClient = clients.createCodeDeployClient();
   }
 
-  public AWSClient(@NotNull final String iamRoleARN, @Nullable final String externalID,
-                   @Nullable final String accessKeyId, @Nullable final String secretAccessKey,
-                   @NotNull final String sessionName, final int sessionDuration,
-                   @NotNull String regionName) {
-    this(new LazyCredentials() {
+  public AWSClient(@NotNull final AWSClients clients,
+                   @NotNull final String iamRoleARN, final @Nullable String externalID,
+                   @NotNull final String sessionName, final int sessionDuration) {
+    // using lazy credentials in order to process exceptions related to wrong credentials later when listeners are available
+    final AWSClients lazyClients = AWSClients.fromExistingCredentials(new LazyCredentials() {
       @NotNull
       @Override
       protected AWSSessionCredentials createCredentials() {
-        return getTempCredentials(iamRoleARN, externalID, accessKeyId, secretAccessKey, patchSessionName(sessionName), sessionDuration);
+        return clients.createSessionCredentials(iamRoleARN, externalID, AWSClients.patchSessionName(sessionName), sessionDuration);
       }
-    }, getRegion(regionName));
-  }
-
-  @NotNull
-  private static String patchSessionName(@NotNull String sessionName) {
-    return StringUtil.truncateStringValue(sessionName.replaceAll(UNSUPPORTED_SESSION_NAME_CHARS, "_"), 64);
-  }
-
-  @Nullable
-  private static BasicAWSCredentials getBasicCredentials(@Nullable String accessKeyId, @Nullable String secretAccessKey) {
-    if (accessKeyId == null) return null;
-    if (secretAccessKey == null) throw new IllegalArgumentException("secretAccessKey mustn't be empty");
-    return new BasicAWSCredentials(accessKeyId, secretAccessKey);
-  }
-
-  @NotNull
-  private static AWSSessionCredentials getTempCredentials(@NotNull String iamRoleARN, @Nullable String externalID,
-                                                   @Nullable String accessKeyId, @Nullable String secretAccessKey,
-                                                   @NotNull String sessionName, int sessionDuration) {
-    final AssumeRoleRequest assumeRoleRequest = new AssumeRoleRequest().withRoleArn(iamRoleARN).withRoleSessionName(sessionName).withDurationSeconds(sessionDuration);
-    if (StringUtil.isNotEmpty(externalID)) assumeRoleRequest.setExternalId(externalID);
-
-    final BasicAWSCredentials basicCredentials = getBasicCredentials(accessKeyId, secretAccessKey);
-    final Credentials credentials =
-      (basicCredentials == null ? new AWSSecurityTokenServiceClient() : new AWSSecurityTokenServiceClient(basicCredentials))
-        .assumeRole(assumeRoleRequest).getCredentials();
-
-    return new BasicSessionCredentials(credentials.getAccessKeyId(), credentials.getSecretAccessKey(), credentials.getSessionToken());
-  }
-
-  private AWSClient(@Nullable AWSCredentials credentials, @NotNull Region region) {
-    myCredentials = credentials;
-    myRegion = region;
+    }, clients.getRegion());
+    myS3Client = lazyClients.createS3Client();
+    myCodeDeployClient = lazyClients.createCodeDeployClient();
   }
 
   @NotNull
@@ -111,16 +71,6 @@ public class AWSClient {
   public AWSClient withListener(@NotNull Listener listener) {
     myListener = listener;
     return this;
-  }
-
-  @NotNull
-  private AmazonS3Client createS3Client() {
-    return (myCredentials == null ? new AmazonS3Client() : new AmazonS3Client(myCredentials)).withRegion(myRegion);
-  }
-
-  @NotNull
-  private AmazonCodeDeployClient createCodeDeployClient() {
-    return (myCredentials == null ? new AmazonCodeDeployClient() : new AmazonCodeDeployClient(myCredentials)).withRegion(myRegion);
   }
 
   /**
@@ -210,11 +160,9 @@ public class AWSClient {
   private void waitForDeployment(@NotNull String deploymentId, int waitTimeoutSec, int waitIntervalSec) {
     myListener.deploymentWaitStarted(deploymentId);
 
-    final AmazonCodeDeployClient cdClient = createCodeDeployClient();
-
     final GetDeploymentRequest dRequest = new GetDeploymentRequest().withDeploymentId(deploymentId);
 
-    DeploymentInfo dInfo = cdClient.getDeployment(dRequest).getDeploymentInfo();
+    DeploymentInfo dInfo = myCodeDeployClient.getDeployment(dRequest).getDeploymentInfo();
 
     long startTime = (dInfo == null || dInfo.getStartTime() == null) ? System.currentTimeMillis() : dInfo.getStartTime().getTime();
 
@@ -233,7 +181,7 @@ public class AWSClient {
         return;
       }
 
-      dInfo = cdClient.getDeployment(dRequest).getDeploymentInfo();
+      dInfo = myCodeDeployClient.getDeployment(dRequest).getDeploymentInfo();
     }
 
     if (isSuccess(dInfo)) {
@@ -246,10 +194,9 @@ public class AWSClient {
   private void doUploadRevision(@NotNull File revision, @NotNull String s3BucketName, @NotNull String s3ObjectKey) {
     myListener.uploadRevisionStarted(revision, s3BucketName, s3ObjectKey);
 
-    final AmazonS3Client s3Client = createS3Client();
-    s3Client.putObject(new PutObjectRequest(s3BucketName, s3ObjectKey, revision));
+    myS3Client.putObject(new PutObjectRequest(s3BucketName, s3ObjectKey, revision));
 
-    myListener.uploadRevisionFinished(revision, s3BucketName, s3ObjectKey, s3Client.getUrl(s3BucketName, s3ObjectKey).toString());
+    myListener.uploadRevisionFinished(revision, s3BucketName, s3ObjectKey, myS3Client.getUrl(s3BucketName, s3ObjectKey).toString());
   }
 
   @NotNull
@@ -260,28 +207,18 @@ public class AWSClient {
   }
 
   @Nullable
-  public static String getBundleType(@NotNull String revision) throws IllegalArgumentException {
+  public static String getBundleType(@NotNull String revision) {
     if (revision.endsWith(".zip")) return BundleType.Zip.name();
     if (revision.endsWith(".tar")) return BundleType.Tar.name();
     if (revision.endsWith(".tar.gz")) return BundleType.Tgz.name();
     return null;
   }
 
-  @NotNull
-  public static Region getRegion(@NotNull String regionName) throws IllegalArgumentException {
-    try {
-      return Region.getRegion(Regions.fromName(regionName));
-    } catch (Exception e) {
-      // see below
-    }
-    throw new IllegalArgumentException("Unsupported region name " + regionName);
-  }
-
   private void doRegisterRevision(@NotNull RevisionLocation revisionLocation, @NotNull String applicationName) {
     final S3Location s3Location = revisionLocation.getS3Location();
     myListener.registerRevisionStarted(applicationName, s3Location.getBucket(), s3Location.getKey(), s3Location.getBundleType(), s3Location.getVersion());
 
-    createCodeDeployClient().registerApplicationRevision(
+    myCodeDeployClient.registerApplicationRevision(
       new RegisterApplicationRevisionRequest()
         .withRevision(revisionLocation)
         .withApplicationName(applicationName)
@@ -306,7 +243,7 @@ public class AWSClient {
 
     if (StringUtil.isNotEmpty(deploymentConfigName)) request.setDeploymentConfigName(deploymentConfigName);
 
-    final String deploymentId = createCodeDeployClient().createDeployment(request).getDeploymentId();
+    final String deploymentId = myCodeDeployClient.createDeployment(request).getDeploymentId();
     myListener.createDeploymentFinished(applicationName, deploymentGroupName, deploymentConfigName, deploymentId);
     return deploymentId;
   }
@@ -428,6 +365,7 @@ public class AWSClient {
     }
   }
 
+  // must implement AWSSessionCredentials as AWS SDK may use "instanceof"
   private static abstract class LazyCredentials implements AWSSessionCredentials {
     @Nullable private AWSSessionCredentials myDelegate = null;
     @Override public String getAWSAccessKeyId() { return getDelegate().getAWSAccessKeyId(); }
@@ -440,19 +378,4 @@ public class AWSClient {
     }
     @NotNull protected abstract AWSSessionCredentials createCredentials();
   }
-
-  //  @NotNull
-//  private String ensureS3Bucket(@NotNull String s3BucketName) {
-//    final AmazonS3Client s3Client = createS3Client();
-//
-//    if (!s3Client.doesBucketExist(s3BucketName)) {
-//      log(String.format("Creating S3 bucket %s in region %s", s3BucketName, myRegion));
-//      s3Client.createBucket(s3BucketName, myRegion.getName());
-//
-//      final String bucketLocation = s3Client.getBucketLocation(s3BucketName);
-//      log("Created S3 bucket location: " + bucketLocation);
-//    }
-//
-//    return s3BucketName;
-//  }
 }

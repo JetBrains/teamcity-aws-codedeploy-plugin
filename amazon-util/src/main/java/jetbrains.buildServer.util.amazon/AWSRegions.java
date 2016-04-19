@@ -14,8 +14,10 @@
  * limitations under the License.
  */
 
-package jetbrains.buildServer.runner.codedeploy;
+package jetbrains.buildServer.util.amazon;
 
+import com.amazonaws.regions.Region;
+import com.amazonaws.regions.Regions;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
@@ -23,7 +25,7 @@ import java.util.*;
 /**
  * @author vbedrosova
  */
-public class AWSUtil {
+public class AWSRegions {
   private static final Map<String, String> REGION_NAMES_FOR_WEB;
 
   static {
@@ -51,5 +53,15 @@ public class AWSUtil {
   @NotNull
   public static Map<String,String> getAllRegions(){
     return Collections.unmodifiableMap(REGION_NAMES_FOR_WEB);
+  }
+
+  @NotNull
+  public static Region getRegion(@NotNull String regionName) throws IllegalArgumentException {
+    try {
+      return Region.getRegion(Regions.fromName(regionName));
+    } catch (Exception e) {
+      // see below
+    }
+    throw new IllegalArgumentException("Unsupported region name " + regionName);
   }
 }

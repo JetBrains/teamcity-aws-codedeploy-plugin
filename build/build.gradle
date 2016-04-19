@@ -18,9 +18,11 @@ apply plugin: 'com.github.rodm.teamcity-agent'
 apply plugin: 'com.github.rodm.teamcity-server'
 
 dependencies {
+    agent project(':amazon-util')
     agent project(':aws-codedeploy-common')
     agent project(':aws-codedeploy-agent')
 
+    server project(':amazon-util')
     server project(':aws-codedeploy-common')
     server project(':aws-codedeploy-server')
 }

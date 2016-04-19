@@ -19,6 +19,7 @@ package jetbrains.buildServer.runner.codedeploy;
 import jetbrains.buildServer.parameters.ReferencesResolverUtil;
 import jetbrains.buildServer.util.FileUtil;
 import jetbrains.buildServer.util.StringUtil;
+import jetbrains.buildServer.util.amazon.AWSRegions;
 import org.jetbrains.annotations.NotNull;
 
 import static jetbrains.buildServer.runner.codedeploy.CodeDeployConstants.*;
@@ -75,7 +76,7 @@ final class ParametersValidator {
     } else {
       if (!isReference(regionName, runtime)) {
         try {
-          AWSClient.getRegion(regionName);
+          AWSRegions.getRegion(regionName);
         } catch (IllegalArgumentException e) {
           invalids.put(REGION_NAME_PARAM, e.getMessage());
         }

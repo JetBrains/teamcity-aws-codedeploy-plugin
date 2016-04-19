@@ -20,6 +20,7 @@ import jetbrains.buildServer.RunBuildException;
 import jetbrains.buildServer.agent.*;
 import jetbrains.buildServer.messages.ErrorData;
 import jetbrains.buildServer.util.StringUtil;
+import jetbrains.buildServer.util.amazon.AWSClients;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -130,21 +131,21 @@ public class CodeDeployRunner implements AgentBuildRunner {
     final String regionName = runnerParameters.get(CodeDeployConstants.REGION_NAME_PARAM);
 
     final boolean useDefaultCredProvChain = Boolean.parseBoolean(runnerParameters.get(CodeDeployConstants.USE_DEFAULT_CREDENTIAL_PROVIDER_CHAIN_PARAM));
-    final String accessKeyId = useDefaultCredProvChain ? null : runnerParameters.get(CodeDeployConstants.ACCESS_KEY_ID_PARAM);
-    final String secretAccessKey = useDefaultCredProvChain ? null : runnerParameters.get(CodeDeployConstants.SECRET_ACCESS_KEY_PARAM);
 
-    return (CodeDeployConstants.TEMP_CREDENTIALS_OPTION.equals(runnerParameters.get(CodeDeployConstants.CREDENTIALS_TYPE_PARAM)) ?
-      new AWSClient(
-        runnerParameters.get(CodeDeployConstants.IAM_ROLE_ARN_PARAM),
-        runnerParameters.get(CodeDeployConstants.EXTERNAL_ID_PARAM),
-        accessKeyId,
-        secretAccessKey,
-        runningBuild.getBuildTypeExternalId() + runningBuild.getBuildId(),
-        2 * getIntOrDefault(runnerParameters.get(CodeDeployConstants.WAIT_TIMEOUT_SEC_PARAM), CodeDeployConstants.TEMP_CREDENTIALS_DURATION_SEC_DEFAULT),
-        regionName
-      ) :
-      new AWSClient(accessKeyId, secretAccessKey, regionName))
-      .withDescription("TeamCity build \"" + runningBuild.getBuildTypeName() + "\" #" + runningBuild.getBuildNumber());
+    final AWSClients awsClients =
+      useDefaultCredProvChain ?
+        AWSClients.fromDefaultCredentialProviderChain(regionName) :
+        AWSClients.fromBasicCredentials(runnerParameters.get(CodeDeployConstants.ACCESS_KEY_ID_PARAM), runnerParameters.get(CodeDeployConstants.SECRET_ACCESS_KEY_PARAM), regionName);
+
+    return (
+      CodeDeployConstants.TEMP_CREDENTIALS_OPTION.equals(runnerParameters.get(CodeDeployConstants.CREDENTIALS_TYPE_PARAM)) ?
+        new AWSClient(awsClients,
+          runnerParameters.get(CodeDeployConstants.IAM_ROLE_ARN_PARAM),
+          runnerParameters.get(CodeDeployConstants.EXTERNAL_ID_PARAM),
+          runningBuild.getBuildTypeExternalId() + runningBuild.getBuildId(),
+          2 * getIntOrDefault(runnerParameters.get(CodeDeployConstants.WAIT_TIMEOUT_SEC_PARAM), CodeDeployConstants.TEMP_CREDENTIALS_DURATION_SEC_DEFAULT)) :
+        new AWSClient(awsClients)
+    ).withDescription("TeamCity build \"" + runningBuild.getBuildTypeName() + "\" #" + runningBuild.getBuildNumber());
   }
 
   static class CodeDeployRunnerException extends RunBuildException {

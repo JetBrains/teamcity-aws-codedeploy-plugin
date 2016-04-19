@@ -65,5 +65,8 @@ configure(subprojects - project(':build')) {
 
     repositories {
         mavenCentral()
+        maven {
+            url = 'http://repository.jetbrains.com/all'
+        }
     }
 }
