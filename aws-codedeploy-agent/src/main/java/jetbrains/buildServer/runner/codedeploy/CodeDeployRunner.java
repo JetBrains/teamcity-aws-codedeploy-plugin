@@ -33,11 +33,11 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public class CodeDeployRunner implements AgentBuildRunner {
   @NotNull
   @Override
-  public BuildProcess createBuildProcess(@NotNull final AgentRunningBuild runningBuild, @NotNull final BuildRunnerContext context) throws jetbrains.buildServer.RunBuildException {
+  public BuildProcess createBuildProcess(@NotNull final AgentRunningBuild runningBuild, @NotNull final BuildRunnerContext context) throws RunBuildException {
     return new SyncBuildProcessAdapter() {
       @NotNull
       @Override
-      protected BuildFinishedStatus runImpl() throws jetbrains.buildServer.RunBuildException {
+      protected BuildFinishedStatus runImpl() throws RunBuildException {
 
         final Map<String, String> runnerParameters = validateParams();
         final Map<String, String> configParameters = context.getConfigParameters();
