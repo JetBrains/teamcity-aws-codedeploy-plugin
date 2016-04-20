@@ -29,7 +29,7 @@ import static jetbrains.buildServer.runner.codedeploy.CodeDeployConstants.*;
 /**
  * @author vbedrosova
  */
-abstract class CodeDeployUtil {
+final class CodeDeployUtil {
   static boolean isUploadStepEnabled(@NotNull Map<String, String> params) {
     return isStepEnabled(UPLOAD_STEP, params);
   }
