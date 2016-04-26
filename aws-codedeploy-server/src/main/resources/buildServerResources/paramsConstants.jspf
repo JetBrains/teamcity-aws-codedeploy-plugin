@@ -20,36 +20,11 @@
 <%@ page import="jetbrains.buildServer.runner.codedeploy.CodeDeployConstants" %>
 
 <jsp:useBean id="propertiesBean" scope="request" type="jetbrains.buildServer.controllers.BasePropertiesBean"/>
-<jsp:useBean id="allRegions" scope="request" type="java.util.Map<java.lang.String, java.lang.String>"/>
 <jsp:useBean id="deploymentScenarios" scope="request" type="java.util.Map<java.lang.String, java.lang.String>"/>
 
 <c:set var="revision_path_param" value="<%=CodeDeployConstants.REVISION_PATHS_PARAM%>"/>
 <c:set var="revision_path_label" value="<%=CodeDeployConstants.REVISION_PATHS_LABEL%>"/>
 <c:set var="revision_path_note" value="<%=CodeDeployConstants.REVISION_PATHS_NOTE%>"/>
-
-<c:set var="region_name_param" value="<%=CodeDeployConstants.REGION_NAME_PARAM%>"/>
-<c:set var="region_name_label" value="<%=CodeDeployConstants.REGION_NAME_LABEL%>"/>
-
-<c:set var="credentials_type_param" value="<%=CodeDeployConstants.CREDENTIALS_TYPE_PARAM%>"/>
-<c:set var="credentials_type_label" value="<%=CodeDeployConstants.CREDENTIALS_TYPE_LABEL%>"/>
-
-<c:set var="temp_credentials_option" value="<%=CodeDeployConstants.TEMP_CREDENTIALS_OPTION%>"/>
-<c:set var="temp_credentials_label" value="<%=CodeDeployConstants.TEMP_CREDENTIALS_LABEL%>"/>
-
-<c:set var="access_keys_option" value="<%=CodeDeployConstants.ACCESS_KEYS_OPTION%>"/>
-<c:set var="access_keys_label" value="<%=CodeDeployConstants.ACCESS_KEYS_LABEL%>"/>
-
-<c:set var="access_key_id_param" value="<%=CodeDeployConstants.ACCESS_KEY_ID_PARAM%>"/>
-<c:set var="access_key_id_label" value="<%=CodeDeployConstants.ACCESS_KEY_ID_LABEL%>"/>
-
-<c:set var="secret_access_key_param" value="<%=CodeDeployConstants.SECRET_ACCESS_KEY_PARAM%>"/>
-<c:set var="secret_access_key_label" value="<%=CodeDeployConstants.SECRET_ACCESS_KEY_LABEL%>"/>
-
-<c:set var="iam_role_arn_param" value="<%=CodeDeployConstants.IAM_ROLE_ARN_PARAM%>"/>
-<c:set var="iam_role_arn_label" value="<%=CodeDeployConstants.IAM_ROLE_ARN_LABEL%>"/>
-
-<c:set var="external_id_param" value="<%=CodeDeployConstants.EXTERNAL_ID_PARAM%>"/>
-<c:set var="external_id_label" value="<%=CodeDeployConstants.EXTERNAL_ID_LABEL%>"/>
 
 <c:set var="bucket_name_param" value="<%=CodeDeployConstants.S3_BUCKET_NAME_PARAM%>"/>
 <c:set var="bucket_name_label" value="<%=CodeDeployConstants.S3_BUCKET_NAME_LABEL%>"/>
@@ -71,9 +46,6 @@
 
 <c:set var="wait_timeout_param" value="<%=CodeDeployConstants.WAIT_TIMEOUT_SEC_PARAM%>"/>
 <c:set var="wait_timeout_label" value="<%=CodeDeployConstants.WAIT_TIMEOUT_SEC_LABEL%>"/>
-
-<c:set var="use_default_cred_chain_param" value="<%=CodeDeployConstants.USE_DEFAULT_CREDENTIAL_PROVIDER_CHAIN_PARAM%>"/>
-<c:set var="use_default_cred_chain_label" value="<%=CodeDeployConstants.USE_DEFAULT_CREDENTIAL_PROVIDER_CHAIN_LABEL%>"/>
 
 <c:set var="deployment_steps_param" value="<%=CodeDeployConstants.DEPLOYMENT_STEPS_PARAM%>"/>
 <c:set var="deployment_steps_label" value="<%=CodeDeployConstants.DEPLOYMENT_STEPS_LABEL%>"/>

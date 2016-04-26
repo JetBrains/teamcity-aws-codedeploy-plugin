@@ -19,7 +19,7 @@ package jetbrains.buildServer.runner.codedeploy;
 import jetbrains.buildServer.parameters.ReferencesResolverUtil;
 import jetbrains.buildServer.util.FileUtil;
 import jetbrains.buildServer.util.StringUtil;
-import jetbrains.buildServer.util.amazon.AWSRegions;
+import jetbrains.buildServer.util.amazon.AWSCommonParams;
 import org.jetbrains.annotations.NotNull;
 
 import static jetbrains.buildServer.runner.codedeploy.CodeDeployConstants.*;
@@ -70,18 +70,7 @@ final class ParametersValidator {
   private static Map<String, String> validate(@NotNull Map<String, String> runnerParams, boolean runtime) {
     final Map<String, String> invalids = new HashMap<String, String>();
 
-    final String regionName = runnerParams.get(REGION_NAME_PARAM);
-    if (StringUtil.isEmptyOrSpaces(regionName)) {
-      invalids.put(REGION_NAME_PARAM, REGION_NAME_LABEL + " mustn't be empty");
-    } else {
-      if (!isReference(regionName, runtime)) {
-        try {
-          AWSRegions.getRegion(regionName);
-        } catch (IllegalArgumentException e) {
-          invalids.put(REGION_NAME_PARAM, e.getMessage());
-        }
-      }
-    }
+    invalids.putAll(AWSCommonParams.validate(runnerParams, !runtime));
 
     boolean uploadStepEnabled = false;
     boolean registerStepEnabled = false;
@@ -98,26 +87,6 @@ final class ParametersValidator {
       if (!uploadStepEnabled && !registerStepEnabled && !deployStepEnabled) {
         invalids.put(DEPLOYMENT_STEPS_PARAM, DEPLOYMENT_STEPS_LABEL + " has unexpected value " + deploymentSteps);
       }
-    }
-
-    if (!Boolean.parseBoolean(runnerParams.get(USE_DEFAULT_CREDENTIAL_PROVIDER_CHAIN_PARAM))) {
-      if (StringUtil.isEmptyOrSpaces(runnerParams.get(ACCESS_KEY_ID_PARAM))) {
-        invalids.put(ACCESS_KEY_ID_PARAM, ACCESS_KEY_ID_LABEL + " mustn't be empty");
-      }
-      if (StringUtil.isEmptyOrSpaces(runnerParams.get(SECRET_ACCESS_KEY_PARAM))) {
-        invalids.put(SECRET_ACCESS_KEY_PARAM, SECRET_ACCESS_KEY_LABEL + " mustn't be empty");
-      }
-    }
-
-    final String credentialsType = runnerParams.get(CREDENTIALS_TYPE_PARAM);
-    if (TEMP_CREDENTIALS_OPTION.equals(credentialsType)) {
-      if (StringUtil.isEmptyOrSpaces(runnerParams.get(IAM_ROLE_ARN_PARAM))) {
-        invalids.put(IAM_ROLE_ARN_PARAM, IAM_ROLE_ARN_LABEL + " mustn't be empty");
-      }
-    } else if (StringUtil.isEmptyOrSpaces(credentialsType)) {
-      invalids.put(CREDENTIALS_TYPE_PARAM, CREDENTIALS_TYPE_LABEL + " mustn't be empty");
-    } else if (!ACCESS_KEYS_OPTION.equals(credentialsType)) {
-      invalids.put(CREDENTIALS_TYPE_PARAM, CREDENTIALS_TYPE_LABEL + " has unexpected value " + credentialsType);
     }
 
     if (uploadStepEnabled) {

@@ -19,6 +19,7 @@ package jetbrains.buildServer.runner.codedeploy;
 import jetbrains.buildServer.agent.BuildProgressLogger;
 import jetbrains.buildServer.util.CollectionsUtil;
 import jetbrains.buildServer.util.StringUtil;
+import jetbrains.buildServer.util.amazon.AWSCommonParams;
 import jetbrains.buildServer.util.filters.Filter;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -191,7 +192,7 @@ class LoggingDeploymentListener extends AWSClient.Listener {
       CodeDeployConstants.S3_BUCKET_NAME_PARAM,
       CodeDeployConstants.APP_NAME_PARAM,
       CodeDeployConstants.DEPLOYMENT_GROUP_NAME_PARAM,
-      CodeDeployConstants.REGION_NAME_PARAM);
+      AWSCommonParams.REGION_NAME_PARAM);
     return CollectionsUtil.filterMapByKeys(myRunnerParameters, new Filter<String>() {
       @Override
       public boolean accept(@NotNull String data) {

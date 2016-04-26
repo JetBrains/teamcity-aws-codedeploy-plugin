@@ -20,6 +20,8 @@ import jetbrains.buildServer.util.CollectionsUtil;
 
 import java.util.*;
 
+import static jetbrains.buildServer.util.amazon.AWSCommonParams.*;
+
 /**
  * @author vbedrosova
  */
@@ -38,7 +40,6 @@ public interface CodeDeployConstants {
   String EDIT_PARAMS_JSP = "editCodeDeployParams.jsp";
   String VIEW_PARAMS_JSP = "viewCodeDeployParams.jsp";
 
-  String ALL_REGIONS = "allRegions";
   String DEPLOYMENT_SCENARIOS = "deploymentScenarios";
 
 
@@ -53,27 +54,6 @@ public interface CodeDeployConstants {
   String DEPLOYMENT_STEPS_PARAM = "codedeploy_deployment_steps";
   String DEPLOYMENT_STEPS_LABEL = "Deployment steps";
 
-  String CREDENTIALS_TYPE_PARAM = "codedeploy_credentials_type";
-  String CREDENTIALS_TYPE_LABEL = "Credentials type";
-  String TEMP_CREDENTIALS_OPTION = "codedeploy_temp_credentials";
-  String TEMP_CREDENTIALS_LABEL = "Temporary credentials";
-  String ACCESS_KEYS_OPTION = "codedeploy_access_keys";
-  String ACCESS_KEYS_LABEL = "Access keys";
-
-  String USE_DEFAULT_CREDENTIAL_PROVIDER_CHAIN_PARAM = "codedeploy_use_default_credential_provider_chain";
-  String USE_DEFAULT_CREDENTIAL_PROVIDER_CHAIN_LABEL = "Use default credential provider chain";
-
-  String ACCESS_KEY_ID_PARAM = "codedeploy_access_key_id";
-  String ACCESS_KEY_ID_LABEL = "Access key ID";
-  String SECRET_ACCESS_KEY_PARAM = "codedeploy_secret_access_key";
-  String SECRET_ACCESS_KEY_LABEL = "Secret access key";
-
-  String IAM_ROLE_ARN_PARAM = "codedeploy_iam_role_arn";
-  String IAM_ROLE_ARN_LABEL = "IAM role ARN";
-  String EXTERNAL_ID_PARAM = "codedeploy_external_id";
-  String EXTERNAL_ID_LABEL = "External ID";
-  int TEMP_CREDENTIALS_DURATION_SEC_DEFAULT = 1800;
-
   String REVISION_PATHS_PARAM = "codedeploy_revision_paths";
   String REVISION_PATHS_LABEL = "Application revision";
 
@@ -86,8 +66,6 @@ public interface CodeDeployConstants {
 
   String APP_NAME_PARAM = "codedeploy_application_name";
   String APP_NAME_LABEL = "Application name";
-  String REGION_NAME_PARAM = "codedeploy_region_name";
-  String REGION_NAME_LABEL = "AWS region";
 
   String DEPLOYMENT_GROUP_NAME_PARAM = "codedeploy_deployment_group_name";
   String DEPLOYMENT_GROUP_NAME_LABEL = "Deployment group";

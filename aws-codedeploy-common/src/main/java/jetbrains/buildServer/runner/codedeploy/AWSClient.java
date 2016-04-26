@@ -18,7 +18,6 @@ package jetbrains.buildServer.runner.codedeploy;
 
 import com.amazonaws.AmazonClientException;
 import com.amazonaws.AmazonServiceException;
-import com.amazonaws.auth.AWSSessionCredentials;
 import com.amazonaws.services.codedeploy.AmazonCodeDeployClient;
 import com.amazonaws.services.codedeploy.model.*;
 import com.amazonaws.services.s3.AmazonS3Client;
@@ -44,21 +43,6 @@ public class AWSClient {
   public AWSClient(@NotNull AWSClients clients) {
     myS3Client = clients.createS3Client();
     myCodeDeployClient = clients.createCodeDeployClient();
-  }
-
-  public AWSClient(@NotNull final AWSClients clients,
-                   @NotNull final String iamRoleARN, final @Nullable String externalID,
-                   @NotNull final String sessionName, final int sessionDuration) {
-    // using lazy credentials in order to process exceptions related to wrong credentials later when listeners are available
-    final AWSClients lazyClients = AWSClients.fromExistingCredentials(new LazyCredentials() {
-      @NotNull
-      @Override
-      protected AWSSessionCredentials createCredentials() {
-        return clients.createSessionCredentials(iamRoleARN, externalID, AWSClients.patchSessionName(sessionName), sessionDuration);
-      }
-    }, clients.getRegion());
-    myS3Client = lazyClients.createS3Client();
-    myCodeDeployClient = lazyClients.createCodeDeployClient();
   }
 
   @NotNull
@@ -363,19 +347,5 @@ public class AWSClient {
       @Nullable
       String message;
     }
-  }
-
-  // must implement AWSSessionCredentials as AWS SDK may use "instanceof"
-  private static abstract class LazyCredentials implements AWSSessionCredentials {
-    @Nullable private AWSSessionCredentials myDelegate = null;
-    @Override public String getAWSAccessKeyId() { return getDelegate().getAWSAccessKeyId(); }
-    @Override public String getAWSSecretKey() { return getDelegate().getAWSSecretKey(); }
-    @Override public String getSessionToken() { return getDelegate().getSessionToken(); }
-
-    @NotNull private AWSSessionCredentials getDelegate() {
-      if (myDelegate == null) myDelegate = createCredentials();
-      return myDelegate;
-    }
-    @NotNull protected abstract AWSSessionCredentials createCredentials();
   }
 }

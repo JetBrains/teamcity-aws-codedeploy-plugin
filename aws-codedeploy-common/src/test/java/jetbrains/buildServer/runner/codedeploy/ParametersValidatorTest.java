@@ -25,6 +25,7 @@ import java.io.IOException;
 import java.util.Map;
 import static org.assertj.core.api.BDDAssertions.*;
 import static jetbrains.buildServer.runner.codedeploy.CodeDeployConstants.*;
+import static jetbrains.buildServer.util.amazon.AWSCommonParams.*;
 
 /**
  * @author vbedrosova
@@ -44,18 +45,6 @@ public class ParametersValidatorTest extends BaseTestCase {
   public void unexpected_deployment_steps() {
     then(validate(DEPLOYMENT_STEPS_PARAM, "abrakadabra")).as("Must detect unexpected deployment steps").
       containsEntry(DEPLOYMENT_STEPS_PARAM, "Deployment steps has unexpected value abrakadabra");
-  }
-
-  @Test
-  public void unexpected_region() {
-    then(validate(REGION_NAME_PARAM, "abrakadabra")).as("Must detect unexpected region name").
-      containsEntry(REGION_NAME_PARAM, "Unsupported region name abrakadabra");
-  }
-
-  @Test
-  public void unexpected_credentials_type() {
-    then(validate(CREDENTIALS_TYPE_PARAM, "abrakadabra")).as("Must detect unexpected credentials type").
-      containsEntry(CREDENTIALS_TYPE_PARAM, "Credentials type has unexpected value abrakadabra");
   }
 
   @Test

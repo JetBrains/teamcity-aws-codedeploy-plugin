@@ -21,7 +21,7 @@ import jetbrains.buildServer.serverSide.*;
 import jetbrains.buildServer.util.CollectionsUtil;
 import jetbrains.buildServer.util.Converter;
 import jetbrains.buildServer.util.StringUtil;
-import jetbrains.buildServer.util.amazon.AWSRegions;
+import jetbrains.buildServer.util.amazon.AWSCommonParams;
 import jetbrains.buildServer.web.openapi.PluginDescriptor;
 import jetbrains.buildServer.web.openapi.WebControllerManager;
 import org.jetbrains.annotations.NotNull;
@@ -68,7 +68,6 @@ public class CodeDeployRunType extends RunType {
       @Override
       protected ModelAndView doHandle(@NotNull HttpServletRequest request, @NotNull HttpServletResponse response) throws Exception {
         final ModelAndView mv = new ModelAndView(descriptor.getPluginResourcesPath(jspPath));
-        mv.getModel().put(CodeDeployConstants.ALL_REGIONS, AWSRegions.getAllRegions());
         mv.getModel().put(CodeDeployConstants.DEPLOYMENT_SCENARIOS, CodeDeployConstants.STEP_LABELS);
         return mv;
       }
@@ -98,7 +97,7 @@ public class CodeDeployRunType extends RunType {
     final Map<String, String> defaults = new HashMap<String, String>(CodeDeployConstants.DEFAULTS);
     final String serverUUID = myServerSettings.getServerUUID();
     if (StringUtil.isNotEmpty(serverUUID)) {
-      defaults.put(CodeDeployConstants.EXTERNAL_ID_PARAM, "TeamCity-server-" + serverUUID);
+      defaults.put(AWSCommonParams.EXTERNAL_ID_PARAM, "TeamCity-server-" + serverUUID);
     }
     return defaults;
   }
