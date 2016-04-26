@@ -17,4 +17,6 @@
 dependencies {
     compile "com.amazonaws:aws-java-sdk:${awsSDKVersion}"
     compile "org.jetbrains.teamcity:common-api:${teamcityVersion}"
+
+    testCompile "org.jetbrains.teamcity:tests-support:${teamcityVersion}"
 }
