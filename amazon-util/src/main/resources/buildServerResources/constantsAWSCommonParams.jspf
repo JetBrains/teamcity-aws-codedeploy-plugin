@@ -19,6 +19,8 @@
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="props" tagdir="/WEB-INF/tags/props" %>
 
+<jsp:useBean id="propertiesBean" scope="request" type="jetbrains.buildServer.controllers.BasePropertiesBean"/>
+
 <c:set var="allRegions" value="<%=AWSRegions.getAllRegions()%>"/>
 
 <c:set var="region_name_param" value="<%=AWSCommonParams.REGION_NAME_PARAM%>"/>
