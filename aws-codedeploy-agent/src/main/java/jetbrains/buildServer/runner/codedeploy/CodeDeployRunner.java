@@ -131,7 +131,7 @@ public class CodeDeployRunner implements AgentBuildRunner {
 
   @NotNull
   private AWSClient createAWSClient(final Map<String, String> runnerParameters, @NotNull final AgentRunningBuild runningBuild) {
-    final Map<String, String> params = new HashMap<>(runnerParameters);
+    final Map<String, String> params = new HashMap<String, String>(runnerParameters);
     params.put(TEMP_CREDENTIALS_SESSION_NAME_PARAM, runningBuild.getBuildTypeExternalId() + runningBuild.getBuildId());
     if (CodeDeployUtil.isDeploymentWaitEnabled(runnerParameters)) {
       params.put(TEMP_CREDENTIALS_DURATION_SEC_PARAM, String.valueOf(2 * Integer.parseInt(runnerParameters.get(WAIT_TIMEOUT_SEC_PARAM))));
