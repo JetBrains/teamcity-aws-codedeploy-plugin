@@ -1,0 +1,49 @@
+<%--
+  ~ Copyright 2000-2016 JetBrains s.r.o.
+  ~
+  ~ Licensed under the Apache License, Version 2.0 (the "License");
+  ~ you may not use this file except in compliance with the License.
+  ~ You may obtain a copy of the License at
+  ~
+  ~ http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS,
+  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~ See the License for the specific language governing permissions and
+  ~ limitations under the License.
+  --%>
+<%@ page import="jetbrains.buildServer.util.amazon.AWSCommonParams" %>
+<%@ page import="jetbrains.buildServer.util.amazon.AWSRegions" %>
+
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<%@ taglib prefix="props" tagdir="/WEB-INF/tags/props" %>
+
+<c:set var="allRegions" value="<%=AWSRegions.getAllRegions()%>"/>
+
+<c:set var="region_name_param" value="<%=AWSCommonParams.REGION_NAME_PARAM%>"/>
+<c:set var="region_name_label" value="<%=AWSCommonParams.REGION_NAME_LABEL%>"/>
+
+<c:set var="credentials_type_param" value="<%=AWSCommonParams.CREDENTIALS_TYPE_PARAM%>"/>
+<c:set var="credentials_type_label" value="<%=AWSCommonParams.CREDENTIALS_TYPE_LABEL%>"/>
+
+<c:set var="temp_credentials_option" value="<%=AWSCommonParams.TEMP_CREDENTIALS_OPTION%>"/>
+<c:set var="temp_credentials_label" value="<%=AWSCommonParams.TEMP_CREDENTIALS_LABEL%>"/>
+
+<c:set var="access_keys_option" value="<%=AWSCommonParams.ACCESS_KEYS_OPTION%>"/>
+<c:set var="access_keys_label" value="<%=AWSCommonParams.ACCESS_KEYS_LABEL%>"/>
+
+<c:set var="access_key_id_param" value="<%=AWSCommonParams.ACCESS_KEY_ID_PARAM%>"/>
+<c:set var="access_key_id_label" value="<%=AWSCommonParams.ACCESS_KEY_ID_LABEL%>"/>
+
+<c:set var="secret_access_key_param" value="<%=AWSCommonParams.SECRET_ACCESS_KEY_PARAM%>"/>
+<c:set var="secret_access_key_label" value="<%=AWSCommonParams.SECRET_ACCESS_KEY_LABEL%>"/>
+
+<c:set var="iam_role_arn_param" value="<%=AWSCommonParams.IAM_ROLE_ARN_PARAM%>"/>
+<c:set var="iam_role_arn_label" value="<%=AWSCommonParams.IAM_ROLE_ARN_LABEL%>"/>
+
+<c:set var="external_id_param" value="<%=AWSCommonParams.EXTERNAL_ID_PARAM%>"/>
+<c:set var="external_id_label" value="<%=AWSCommonParams.EXTERNAL_ID_LABEL%>"/>
+
+<c:set var="use_default_cred_chain_param" value="<%=AWSCommonParams.USE_DEFAULT_CREDENTIAL_PROVIDER_CHAIN_PARAM%>"/>
+<c:set var="use_default_cred_chain_label" value="<%=AWSCommonParams.USE_DEFAULT_CREDENTIAL_PROVIDER_CHAIN_LABEL%>"/>
