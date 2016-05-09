@@ -30,6 +30,7 @@ import com.amazonaws.services.securitytoken.AWSSecurityTokenServiceClient;
 import com.amazonaws.services.securitytoken.model.AssumeRoleRequest;
 import com.amazonaws.services.securitytoken.model.Credentials;
 import jetbrains.buildServer.util.StringUtil;
+import jetbrains.buildServer.version.ServerVersionHolder;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -111,6 +112,6 @@ public class AWSClients {
 
   @NotNull
   private static ClientConfiguration createClientConfiguration() {
-    return new ClientConfiguration().withUserAgent(ClientConfiguration.DEFAULT_USER_AGENT);
+    return new ClientConfiguration().withUserAgent("JetBrains TeamCity " + ServerVersionHolder.getVersion().getDisplayVersion());
   }
 }
