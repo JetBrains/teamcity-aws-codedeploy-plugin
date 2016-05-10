@@ -76,7 +76,7 @@ public class CodeDeployRunType extends RunType {
     return resolvedHtmlPath;
   }
 
-  @Nullable
+  @NotNull
   @Override
   public PropertiesProcessor getRunnerPropertiesProcessor() {
     return new PropertiesProcessor() {
@@ -92,7 +92,7 @@ public class CodeDeployRunType extends RunType {
     };
   }
 
-  @Nullable
+  @NotNull
   @Override
   public Map<String, String> getDefaultRunnerProperties() {
     final Map<String, String> defaults = new HashMap<String, String>(DEFAULTS);
@@ -118,13 +118,13 @@ public class CodeDeployRunType extends RunType {
     return RUNNER_DESCR;
   }
 
-  @Nullable
+  @NotNull
   @Override
   public String getEditRunnerParamsJspFilePath() {
     return myEditParamsPath;
   }
 
-  @Nullable
+  @NotNull
   @Override
   public String getViewRunnerParamsJspFilePath() {
     return myViewParamsPath;
