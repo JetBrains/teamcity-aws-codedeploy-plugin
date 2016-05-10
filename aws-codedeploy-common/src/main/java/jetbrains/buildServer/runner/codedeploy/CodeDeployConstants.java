@@ -20,8 +20,6 @@ import jetbrains.buildServer.util.CollectionsUtil;
 
 import java.util.*;
 
-import static jetbrains.buildServer.util.amazon.AWSCommonParams.*;
-
 /**
  * @author vbedrosova
  */
@@ -98,10 +96,7 @@ public interface CodeDeployConstants {
   ));
 
   Map<String, String> DEFAULTS = Collections.unmodifiableMap(CollectionsUtil.asMap(
-    CREDENTIALS_TYPE_PARAM, ACCESS_KEYS_OPTION,
-    EXTERNAL_ID_PARAM, UUID.randomUUID().toString(), // see jetbrains.buildServer.runner.codedeploy.CodeDeployRunType#getDefaultRunnerProperties
     WAIT_FLAG_PARAM, "true",
-    USE_DEFAULT_CREDENTIAL_PROVIDER_CHAIN_PARAM, "false",
     DEPLOYMENT_STEPS_PARAM, UPLOAD_REGISTER_DEPLOY_STEPS
   ));
 

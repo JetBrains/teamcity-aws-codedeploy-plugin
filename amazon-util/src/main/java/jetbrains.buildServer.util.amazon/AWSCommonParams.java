@@ -18,13 +18,13 @@ package jetbrains.buildServer.util.amazon;
 
 import com.amazonaws.auth.AWSSessionCredentials;
 import jetbrains.buildServer.parameters.ReferencesResolverUtil;
+import jetbrains.buildServer.serverSide.ServerSettings;
+import jetbrains.buildServer.util.CollectionsUtil;
 import jetbrains.buildServer.util.StringUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 import static jetbrains.buildServer.util.amazon.AWSClients.*;
 
@@ -58,10 +58,33 @@ public final class AWSCommonParams {
   public static final String EXTERNAL_ID_PARAM = "codedeploy_external_id";
   public static final String EXTERNAL_ID_LABEL = "External ID";
 
+  public static final Map<String, String> DEFAULTS = Collections.unmodifiableMap(CollectionsUtil.asMap(
+    CREDENTIALS_TYPE_PARAM, ACCESS_KEYS_OPTION,
+    EXTERNAL_ID_PARAM, UUID.randomUUID().toString(),
+    USE_DEFAULT_CREDENTIAL_PROVIDER_CHAIN_PARAM, "false"
+  ));
+
   public static final String TEMP_CREDENTIALS_SESSION_NAME_PARAM = "temp_credentials_session_name";
   public static final String TEMP_CREDENTIALS_SESSION_NAME_DEFAULT_PREFIX = "TeamCity_AWS_support_";
   public static final String TEMP_CREDENTIALS_DURATION_SEC_PARAM = "temp_credentials_duration_sec";
   public static final int TEMP_CREDENTIALS_DURATION_SEC_DEFAULT = 1800;
+
+  @NotNull
+  private final ServerSettings myServerSettings;
+
+  public AWSCommonParams(@NotNull ServerSettings serverSettings) {
+    myServerSettings = serverSettings;
+  }
+
+  @NotNull
+  public Map<String, String> getDefaults() {
+    final Map<String, String> defaults = new HashMap<String, String>(DEFAULTS);
+    final String serverUUID = myServerSettings.getServerUUID();
+    if (StringUtil.isNotEmpty(serverUUID)) {
+      defaults.put(EXTERNAL_ID_PARAM, "TeamCity-server-" + serverUUID);
+    }
+    return defaults;
+  }
 
   @NotNull
   public static Map<String, String> validate(@NotNull Map<String, String> params, boolean acceptReferences) throws IllegalArgumentException {

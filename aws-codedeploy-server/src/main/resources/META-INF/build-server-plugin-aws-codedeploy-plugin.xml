@@ -20,6 +20,7 @@
        xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.0.xsd"
        default-autowire="constructor">
 
+    <bean id="awsCommonParams" class="jetbrains.buildServer.util.amazon.AWSCommonParams"/>
     <bean id="codeDeployRunnerRunType" class="jetbrains.buildServer.runner.codedeploy.CodeDeployRunType"/>
     <bean id="codeDeployBuildProblemTypes" class="jetbrains.buildServer.runner.codedeploy.CodeDeployBuildProblemTypes"/>
 </beans>

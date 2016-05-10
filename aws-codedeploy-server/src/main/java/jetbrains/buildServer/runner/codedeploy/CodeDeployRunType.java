@@ -20,7 +20,6 @@ import jetbrains.buildServer.controllers.BaseController;
 import jetbrains.buildServer.serverSide.*;
 import jetbrains.buildServer.util.CollectionsUtil;
 import jetbrains.buildServer.util.Converter;
-import jetbrains.buildServer.util.StringUtil;
 import jetbrains.buildServer.util.amazon.AWSCommonParams;
 import jetbrains.buildServer.web.openapi.PluginDescriptor;
 import jetbrains.buildServer.web.openapi.WebControllerManager;
@@ -34,6 +33,8 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
+import static jetbrains.buildServer.runner.codedeploy.CodeDeployConstants.*;
+
 /**
  * @author vbedrosova
  */
@@ -43,18 +44,18 @@ public class CodeDeployRunType extends RunType {
   @NotNull
   private final String myViewParamsPath;
   @NotNull
-  private final ServerSettings myServerSettings;
+  private final AWSCommonParams myAWSCommonParams;
 
   public CodeDeployRunType(@NotNull RunTypeRegistry registry,
                            @NotNull PluginDescriptor descriptor,
                            @NotNull WebControllerManager controllerManager,
-                           @NotNull ServerSettings serverSettings) {
+                           @NotNull AWSCommonParams awsCommonParams) {
     registry.registerRunType(this);
 
-    myServerSettings = serverSettings;
+    myAWSCommonParams = awsCommonParams;
 
-    myEditParamsPath = registerController(descriptor, controllerManager, CodeDeployConstants.EDIT_PARAMS_JSP, CodeDeployConstants.EDIT_PARAMS_HTML);
-    myViewParamsPath = registerController(descriptor, controllerManager, CodeDeployConstants.VIEW_PARAMS_JSP, CodeDeployConstants.VIEW_PARAMS_HTML);
+    myEditParamsPath = registerController(descriptor, controllerManager, EDIT_PARAMS_JSP, EDIT_PARAMS_HTML);
+    myViewParamsPath = registerController(descriptor, controllerManager, VIEW_PARAMS_JSP, VIEW_PARAMS_HTML);
   }
 
   @NotNull
@@ -68,7 +69,7 @@ public class CodeDeployRunType extends RunType {
       @Override
       protected ModelAndView doHandle(@NotNull HttpServletRequest request, @NotNull HttpServletResponse response) throws Exception {
         final ModelAndView mv = new ModelAndView(descriptor.getPluginResourcesPath(jspPath));
-        mv.getModel().put(CodeDeployConstants.DEPLOYMENT_SCENARIOS, CodeDeployConstants.STEP_LABELS);
+        mv.getModel().put(DEPLOYMENT_SCENARIOS, STEP_LABELS);
         return mv;
       }
     });
@@ -94,30 +95,27 @@ public class CodeDeployRunType extends RunType {
   @Nullable
   @Override
   public Map<String, String> getDefaultRunnerProperties() {
-    final Map<String, String> defaults = new HashMap<String, String>(CodeDeployConstants.DEFAULTS);
-    final String serverUUID = myServerSettings.getServerUUID();
-    if (StringUtil.isNotEmpty(serverUUID)) {
-      defaults.put(AWSCommonParams.EXTERNAL_ID_PARAM, "TeamCity-server-" + serverUUID);
-    }
+    final Map<String, String> defaults = new HashMap<String, String>(DEFAULTS);
+    defaults.putAll(myAWSCommonParams.getDefaults());
     return defaults;
   }
 
   @NotNull
   @Override
   public String getType() {
-    return CodeDeployConstants.RUNNER_TYPE;
+    return RUNNER_TYPE;
   }
 
   @NotNull
   @Override
   public String getDisplayName() {
-    return CodeDeployConstants.RUNNER_DISPLAY_NAME;
+    return RUNNER_DISPLAY_NAME;
   }
 
   @NotNull
   @Override
   public String getDescription() {
-    return CodeDeployConstants.RUNNER_DESCR;
+    return RUNNER_DESCR;
   }
 
   @Nullable
@@ -138,7 +136,7 @@ public class CodeDeployRunType extends RunType {
     final Map<String, String> invalids = ParametersValidator.validateSettings(parameters);
     return
       invalids.isEmpty() ?
-      CodeDeployConstants.STEP_LABELS.get(parameters.get(CodeDeployConstants.DEPLOYMENT_STEPS_PARAM)) + " application revision" :
+      STEP_LABELS.get(parameters.get(DEPLOYMENT_STEPS_PARAM)) + " application revision" :
       CodeDeployUtil.printStrings(invalids.values());
   }
 }

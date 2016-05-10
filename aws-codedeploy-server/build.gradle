@@ -18,7 +18,6 @@ apply plugin: 'com.github.rodm.teamcity-server'
 
 dependencies {
     compile project(':aws-codedeploy-common')
-    provided "org.jetbrains.teamcity.internal:server:${teamcityVersion}"
 }
 
 teamcity {
