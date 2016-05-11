@@ -52,6 +52,7 @@ public class AWSException extends RuntimeException {
 
   @NotNull
   private static String getMessage(@NotNull Throwable t) {
+    if (t instanceof AWSException) return t.getMessage();
     if (t instanceof AmazonServiceException)  return "AWS error: " + removeTrailingDot(((AmazonServiceException) t).getErrorMessage());
     if (t instanceof AmazonClientException) return "Error while trying to communicate with AWS: " + removeTrailingDot(t.getMessage());
     return "Unexpected error during the deployment: " + removeTrailingDot(t.getMessage());
@@ -59,6 +60,7 @@ public class AWSException extends RuntimeException {
 
   @Nullable
   private static String getIdentity(@NotNull Throwable t) {
+    if (t instanceof AWSException) return ((AWSException) t).getIdentity();
     if (t instanceof AmazonServiceException) {
       final AmazonServiceException ase = (AmazonServiceException) t;
       return ase.getServiceName() + ase.getErrorType().name() + String.valueOf(ase.getStatusCode()) + ase.getErrorCode();
@@ -68,6 +70,7 @@ public class AWSException extends RuntimeException {
 
   @NotNull
   private static String getType(@NotNull Throwable t) {
+    if (t instanceof  AWSException) return ((AWSException) t).getType();
     if (t instanceof AmazonServiceException) return SERVICE_PROBLEM_TYPE;
     if (t instanceof AmazonClientException) return CLIENT_PROBLEM_TYPE;
     return EXCEPTION_BUILD_PROBLEM_TYPE;
@@ -75,6 +78,7 @@ public class AWSException extends RuntimeException {
 
   @Nullable
   private static String getDetails(@NotNull Throwable t) {
+    if (t instanceof AWSException) return ((AWSException) t).getDetails();
     if (t instanceof AmazonServiceException) {
       final AmazonServiceException ase = (AmazonServiceException) t;
       return "\n" +
@@ -92,7 +96,7 @@ public class AWSException extends RuntimeException {
     return (msg != null && msg.endsWith(".")) ? msg.substring(0, msg.length() - 1) : msg;
   }
 
-  @NotNull
+  @Nullable
   public String getIdentity() {
     return myIdentity;
   }

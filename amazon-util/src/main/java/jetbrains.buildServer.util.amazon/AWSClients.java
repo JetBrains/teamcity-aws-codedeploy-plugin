@@ -94,12 +94,15 @@ public class AWSClients {
   }
 
   @NotNull
-  public AWSSessionCredentials createSessionCredentials(@NotNull String iamRoleARN, @Nullable String externalID, @NotNull String sessionName, int sessionDuration) {
+  public AWSSessionCredentials createSessionCredentials(@NotNull String iamRoleARN, @Nullable String externalID, @NotNull String sessionName, int sessionDuration) throws AWSException {
     final AssumeRoleRequest assumeRoleRequest = new AssumeRoleRequest().withRoleArn(iamRoleARN).withRoleSessionName(sessionName).withDurationSeconds(sessionDuration);
     if (StringUtil.isNotEmpty(externalID)) assumeRoleRequest.setExternalId(externalID);
-
-    final Credentials credentials = createSecurityTokenServiceClient().assumeRole(assumeRoleRequest).getCredentials();
-    return new BasicSessionCredentials(credentials.getAccessKeyId(), credentials.getSecretAccessKey(), credentials.getSessionToken());
+    try {
+      final Credentials credentials = createSecurityTokenServiceClient().assumeRole(assumeRoleRequest).getCredentials();
+      return new BasicSessionCredentials(credentials.getAccessKeyId(), credentials.getSecretAccessKey(), credentials.getSessionToken());
+    } catch (Exception e) {
+      throw new AWSException(e);
+    }
   }
 
   public static final String UNSUPPORTED_SESSION_NAME_CHARS = "[^\\w+=,.@-]";
