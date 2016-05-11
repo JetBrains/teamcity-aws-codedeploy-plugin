@@ -18,6 +18,7 @@ package jetbrains.buildServer.runner.codedeploy;
 
 import jetbrains.buildServer.agent.NullBuildProgressLogger;
 import jetbrains.buildServer.util.CollectionsUtil;
+import jetbrains.buildServer.util.amazon.AWSException;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.testng.annotations.AfterMethod;
@@ -177,7 +178,7 @@ public class LoggingDeploymentListenerTest extends LoggingTestCase {
 
   @Test
   public void deployment_exception_with_description_type() throws Exception {
-    create().exception("Some exception message", "Some exception details", CodeDeployConstants.CLIENT_PROBLEM_TYPE, null);
+    create().exception("Some exception message", "Some exception details", AWSException.CLIENT_PROBLEM_TYPE, null);
     assertLog(
       "ERR Some exception message",
       "ERR Some exception details",
@@ -187,7 +188,7 @@ public class LoggingDeploymentListenerTest extends LoggingTestCase {
 
   @Test
   public void deployment_exception_with_description_type_identity() throws Exception {
-    create().exception("Some exception message", "Some exception details", CodeDeployConstants.CLIENT_PROBLEM_TYPE, "ABC123");
+    create().exception("Some exception message", "Some exception details", AWSException.CLIENT_PROBLEM_TYPE, "ABC123");
     assertLog(
       "ERR Some exception message",
       "ERR Some exception details",

@@ -20,6 +20,7 @@ import jetbrains.buildServer.agent.BuildProgressLogger;
 import jetbrains.buildServer.util.CollectionsUtil;
 import jetbrains.buildServer.util.StringUtil;
 import jetbrains.buildServer.util.amazon.AWSCommonParams;
+import jetbrains.buildServer.util.amazon.AWSException;
 import jetbrains.buildServer.util.filters.Filter;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -134,7 +135,7 @@ class LoggingDeploymentListener extends AWSClient.Listener {
   void exception(@NotNull String message, @Nullable String details, @Nullable String type, @Nullable String identity) {
     err(message);
     if (StringUtil.isNotEmpty(details)) err(details);
-    problem(getIdentity(message, identity), type == null ? CodeDeployConstants.EXCEPTION_BUILD_PROBLEM_TYPE : type, message);
+    problem(getIdentity(message, identity), type == null ? AWSException.EXCEPTION_BUILD_PROBLEM_TYPE : type, message);
     close(DEPLOY_APPLICATION);
   }
 

@@ -16,14 +16,13 @@
 
 package jetbrains.buildServer.runner.codedeploy;
 
-import com.amazonaws.AmazonClientException;
-import com.amazonaws.AmazonServiceException;
 import com.amazonaws.services.codedeploy.AmazonCodeDeployClient;
 import com.amazonaws.services.codedeploy.model.*;
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.model.PutObjectRequest;
 import jetbrains.buildServer.util.StringUtil;
 import jetbrains.buildServer.util.amazon.AWSClients;
+import jetbrains.buildServer.util.amazon.AWSException;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -233,26 +232,8 @@ public class AWSClient {
   }
 
   private void processFailure(@NotNull Throwable t) {
-    if (t instanceof AmazonServiceException) {
-      final AmazonServiceException ase = (AmazonServiceException) t;
-
-      final String details = "\n" +
-        "Service   :          " + ase.getServiceName() + "\n" +
-        "HTTP Status Code:    " + ase.getStatusCode() + "\n" +
-        "AWS Error Code:      " + ase.getErrorCode() + "\n" +
-        "Error Type:          " + ase.getErrorType() + "\n" +
-        "Request ID:          " + ase.getRequestId();
-
-      myListener.exception(
-        "AWS error: " + removeTrailingDot(ase.getErrorMessage()),
-        details, CodeDeployConstants.SERVICE_PROBLEM_TYPE,
-        ase.getServiceName() + ase.getErrorType().name() + String.valueOf(ase.getStatusCode()) + ase.getErrorCode());
-
-    } else if (t instanceof AmazonClientException) {
-      myListener.exception("Error while trying to communicate with AWS: " + removeTrailingDot(t.getMessage()), null, CodeDeployConstants.CLIENT_PROBLEM_TYPE, null);
-    } else {
-      myListener.exception("Unexpected error during the deployment: " + removeTrailingDot(t.getMessage()), null, null, null);
-    }
+    final AWSException awsException = new AWSException(t);
+    myListener.exception(awsException.getMessage(), awsException.getDetails(), awsException.getType(), awsException.getIdentity());
   }
 
   private boolean isSuccess(@NotNull DeploymentInfo dInfo) {
