@@ -54,7 +54,7 @@ public class AWSException extends RuntimeException {
   private static String getMessage(@NotNull Throwable t) {
     if (t instanceof AWSException) return t.getMessage();
     if (t instanceof AmazonServiceException)  return "AWS error: " + removeTrailingDot(((AmazonServiceException) t).getErrorMessage());
-    if (t instanceof AmazonClientException) return "Error while trying to communicate with AWS: " + removeTrailingDot(t.getMessage());
+    if (t instanceof AmazonClientException) return "AWS client error: " + removeTrailingDot(t.getMessage());
     return "Unexpected error during the deployment: " + removeTrailingDot(t.getMessage());
   }
 

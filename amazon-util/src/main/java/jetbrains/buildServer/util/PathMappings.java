@@ -14,34 +14,34 @@
  * limitations under the License.
  */
 
-package jetbrains.buildServer.runner.codedeploy;
+package jetbrains.buildServer.util;
 
-import jetbrains.buildServer.util.CollectionsUtil;
-import jetbrains.buildServer.util.FileUtil;
-import jetbrains.buildServer.util.StringUtil;
 import jetbrains.buildServer.util.pathMatcher.AntPatternFileCollector;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
-import java.util.*;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * @author vbedrosova
  */
-class PathMappings {
+public class PathMappings {
   @NotNull
   private final File myBaseDir;
   @NotNull
   private final Map<String, String> myPathMappings;
 
-  PathMappings(@NotNull File baseDir, @NotNull Map<String, String> pathMappings) {
+  public PathMappings(@NotNull File baseDir, @NotNull Map<String, String> pathMappings) {
     myBaseDir = baseDir;
     myPathMappings = pathMappings;
   }
 
   @NotNull
-  List<File> collectFiles() {
+  public List<File> collectFiles() {
     return doCollectFiles(myPathMappings.keySet());
   }
 
@@ -55,7 +55,7 @@ class PathMappings {
   }
 
   @Nullable
-  String mapPath(@NotNull File f) {
+  public String mapPath(@NotNull File f) {
     String relativePath = FileUtil.getRelativePath(myBaseDir, f);
 
     if (relativePath == null) return null;
@@ -71,7 +71,7 @@ class PathMappings {
         continue;
       }
 
-      if (CodeDeployUtil.isWildcard(m.getKey()) && matches(m.getKey(), f)) {
+      if (isWildcard(m.getKey()) && matches(m.getKey(), f)) {
         final String withoutWildcards = removeWildcards(m.getKey());
         result = doMap(
           StringUtil.isEmpty(withoutWildcards) ?
@@ -99,5 +99,9 @@ class PathMappings {
       return slash > 0 ? removeWildcards(path.substring(0, slash + 1)) : StringUtil.EMPTY;
     }
     return path.substring(slash);
+  }
+
+  public static boolean isWildcard(@NotNull String path) {
+    return path.contains("*") || path.contains("?");
   }
 }

@@ -17,6 +17,7 @@
 package jetbrains.buildServer.runner.codedeploy;
 
 import jetbrains.buildServer.util.FileUtil;
+import jetbrains.buildServer.util.PathMappings;
 import jetbrains.buildServer.util.StringUtil;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
@@ -56,7 +57,7 @@ final class CodeDeployUtil {
     final String[] split = revisionPathsParam.trim().split(MULTILINE_SPLIT_REGEX);
     if (split.length == 1) {
       final String revisionPath = split[0];
-      if (isWildcard(revisionPath)) return null;
+      if (PathMappings.isWildcard(revisionPath)) return null;
       if (null == AWSClient.getBundleType(revisionPath)) return null;
       return revisionPath;
     }
@@ -87,10 +88,6 @@ final class CodeDeployUtil {
     final String suffix = isFromPart && path.endsWith("/") ? "/" : StringUtil.EMPTY;
     path = FileUtil.normalizeRelativePath(path);
     return StringUtil.isEmpty(path) && isFromPart ? "**" : path + suffix;
-  }
-
-  static boolean isWildcard(@NotNull String path) {
-    return path.contains("*") || path.contains("?");
   }
 
   @NotNull

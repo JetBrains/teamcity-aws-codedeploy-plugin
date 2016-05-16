@@ -19,6 +19,7 @@ package jetbrains.buildServer.runner.codedeploy;
 import jetbrains.buildServer.agent.BuildProgressLogger;
 import jetbrains.buildServer.util.CollectionsUtil;
 import jetbrains.buildServer.util.FileUtil;
+import jetbrains.buildServer.util.PathMappings;
 import jetbrains.buildServer.util.StringUtil;
 import jetbrains.buildServer.util.filters.Filter;
 import org.jetbrains.annotations.NotNull;
