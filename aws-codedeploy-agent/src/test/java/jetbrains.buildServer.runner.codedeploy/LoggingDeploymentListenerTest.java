@@ -158,8 +158,8 @@ public class LoggingDeploymentListenerTest extends LoggingTestCase {
   }
 
   @Test
-  public void deployment_exception_only_message() throws Exception {
-    create().exception(new AWSException("Some exception message", null, null, null));
+  public void deployment_exception_type() throws Exception {
+    create().exception(new AWSException("Some exception message", null, AWSException.EXCEPTION_BUILD_PROBLEM_TYPE, null));
     assertLog(
       "ERR Some exception message",
       "PROBLEM identity: 2086901196 type: CODEDEPLOY_EXCEPTION descr: Some exception message",
@@ -167,18 +167,8 @@ public class LoggingDeploymentListenerTest extends LoggingTestCase {
   }
 
   @Test
-  public void deployment_exception_with_description() throws Exception {
-    create().exception(new AWSException("Some exception message", "Some exception details", null, null));
-    assertLog(
-      "ERR Some exception message",
-      "ERR Some exception details",
-      "PROBLEM identity: 2086901196 type: CODEDEPLOY_EXCEPTION descr: Some exception message",
-      "CLOSE deploy application");
-  }
-
-  @Test
-  public void deployment_exception_with_description_type() throws Exception {
-    create().exception(new AWSException("Some exception message", "Some exception details", AWSException.CLIENT_PROBLEM_TYPE, null));
+  public void deployment_exception_description_type() throws Exception {
+    create().exception(new AWSException("Some exception message", null, AWSException.CLIENT_PROBLEM_TYPE, "Some exception details"));
     assertLog(
       "ERR Some exception message",
       "ERR Some exception details",
@@ -187,13 +177,18 @@ public class LoggingDeploymentListenerTest extends LoggingTestCase {
   }
 
   @Test
-  public void deployment_exception_with_description_type_identity() throws Exception {
-    create().exception(new AWSException("Some exception message", "Some exception details", AWSException.CLIENT_PROBLEM_TYPE, "ABC123"));
+  public void deployment_exception_description_type_identity() throws Exception {
+    create().exception(new AWSException("Some exception message", "ABC123", AWSException.CLIENT_PROBLEM_TYPE, "Some exception details"));
     assertLog(
       "ERR Some exception message",
       "ERR Some exception details",
       "PROBLEM identity: 988381276 type: CODEDEPLOY_CLIENT descr: Some exception message",
       "CLOSE deploy application");
+  }
+
+  @Override
+  protected void performAfterTestVerification() {
+    // override parent behaviour
   }
 
   @NotNull
