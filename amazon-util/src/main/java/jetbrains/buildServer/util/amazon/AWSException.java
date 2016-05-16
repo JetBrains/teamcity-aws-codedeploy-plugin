@@ -43,6 +43,13 @@ public class AWSException extends RuntimeException {
   @NotNull private final String myType;
   @Nullable private final String myDetails;
 
+  public AWSException(@NotNull String message, @Nullable String identity, @NotNull String type, @Nullable String details) {
+    super(message);
+    myIdentity = identity;
+    myType = type;
+    myDetails = details;
+  }
+
   public AWSException(@NotNull Throwable t) {
     super(getMessage(t), t);
     myIdentity = getIdentity(t);

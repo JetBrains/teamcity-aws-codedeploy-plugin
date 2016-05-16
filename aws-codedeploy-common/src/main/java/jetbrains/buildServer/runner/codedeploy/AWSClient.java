@@ -232,8 +232,7 @@ public class AWSClient {
   }
 
   private void processFailure(@NotNull Throwable t) {
-    final AWSException awsException = new AWSException(t);
-    myListener.exception(awsException.getMessage(), awsException.getDetails(), awsException.getType(), awsException.getIdentity());
+    myListener.exception(new AWSException(t));
   }
 
   private boolean isSuccess(@NotNull DeploymentInfo dInfo) {
@@ -310,7 +309,7 @@ public class AWSClient {
     void deploymentInProgress(@NotNull String deploymentId, @Nullable InstancesStatus instancesStatus) {}
     void deploymentFailed(@NotNull String deploymentId, @Nullable Integer timeoutSec, @Nullable ErrorInfo errorInfo, @Nullable InstancesStatus instancesStatus) {}
     void deploymentSucceeded(@NotNull String deploymentId, @Nullable InstancesStatus instancesStatus) {}
-    void exception(@NotNull String message, @Nullable String details, @Nullable String type, @Nullable String identity) {}
+    void exception(@NotNull AWSException exception) {}
 
     public static class InstancesStatus {
       int pending;

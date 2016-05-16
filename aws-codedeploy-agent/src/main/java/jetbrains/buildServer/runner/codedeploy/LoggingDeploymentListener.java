@@ -16,7 +16,9 @@
 
 package jetbrains.buildServer.runner.codedeploy;
 
+import com.intellij.openapi.diagnostic.Logger;
 import jetbrains.buildServer.agent.BuildProgressLogger;
+import jetbrains.buildServer.log.Loggers;
 import jetbrains.buildServer.util.CollectionsUtil;
 import jetbrains.buildServer.util.StringUtil;
 import jetbrains.buildServer.util.amazon.AWSCommonParams;
@@ -32,6 +34,9 @@ import java.util.*;
  * @author vbedrosova
  */
 class LoggingDeploymentListener extends AWSClient.Listener {
+  @NotNull
+  private static final Logger LOG = Logger.getInstance(Loggers.VCS_CATEGORY + CodeDeployRunner.class);
+
   static final String DEPLOY_APPLICATION = "deploy application";
   static final String REGISTER_REVISION = "register revision";
   static final String UPLOAD_REVISION = "upload revision";
@@ -132,10 +137,15 @@ class LoggingDeploymentListener extends AWSClient.Listener {
   }
 
   @Override
-  void exception(@NotNull String message, @Nullable String details, @Nullable String type, @Nullable String identity) {
+  void exception(@NotNull AWSException e) {
+    LOG.error(e);
+
+    final String message = e.getMessage();
+    final String details = e.getDetails();
+
     err(message);
     if (StringUtil.isNotEmpty(details)) err(details);
-    problem(getIdentity(message, identity), type == null ? AWSException.EXCEPTION_BUILD_PROBLEM_TYPE : type, message);
+    problem(getIdentity(message, e.getIdentity()), e.getType(), message);
     close(DEPLOY_APPLICATION);
   }
 

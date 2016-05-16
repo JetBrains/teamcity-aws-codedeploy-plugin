@@ -159,7 +159,7 @@ public class LoggingDeploymentListenerTest extends LoggingTestCase {
 
   @Test
   public void deployment_exception_only_message() throws Exception {
-    create().exception("Some exception message", null, null, null);
+    create().exception(new AWSException("Some exception message", null, null, null));
     assertLog(
       "ERR Some exception message",
       "PROBLEM identity: 2086901196 type: CODEDEPLOY_EXCEPTION descr: Some exception message",
@@ -168,7 +168,7 @@ public class LoggingDeploymentListenerTest extends LoggingTestCase {
 
   @Test
   public void deployment_exception_with_description() throws Exception {
-    create().exception("Some exception message", "Some exception details", null, null);
+    create().exception(new AWSException("Some exception message", "Some exception details", null, null));
     assertLog(
       "ERR Some exception message",
       "ERR Some exception details",
@@ -178,7 +178,7 @@ public class LoggingDeploymentListenerTest extends LoggingTestCase {
 
   @Test
   public void deployment_exception_with_description_type() throws Exception {
-    create().exception("Some exception message", "Some exception details", AWSException.CLIENT_PROBLEM_TYPE, null);
+    create().exception(new AWSException("Some exception message", "Some exception details", AWSException.CLIENT_PROBLEM_TYPE, null));
     assertLog(
       "ERR Some exception message",
       "ERR Some exception details",
@@ -188,7 +188,7 @@ public class LoggingDeploymentListenerTest extends LoggingTestCase {
 
   @Test
   public void deployment_exception_with_description_type_identity() throws Exception {
-    create().exception("Some exception message", "Some exception details", AWSException.CLIENT_PROBLEM_TYPE, "ABC123");
+    create().exception(new AWSException("Some exception message", "Some exception details", AWSException.CLIENT_PROBLEM_TYPE, "ABC123"));
     assertLog(
       "ERR Some exception message",
       "ERR Some exception details",
