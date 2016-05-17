@@ -64,7 +64,9 @@ public class PathMappings {
 
     String result = null;
     for (Map.Entry<String, String> m : myPathMappings.entrySet()) {
-      final String from = m.getKey().startsWith("+:") || m.getKey().startsWith("-:") ? m.getKey().substring(2) : m.getKey();
+      if (m.getKey().startsWith("-:")) continue;
+
+      final String from = m.getKey().startsWith("+:") ? m.getKey().substring(2) : m.getKey();
       if (relativePath.equals(from)) return doMap(f.getName(), m.getValue());
 
       if (relativePath.startsWith(from)) {
