@@ -84,7 +84,7 @@ public class AWSException extends RuntimeException {
   }
 
   @Nullable
-  private static String getDetails(@NotNull Throwable t) {
+  public static String getDetails(@NotNull Throwable t) {
     if (t instanceof AWSException) return ((AWSException) t).getDetails();
     if (t instanceof AmazonServiceException) {
       final AmazonServiceException ase = (AmazonServiceException) t;
