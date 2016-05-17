@@ -251,6 +251,16 @@ public class ApplicationRevisionTest extends LoggingTestCase {
     assertLog("Packaging 4 files to application revision ##TEMP_DIR##/test_revision.zip");
   }
 
+//  TW-45267
+  @Test
+  public void wildcard_two_stars_with_mapping_with_plus_prefix() throws Exception {
+    fillBaseDir(true);
+
+    assertRevision(create("+:some/path/**=>pages/dist,+:some/path/inner/path/test/**=>pages,+:appspec.yml").getArchive(), arr("pages/dist/index.html", "pages/dist/inner/path/error.html", "pages/test.html", "appspec.yml"), AC);
+
+    assertLog("Packaging 4 files to application revision ##TEMP_DIR##/test_revision.zip");
+  }
+
   @Test
   public void wildcard_three_stars_with_mapping() throws Exception {
     fillBaseDir(true);

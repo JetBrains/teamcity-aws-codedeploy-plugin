@@ -64,15 +64,16 @@ public class PathMappings {
 
     String result = null;
     for (Map.Entry<String, String> m : myPathMappings.entrySet()) {
-      if (relativePath.equals(m.getKey())) return doMap(f.getName(), m.getValue());
+      final String from = m.getKey().startsWith("+:") || m.getKey().startsWith("-:") ? m.getKey().substring(2) : m.getKey();
+      if (relativePath.equals(from)) return doMap(f.getName(), m.getValue());
 
-      if (relativePath.startsWith(m.getKey())) {
-        result = doMap(relativePath.substring(StringUtil.commonPrefix(relativePath, m.getKey()).length()), m.getValue());
+      if (relativePath.startsWith(from)) {
+        result = doMap(relativePath.substring(StringUtil.commonPrefix(relativePath, from).length()), m.getValue());
         continue;
       }
 
-      if (isWildcard(m.getKey()) && matches(m.getKey(), f)) {
-        final String withoutWildcards = removeWildcards(m.getKey());
+      if (isWildcard(from) && matches(from, f)) {
+        final String withoutWildcards = removeWildcards(from);
         result = doMap(
           StringUtil.isEmpty(withoutWildcards) ?
             relativePath :
