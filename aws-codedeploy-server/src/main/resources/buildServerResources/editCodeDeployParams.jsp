@@ -103,7 +103,7 @@
 <tr id="${wait_timeout_param}_row" data-steps="${deploy_step}">
     <th><label for="${wait_timeout_param}">${wait_timeout_label}: <l:star/></label></th>
     <td><props:textProperty name="${wait_timeout_param}" maxlength="256"/>
-        <span class="smallNote">Build will fail if timeout is exceeded</span><span class="error" id="error_${wait_timeout_param}"></span>
+        <span class="smallNote">Build will fail if the timeout is exceeded</span><span class="error" id="error_${wait_timeout_param}"></span>
     </td>
 </tr>
 
