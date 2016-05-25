@@ -32,7 +32,7 @@ ext.teamcityDir = hasProperty('teamcity.dir') ? property('teamcity.dir') : "$roo
 ext.teamcityDataDir = "$rootDir/teamcity/data/" + teamcityVersion
 ext.teamcityJavaHome = System.properties['java.home']
 
-ext.awsSDKVersion = hasProperty('aws.sdk.version') ? property('aws.sdk.version') : '1.10.51'
+ext.awsSDKVersion = hasProperty('aws.sdk.version') ? property('aws.sdk.version') : '1.11.4'
 
 ext.javaVersion = hasProperty('plugin.java.version') ? property('plugin.java.version') : '1.7'
 
