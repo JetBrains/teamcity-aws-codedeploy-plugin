@@ -17,7 +17,6 @@
 package jetbrains.buildServer.runner.codedeploy;
 
 import jetbrains.buildServer.agent.NullBuildProgressLogger;
-import jetbrains.buildServer.util.CollectionsUtil;
 import jetbrains.buildServer.util.amazon.AWSException;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -26,6 +25,7 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import java.io.File;
+import java.util.Collections;
 
 /**
  * @author vbedrosova
@@ -182,7 +182,7 @@ public class LoggingDeploymentListenerTest extends LoggingTestCase {
     assertLog(
       "ERR Some exception message",
       "ERR Some exception details",
-      "PROBLEM identity: 988381276 type: CODEDEPLOY_CLIENT descr: Some exception message",
+      "PROBLEM identity: -1424436592 type: CODEDEPLOY_CLIENT descr: Some exception message",
       "CLOSE deploy application");
   }
 
@@ -218,7 +218,7 @@ public class LoggingDeploymentListenerTest extends LoggingTestCase {
 
   @NotNull
   private LoggingDeploymentListener create() {
-    return new LoggingDeploymentListener(CollectionsUtil.asMap("", ""),
+    return new LoggingDeploymentListener(Collections.<String, String>emptyMap(),
       new NullBuildProgressLogger(),
       "fake_checkout_dir") {
       @Override

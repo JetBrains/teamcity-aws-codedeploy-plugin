@@ -20,6 +20,7 @@ import com.amazonaws.auth.AWSSessionCredentials;
 import jetbrains.buildServer.parameters.ReferencesResolverUtil;
 import jetbrains.buildServer.serverSide.ServerSettings;
 import jetbrains.buildServer.util.CollectionsUtil;
+import jetbrains.buildServer.util.FileUtil;
 import jetbrains.buildServer.util.StringUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -90,7 +91,7 @@ public final class AWSCommonParams {
   public static Map<String, String> validate(@NotNull Map<String, String> params, boolean acceptReferences) throws IllegalArgumentException {
     final Map<String, String> invalids = new HashMap<String, String>();
 
-    final String regionName = params.get(REGION_NAME_PARAM);
+    final String regionName = getRegionName(params);
     if (StringUtil.isEmptyOrSpaces(regionName)) {
       invalids.put(REGION_NAME_PARAM, REGION_NAME_LABEL + " mustn't be empty");
     } else {
@@ -126,6 +127,11 @@ public final class AWSCommonParams {
     return invalids;
   }
 
+  @Nullable
+  public static String getRegionName(@NotNull Map<String, String> params) {
+    return params.get(REGION_NAME_PARAM);
+  }
+
   private static boolean isReference(@NotNull String param, boolean acceptReferences) {
     return acceptReferences && ReferencesResolverUtil.containsReference(param);
   }
@@ -137,7 +143,7 @@ public final class AWSCommonParams {
 
   @NotNull
   public static AWSClients createAWSClients(@NotNull Map<String, String> params, boolean lazy) {
-    final String regionName = params.get(REGION_NAME_PARAM);
+    final String regionName = getRegionName(params);
 
     final boolean useDefaultCredProvChain = Boolean.parseBoolean(params.get(USE_DEFAULT_CREDENTIAL_PROVIDER_CHAIN_PARAM));
 
@@ -181,6 +187,33 @@ public final class AWSCommonParams {
       if (StringUtil.isNotEmpty(val)) return Integer.parseInt(val);
     } catch (NumberFormatException e) { /* see below */ }
     return defaultVal;
+  }
+
+  public static int calculateIdentity(@NotNull String baseDir, @NotNull Map<String, String> params, @NotNull Collection<String> otherParts) {
+    return calculateIdentity(baseDir, params, CollectionsUtil.toStringArray(otherParts));
+  }
+
+  public static int calculateIdentity(@NotNull String baseDir, @NotNull Map<String, String> params, String... otherParts) {
+    List<String> allParts = new ArrayList<String>(CollectionsUtil.join(getIdentityFormingParams(params), Arrays.asList(otherParts)));
+    allParts = CollectionsUtil.filterNulls(allParts);
+    Collections.sort(allParts);
+
+    baseDir = FileUtil.toSystemIndependentName(baseDir);
+    final StringBuilder sb = new StringBuilder();
+    for (String p : allParts) {
+      if (StringUtil.isEmptyOrSpaces(p)) continue;
+
+      p = FileUtil.toSystemIndependentName(p);
+      p = p.replace(baseDir, "");
+      sb.append(p);
+    }
+
+    return sb.toString().replace(" ", "").toLowerCase().hashCode();
+  }
+
+  @NotNull
+  private static Collection<String> getIdentityFormingParams(@NotNull Map<String, String> params) {
+    return Arrays.asList(getRegionName(params), params.get(ACCESS_KEY_ID_PARAM), params.get(IAM_ROLE_ARN_LABEL));
   }
 
   // must implement AWSSessionCredentials as AWS SDK may use "instanceof"

@@ -58,15 +58,15 @@ public class AWSException extends RuntimeException {
   }
 
   @NotNull
-  private static String getMessage(@NotNull Throwable t) {
+  public static String getMessage(@NotNull Throwable t) {
     if (t instanceof AWSException) return t.getMessage();
     if (t instanceof AmazonServiceException)  return "AWS error: " + removeTrailingDot(((AmazonServiceException) t).getErrorMessage());
     if (t instanceof AmazonClientException) return "AWS client error: " + removeTrailingDot(t.getMessage());
-    return "Unexpected error during the deployment: " + removeTrailingDot(t.getMessage());
+    return "Unexpected error: " + removeTrailingDot(t.getMessage());
   }
 
   @Nullable
-  private static String getIdentity(@NotNull Throwable t) {
+  public static String getIdentity(@NotNull Throwable t) {
     if (t instanceof AWSException) return ((AWSException) t).getIdentity();
     if (t instanceof AmazonServiceException) {
       final AmazonServiceException ase = (AmazonServiceException) t;
@@ -76,7 +76,7 @@ public class AWSException extends RuntimeException {
   }
 
   @NotNull
-  private static String getType(@NotNull Throwable t) {
+  public static String getType(@NotNull Throwable t) {
     if (t instanceof  AWSException) return ((AWSException) t).getType();
     if (t instanceof AmazonServiceException) return SERVICE_PROBLEM_TYPE;
     if (t instanceof AmazonClientException) return CLIENT_PROBLEM_TYPE;
@@ -89,7 +89,7 @@ public class AWSException extends RuntimeException {
     if (t instanceof AmazonServiceException) {
       final AmazonServiceException ase = (AmazonServiceException) t;
       return "\n" +
-        "Service   :          " + ase.getServiceName() + "\n" +
+        "Service:             " + ase.getServiceName() + "\n" +
         "HTTP Status Code:    " + ase.getStatusCode() + "\n" +
         "AWS Error Code:      " + ase.getErrorCode() + "\n" +
         "Error Type:          " + ase.getErrorType() + "\n" +
@@ -103,9 +103,9 @@ public class AWSException extends RuntimeException {
     return (msg != null && msg.endsWith(".")) ? msg.substring(0, msg.length() - 1) : msg;
   }
 
-  @Nullable
+  @NotNull
   public String getIdentity() {
-    return myIdentity;
+    return myIdentity == null ? getMessage() :  myIdentity;
   }
 
   @NotNull

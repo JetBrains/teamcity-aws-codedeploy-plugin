@@ -189,14 +189,6 @@ public class AWSClient {
     return new RevisionLocation().withRevisionType(RevisionLocationType.S3).withS3Location(loc);
   }
 
-  @Nullable
-  public static String getBundleType(@NotNull String revision) {
-    if (revision.endsWith(".zip")) return BundleType.Zip.name();
-    if (revision.endsWith(".tar")) return BundleType.Tar.name();
-    if (revision.endsWith(".tar.gz")) return BundleType.Tgz.name();
-    return null;
-  }
-
   private void doRegisterRevision(@NotNull RevisionLocation revisionLocation, @NotNull String applicationName) {
     final S3Location s3Location = revisionLocation.getS3Location();
     myListener.registerRevisionStarted(applicationName, s3Location.getBucket(), s3Location.getKey(), s3Location.getBundleType(), s3Location.getVersion());

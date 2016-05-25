@@ -20,6 +20,7 @@ import jetbrains.buildServer.parameters.ReferencesResolverUtil;
 import jetbrains.buildServer.util.FileUtil;
 import jetbrains.buildServer.util.StringUtil;
 import jetbrains.buildServer.util.amazon.AWSCommonParams;
+import jetbrains.buildServer.util.amazon.AWSUtil;
 import org.jetbrains.annotations.NotNull;
 
 import static jetbrains.buildServer.runner.codedeploy.CodeDeployConstants.*;
@@ -170,7 +171,7 @@ final class ParametersValidator {
 
   private static void validateBundleType(@NotNull Map<String, String> invalids, @NotNull String param, @NotNull String key, @NotNull String name, boolean runtime) {
     if (!isReference(param, runtime)) {
-      if (null == AWSClient.getBundleType(param)) {
+      if (null == AWSUtil.getBundleType(param)) {
         invalids.put(key, name + " provides invalid bundle type, supported bundle types are .zip, .tar and .tar.gz");
       }
     }

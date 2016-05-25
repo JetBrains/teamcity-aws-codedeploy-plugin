@@ -23,7 +23,6 @@ import jetbrains.buildServer.util.CollectionsUtil;
 import jetbrains.buildServer.util.StringUtil;
 import jetbrains.buildServer.util.amazon.AWSCommonParams;
 import jetbrains.buildServer.util.amazon.AWSException;
-import jetbrains.buildServer.util.filters.Filter;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -145,7 +144,7 @@ class LoggingDeploymentListener extends AWSClient.Listener {
 
     err(message);
     if (StringUtil.isNotEmpty(details)) err(details);
-    problem(getIdentity(message, e.getIdentity()), e.getType(), message);
+    problem(getIdentity(e.getIdentity()), e.getType(), message);
     close(DEPLOY_APPLICATION);
   }
 
@@ -179,37 +178,15 @@ class LoggingDeploymentListener extends AWSClient.Listener {
   }
 
   private int getIdentity(String... parts) {
-    final String baseDir = myCheckoutDir.replace("\\", "/");
-    final StringBuilder sb = new StringBuilder();
-
-    List<String> allParts = new ArrayList<String>(CollectionsUtil.join(Arrays.asList(parts), getIdentityFormingParameters()));
-    allParts = CollectionsUtil.filterNulls(allParts);
-    Collections.sort(allParts);
-
-    for (String p : allParts) {
-      if (StringUtil.isEmptyOrSpaces(p)) continue;
-
-      p = p.replace("\\", "/");
-      p = p.replace(baseDir, "");
-      sb.append(p);
-    }
-
-    return sb.toString().replace(" ", "").toLowerCase().hashCode();
+    return AWSCommonParams.calculateIdentity(myCheckoutDir, myRunnerParameters, CollectionsUtil.join(getIdentityFormingParameters(), Arrays.asList(parts)));
   }
 
   @NotNull
   private Collection<String> getIdentityFormingParameters() {
-    final List<String> key = Arrays.asList(
-      CodeDeployConstants.S3_BUCKET_NAME_PARAM,
-      CodeDeployConstants.APP_NAME_PARAM,
-      CodeDeployConstants.DEPLOYMENT_GROUP_NAME_PARAM,
-      AWSCommonParams.REGION_NAME_PARAM);
-    return CollectionsUtil.filterMapByKeys(myRunnerParameters, new Filter<String>() {
-      @Override
-      public boolean accept(@NotNull String data) {
-        return key.contains(data);
-      }
-    }).values();
+    return Arrays.asList(
+      myRunnerParameters.get(CodeDeployConstants.S3_BUCKET_NAME_PARAM),
+      myRunnerParameters.get(CodeDeployConstants.APP_NAME_PARAM),
+      myRunnerParameters.get(CodeDeployConstants.DEPLOYMENT_GROUP_NAME_PARAM));
   }
 
   protected void debug(@NotNull String message) {
