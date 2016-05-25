@@ -65,7 +65,7 @@ public class AWSClients {
 
   @NotNull
   public static AWSClients fromBasicSessionCredentials(@NotNull String accessKeyId, @NotNull String secretAccessKey, @NotNull String sessionToken, @NotNull String region) {
-    return fromExistingCredentials(new BasicAWSCredentials(accessKeyId, secretAccessKey), region);
+    return fromExistingCredentials(new BasicSessionCredentials(accessKeyId, secretAccessKey, sessionToken), region);
   }
 
   @NotNull
