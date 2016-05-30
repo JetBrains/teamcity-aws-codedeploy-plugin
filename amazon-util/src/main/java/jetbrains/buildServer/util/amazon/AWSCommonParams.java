@@ -51,6 +51,7 @@ public final class AWSCommonParams {
 
   public static final String ACCESS_KEY_ID_PARAM = "codedeploy_access_key_id";
   public static final String ACCESS_KEY_ID_LABEL = "Access key ID";
+  public static final String SECURE_SECRET_ACCESS_KEY_PARAM = "secure:codedeploy_secret_access_key";
   public static final String SECRET_ACCESS_KEY_PARAM = "codedeploy_secret_access_key";
   public static final String SECRET_ACCESS_KEY_LABEL = "Secret access key";
 
@@ -108,8 +109,8 @@ public final class AWSCommonParams {
       if (StringUtil.isEmptyOrSpaces(params.get(ACCESS_KEY_ID_PARAM))) {
         invalids.put(ACCESS_KEY_ID_PARAM, ACCESS_KEY_ID_LABEL + " mustn't be empty");
       }
-      if (StringUtil.isEmptyOrSpaces(params.get(SECRET_ACCESS_KEY_PARAM))) {
-        invalids.put(SECRET_ACCESS_KEY_PARAM, SECRET_ACCESS_KEY_LABEL + " mustn't be empty");
+      if (StringUtil.isEmptyOrSpaces(getSecretAccessKey(params))) {
+        invalids.put(SECURE_SECRET_ACCESS_KEY_PARAM, SECRET_ACCESS_KEY_LABEL + " mustn't be empty");
       }
     }
 
@@ -125,6 +126,12 @@ public final class AWSCommonParams {
     }
 
     return invalids;
+  }
+
+  @Nullable
+  private static String getSecretAccessKey(@NotNull Map<String, String> params) {
+    final String secretAccessKeyParam = params.get(SECURE_SECRET_ACCESS_KEY_PARAM);
+    return StringUtil.isNotEmpty(secretAccessKeyParam) ? secretAccessKeyParam : params.get(SECRET_ACCESS_KEY_PARAM);
   }
 
   @Nullable
@@ -150,7 +157,7 @@ public final class AWSCommonParams {
     final AWSClients awsClients =
       useDefaultCredProvChain ?
         fromDefaultCredentialProviderChain(regionName) :
-        fromBasicCredentials(params.get(ACCESS_KEY_ID_PARAM), params.get(SECRET_ACCESS_KEY_PARAM), regionName);
+        fromBasicCredentials(params.get(ACCESS_KEY_ID_PARAM), getSecretAccessKey(params), regionName);
 
     return
       TEMP_CREDENTIALS_OPTION.equals(params.get(CREDENTIALS_TYPE_PARAM)) ? createTempAWSClients(awsClients, params, lazy) : awsClients;

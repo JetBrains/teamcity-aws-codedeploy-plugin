@@ -38,7 +38,7 @@ public class ParametersValidatorTest extends BaseTestCase {
       containsEntry(REGION_NAME_PARAM, "AWS region mustn't be empty").
       containsEntry(CREDENTIALS_TYPE_PARAM, "Credentials type mustn't be empty").
       containsEntry(ACCESS_KEY_ID_PARAM, "Access key ID mustn't be empty").
-      containsEntry(SECRET_ACCESS_KEY_PARAM, "Secret access key mustn't be empty");
+      containsEntry(SECURE_SECRET_ACCESS_KEY_PARAM, "Secret access key mustn't be empty");
   }
 
   @Test
@@ -53,7 +53,7 @@ public class ParametersValidatorTest extends BaseTestCase {
       containsEntry(REGION_NAME_PARAM, "AWS region mustn't be empty").
       containsEntry(CREDENTIALS_TYPE_PARAM, "Credentials type mustn't be empty").
       containsEntry(ACCESS_KEY_ID_PARAM, "Access key ID mustn't be empty").
-      containsEntry(SECRET_ACCESS_KEY_PARAM, "Secret access key mustn't be empty").
+      containsEntry(SECURE_SECRET_ACCESS_KEY_PARAM, "Secret access key mustn't be empty").
       containsEntry(REVISION_PATHS_PARAM, "Application revision mustn't be empty").
       containsEntry(S3_BUCKET_NAME_PARAM, "S3 bucket mustn't be empty");
   }
@@ -64,7 +64,7 @@ public class ParametersValidatorTest extends BaseTestCase {
       containsEntry(REGION_NAME_PARAM, "AWS region mustn't be empty").
       containsEntry(CREDENTIALS_TYPE_PARAM, "Credentials type mustn't be empty").
       containsEntry(ACCESS_KEY_ID_PARAM, "Access key ID mustn't be empty").
-      containsEntry(SECRET_ACCESS_KEY_PARAM, "Secret access key mustn't be empty").
+      containsEntry(SECURE_SECRET_ACCESS_KEY_PARAM, "Secret access key mustn't be empty").
       containsEntry(S3_BUCKET_NAME_PARAM, "S3 bucket mustn't be empty").
       containsEntry(S3_OBJECT_KEY_PARAM, "S3 object key mustn't be empty").
       containsEntry(APP_NAME_PARAM, "Application name mustn't be empty");
@@ -76,7 +76,7 @@ public class ParametersValidatorTest extends BaseTestCase {
       containsEntry(REGION_NAME_PARAM, "AWS region mustn't be empty").
       containsEntry(CREDENTIALS_TYPE_PARAM, "Credentials type mustn't be empty").
       containsEntry(ACCESS_KEY_ID_PARAM, "Access key ID mustn't be empty").
-      containsEntry(SECRET_ACCESS_KEY_PARAM, "Secret access key mustn't be empty").
+      containsEntry(SECURE_SECRET_ACCESS_KEY_PARAM, "Secret access key mustn't be empty").
       containsEntry(S3_BUCKET_NAME_PARAM, "S3 bucket mustn't be empty").
       containsEntry(S3_OBJECT_KEY_PARAM, "S3 object key mustn't be empty").
       containsEntry(APP_NAME_PARAM, "Application name mustn't be empty").

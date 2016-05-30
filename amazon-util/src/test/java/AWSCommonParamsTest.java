@@ -34,7 +34,7 @@ public class AWSCommonParamsTest extends BaseTestCase {
       containsEntry(REGION_NAME_PARAM, "AWS region mustn't be empty").
       containsEntry(CREDENTIALS_TYPE_PARAM, "Credentials type mustn't be empty").
       containsEntry(ACCESS_KEY_ID_PARAM, "Access key ID mustn't be empty").
-      containsEntry(SECRET_ACCESS_KEY_PARAM, "Secret access key mustn't be empty");
+      containsEntry(SECURE_SECRET_ACCESS_KEY_PARAM, "Secret access key mustn't be empty");
   }
 
   @Test
@@ -53,7 +53,7 @@ public class AWSCommonParamsTest extends BaseTestCase {
   public void default_credentials_provider_chain_true() {
     then(validate(USE_DEFAULT_CREDENTIAL_PROVIDER_CHAIN_PARAM, "true")).as("Mustn't require params").
       doesNotContainKey(ACCESS_KEY_ID_PARAM).
-      doesNotContainKey(SECRET_ACCESS_KEY_PARAM);
+      doesNotContainKey(SECURE_SECRET_ACCESS_KEY_PARAM);
   }
 
   @Test

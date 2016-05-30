@@ -38,6 +38,7 @@
 <c:set var="access_key_id_param" value="<%=AWSCommonParams.ACCESS_KEY_ID_PARAM%>"/>
 <c:set var="access_key_id_label" value="<%=AWSCommonParams.ACCESS_KEY_ID_LABEL%>"/>
 
+<c:set var="secure_secret_access_key_param" value="<%=AWSCommonParams.SECURE_SECRET_ACCESS_KEY_PARAM%>"/>
 <c:set var="secret_access_key_param" value="<%=AWSCommonParams.SECRET_ACCESS_KEY_PARAM%>"/>
 <c:set var="secret_access_key_label" value="<%=AWSCommonParams.SECRET_ACCESS_KEY_LABEL%>"/>
 
