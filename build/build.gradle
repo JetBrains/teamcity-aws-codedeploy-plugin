@@ -47,11 +47,15 @@ teamcity {
                 from awsSDKFiles()
             }
         }
-    }
 
-    homeDir = file(teamcityDir)
-    dataDir = file(teamcityDataDir)
-    javaHome = file(teamcityJavaHome)
+        environments {
+            teamcity {
+                homeDir = file(teamcityDir)
+                dataDir = file(teamcityDataDir)
+                javaHome = file(teamcityJavaHome)
+            }
+        }
+    }
 
     version = teamcityVersion
 }
