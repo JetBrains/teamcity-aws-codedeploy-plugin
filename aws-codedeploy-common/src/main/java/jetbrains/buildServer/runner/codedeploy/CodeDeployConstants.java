@@ -30,6 +30,7 @@ public interface CodeDeployConstants {
 
   String DEPLOYMENT_ID_BUILD_CONFIG_PARAM = "codedeploy.deployment.id";
   String S3_OBJECT_VERSION_CONFIG_PARAM = "codedeploy.revision.s3.version";
+  String S3_OBJECT_ETAG_CONFIG_PARAM = "codedeploy.revision.s3.etag";
   String CUSTOM_APPSPEC_YML_CONFIG_PARAM = "codedeploy.custom.appspec.yml";
 
 

@@ -26,7 +26,6 @@ import org.jetbrains.annotations.Nullable;
 import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import static jetbrains.buildServer.runner.codedeploy.CodeDeployConstants.*;
 import static jetbrains.buildServer.util.amazon.AWSCommonParams.*;
@@ -47,21 +46,31 @@ public class CodeDeployRunner implements AgentBuildRunner {
         final Map<String, String> runnerParameters = validateParams();
         final Map<String, String> configParameters = context.getConfigParameters();
 
-        final AtomicBoolean problemOccurred = new AtomicBoolean();
+        final Mutable m = new Mutable(configParameters);
+        m.problemOccurred = false;
+        m.s3ObjectVersion = nullIfEmpty(configParameters.get(S3_OBJECT_VERSION_CONFIG_PARAM));
+        m.s3ObjectETag = nullIfEmpty(configParameters.get(S3_OBJECT_ETAG_CONFIG_PARAM));
 
         final AWSClient awsClient = createAWSClient(runnerParameters, runningBuild).withListener(
           new LoggingDeploymentListener(runnerParameters, runningBuild.getBuildLogger(), runningBuild.getCheckoutDirectory().getAbsolutePath()) {
             @Override
             protected void problem(int identity, @NotNull String type, @NotNull String descr) {
               super.problem(identity, type, descr);
-              problemOccurred.set(true);
+              m.problemOccurred = true;
+            }
+
+            @Override
+            void uploadRevisionFinished(@NotNull File revision, @NotNull String s3BucketName, @NotNull String s3ObjectKey, @Nullable String s3ObjectVersion, @Nullable String s3ObjectETag, @NotNull String url) {
+              super.uploadRevisionFinished(revision, s3BucketName, s3ObjectKey, s3ObjectVersion, s3ObjectETag, url);
+              m.s3ObjectVersion = s3ObjectVersion;
+              m.s3ObjectETag = s3ObjectETag;
             }
           });
 
         final String s3BucketName = runnerParameters.get(S3_BUCKET_NAME_PARAM);
         String s3ObjectKey = runnerParameters.get(S3_OBJECT_KEY_PARAM);
 
-        if (CodeDeployUtil.isUploadStepEnabled(runnerParameters) && !problemOccurred.get() && !isInterrupted()) {
+        if (CodeDeployUtil.isUploadStepEnabled(runnerParameters) && !m.problemOccurred && !isInterrupted()) {
           final File readyRevision = new ApplicationRevision(
             isEmptyOrSpaces(s3ObjectKey) ? runningBuild.getBuildTypeExternalId() : s3ObjectKey,
             runnerParameters.get(REVISION_PATHS_PARAM),
@@ -77,30 +86,29 @@ public class CodeDeployRunner implements AgentBuildRunner {
 
         final String applicationName = runnerParameters.get(APP_NAME_PARAM);
         final String bundleType = "" + AWSUtil.getBundleType(s3ObjectKey);
-        final String s3ObjectVersion = nullIfEmpty(configParameters.get(S3_OBJECT_VERSION_CONFIG_PARAM));
 
-        if (CodeDeployUtil.isRegisterStepEnabled(runnerParameters) && !problemOccurred.get() && !isInterrupted()) {
-          awsClient.registerRevision(s3BucketName, s3ObjectKey, bundleType, s3ObjectVersion, applicationName);
+        if (CodeDeployUtil.isRegisterStepEnabled(runnerParameters) && !m.problemOccurred && !isInterrupted()) {
+          awsClient.registerRevision(s3BucketName, s3ObjectKey, bundleType, m.s3ObjectVersion, m.s3ObjectETag, applicationName);
         }
 
-        if (CodeDeployUtil.isDeployStepEnabled(runnerParameters) && !problemOccurred.get() && !isInterrupted()) {
+        if (CodeDeployUtil.isDeployStepEnabled(runnerParameters) && !m.problemOccurred && !isInterrupted()) {
           final String deploymentGroupName = runnerParameters.get(DEPLOYMENT_GROUP_NAME_PARAM);
           final String deploymentConfigName = nullIfEmpty(runnerParameters.get(DEPLOYMENT_CONFIG_NAME_PARAM));
 
           if (CodeDeployUtil.isDeploymentWaitEnabled(runnerParameters)) {
             awsClient.deployRevisionAndWait(
-              s3BucketName, s3ObjectKey, bundleType, s3ObjectVersion,
+              s3BucketName, s3ObjectKey, bundleType, m.s3ObjectVersion, m.s3ObjectETag,
               applicationName, deploymentGroupName, deploymentConfigName,
               Integer.parseInt(runnerParameters.get(WAIT_TIMEOUT_SEC_PARAM)),
               getIntegerOrDefault(configParameters.get(WAIT_POLL_INTERVAL_SEC_CONFIG_PARAM), WAIT_POLL_INTERVAL_SEC_DEFAULT));
           } else {
             awsClient.deployRevision(
-              s3BucketName, s3ObjectKey, bundleType, s3ObjectVersion,
+              s3BucketName, s3ObjectKey, bundleType, m.s3ObjectVersion, m.s3ObjectETag,
               applicationName, deploymentGroupName, deploymentConfigName);
           }
         }
 
-        return problemOccurred.get() ? BuildFinishedStatus.FINISHED_WITH_PROBLEMS : BuildFinishedStatus.FINISHED_SUCCESS;
+        return m.problemOccurred ? BuildFinishedStatus.FINISHED_WITH_PROBLEMS : BuildFinishedStatus.FINISHED_SUCCESS;
       }
 
       @NotNull
@@ -146,5 +154,16 @@ public class CodeDeployRunner implements AgentBuildRunner {
       super(message, cause, ErrorData.BUILD_RUNNER_ERROR_TYPE);
       this.setLogStacktrace(false);
     }
+  }
+
+  private class Mutable {
+    public Mutable(@NotNull Map<String, String> configParameters) {
+      problemOccurred = false;
+      s3ObjectVersion = nullIfEmpty(configParameters.get(S3_OBJECT_VERSION_CONFIG_PARAM));
+      s3ObjectETag = nullIfEmpty(configParameters.get(S3_OBJECT_ETAG_CONFIG_PARAM));
+    }
+    boolean problemOccurred;
+    String s3ObjectVersion;
+    String s3ObjectETag;
   }
 }

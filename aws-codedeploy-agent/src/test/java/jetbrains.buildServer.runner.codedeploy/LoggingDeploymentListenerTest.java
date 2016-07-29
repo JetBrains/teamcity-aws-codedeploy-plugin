@@ -52,18 +52,19 @@ public class LoggingDeploymentListenerTest extends LoggingTestCase {
     final File revision = writeFile(revisionName);
     final String bucketName = "bucketName";
     final String key = "path/key.zip";
+    final String eTag = "12345";
 
     listener.uploadRevisionStarted(revision, bucketName, key);
 
     final String url = "https://s3-eu-west-1.amazonaws.com/bucketName/path/key.zip";
 
-    listener.uploadRevisionFinished(revision, bucketName, key, url);
+    listener.uploadRevisionFinished(revision, bucketName, key, null, eTag, url);
 
     final String applicationName = "App Name";
     final String bundleType = ".zip";
 
-    listener.registerRevisionStarted(applicationName, bucketName, key, bundleType, null);
-    listener.registerRevisionFinished(applicationName, bucketName, key, bundleType, null);
+    listener.registerRevisionStarted(applicationName, bucketName, key, bundleType, null, eTag);
+    listener.registerRevisionFinished(applicationName, bucketName, key, bundleType, null, eTag);
 
     final String groupName = "Deployment Fleet";
 
@@ -76,11 +77,12 @@ public class LoggingDeploymentListenerTest extends LoggingTestCase {
     assertLog(
       "OPEN " + LoggingDeploymentListener.UPLOAD_REVISION,
       "LOG Uploading application revision ##BASE_DIR##/" + revisionName + " to S3 bucket " + bucketName + " using key " + key,
-      "LOG Uploaded application revision " + url,
-      "STATUS_TEXT Uploaded " + url,
+      "LOG Uploaded application revision " + url + "?etag=" + eTag,
+      "STATUS_TEXT Uploaded " + url + "?etag=" + eTag,
+      "PARAM " + CodeDeployConstants.S3_OBJECT_ETAG_CONFIG_PARAM + " -> " + eTag,
       "CLOSE " + LoggingDeploymentListener.UPLOAD_REVISION,
       "OPEN " + LoggingDeploymentListener.REGISTER_REVISION,
-      "LOG Registering application " + applicationName + " revision from S3 bucket " + bucketName + " with key " + key + ", bundle type " + bundleType + " and latest version",
+      "LOG Registering application " + applicationName + " revision from S3 bucket " + bucketName + " with key " + key + ", bundle type " + bundleType + ", latest version and " + eTag + " ETag",
       "STATUS_TEXT Registered revision",
       "CLOSE " + LoggingDeploymentListener.REGISTER_REVISION,
       "OPEN " + LoggingDeploymentListener.DEPLOY_APPLICATION,

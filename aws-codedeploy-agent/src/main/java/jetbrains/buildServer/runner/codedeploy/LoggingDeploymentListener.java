@@ -60,22 +60,34 @@ class LoggingDeploymentListener extends AWSClient.Listener {
   }
 
   @Override
-  void uploadRevisionFinished(@NotNull File revision, @NotNull String s3BucketName, @NotNull String key, @NotNull String url) {
-    log("Uploaded application revision " + url);
+  void uploadRevisionFinished(@NotNull File revision, @NotNull String s3BucketName, @NotNull String s3ObjectKey, @Nullable String s3ObjectVersion, @Nullable String s3ObjectETag, @NotNull String url) {
+    final boolean hasVersion = StringUtil.isNotEmpty(s3ObjectVersion);
+    final boolean hasETag = StringUtil.isNotEmpty(s3ObjectETag);
+
+    final String directUrl =
+      url +
+        (hasVersion || hasETag ? "?" : "") +
+        (hasVersion ? "versionId=" + s3ObjectVersion : "") +
+        (hasVersion && hasETag ? "&" : "") +
+        (hasETag ? "etag=" + s3ObjectETag : "");
+
+    log("Uploaded application revision " + directUrl);
     if (!CodeDeployUtil.isRegisterStepEnabled(myRunnerParameters)) {
-      statusText("Uploaded " + url);
+      statusText("Uploaded " + directUrl);
     }
+    if (hasVersion) parameter(CodeDeployConstants.S3_OBJECT_VERSION_CONFIG_PARAM, s3ObjectVersion);
+    if (hasETag) parameter(CodeDeployConstants.S3_OBJECT_ETAG_CONFIG_PARAM, s3ObjectETag);
     close(UPLOAD_REVISION);
   }
 
   @Override
-  void registerRevisionStarted(@NotNull String applicationName, @NotNull String s3BucketName, @NotNull String s3ObjectKey, @NotNull String s3BundleType, @Nullable String s3ObjectVersion) {
+  void registerRevisionStarted(@NotNull String applicationName, @NotNull String s3BucketName, @NotNull String s3ObjectKey, @NotNull String s3BundleType, @Nullable String s3ObjectVersion, @Nullable String s3ObjectETag) {
     open(REGISTER_REVISION);
-    log(String.format("Registering application %s revision from S3 bucket %s with key %s, bundle type %s and %s version", applicationName, s3BucketName, s3ObjectKey, s3BundleType, StringUtil.isEmptyOrSpaces(s3ObjectVersion) ? "latest" : s3ObjectVersion));
+    log(String.format("Registering application %s revision from S3 bucket %s with key %s, bundle type %s, %s version and %s ETag", applicationName, s3BucketName, s3ObjectKey, s3BundleType, StringUtil.isEmptyOrSpaces(s3ObjectVersion) ? "latest" : s3ObjectVersion, StringUtil.isEmptyOrSpaces(s3ObjectETag) ? "no" : s3ObjectETag));
   }
 
   @Override
-  void registerRevisionFinished(@NotNull String applicationName, @NotNull String s3BucketName, @NotNull String s3ObjectKey, @NotNull String s3BundleType, @Nullable String s3ObjectVersion) {
+  void registerRevisionFinished(@NotNull String applicationName, @NotNull String s3BucketName, @NotNull String s3ObjectKey, @NotNull String bundleType, @Nullable String s3ObjectVersion, @Nullable String s3ObjectETag) {
     if (!CodeDeployUtil.isDeployStepEnabled(myRunnerParameters)) {
       statusText("Registered revision");
     }

@@ -20,6 +20,7 @@ import com.amazonaws.services.codedeploy.AmazonCodeDeployClient;
 import com.amazonaws.services.codedeploy.model.*;
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.model.PutObjectRequest;
+import com.amazonaws.services.s3.model.PutObjectResult;
 import jetbrains.buildServer.util.StringUtil;
 import jetbrains.buildServer.util.amazon.AWSClients;
 import jetbrains.buildServer.util.amazon.AWSException;
@@ -83,12 +84,13 @@ public class AWSClient {
    * @param s3ObjectKey     valid S3 object key
    * @param bundleType      one of zip, tar or tar.gz
    * @param s3ObjectVersion S3 object version (for versioned buckets) or null to use the latest version
+   * @param s3ObjectETag    S3 object ETag (file checksum) for object validation or null if no validation should be performed
    * @param applicationName CodeDeploy application name
    */
-  public void registerRevision(@NotNull String s3BucketName, @NotNull String s3ObjectKey, @NotNull String bundleType, @Nullable String s3ObjectVersion,
+  public void registerRevision(@NotNull String s3BucketName, @NotNull String s3ObjectKey, @NotNull String bundleType, @Nullable String s3ObjectVersion, @Nullable String s3ObjectETag,
                                @NotNull String applicationName) {
     try {
-      doRegisterRevision(getRevisionLocation(s3BucketName, s3ObjectKey, bundleType, s3ObjectVersion), applicationName);
+      doRegisterRevision(getRevisionLocation(s3BucketName, s3ObjectKey, bundleType, s3ObjectVersion, s3ObjectETag), applicationName);
     } catch (Throwable t) {
       processFailure(t);
     }
@@ -105,32 +107,33 @@ public class AWSClient {
    * @param s3ObjectKey          valid S3 object key
    * @param bundleType           one of zip, tar or tar.gz
    * @param s3ObjectVersion      S3 object version (for versioned buckets) or null to use the latest version
+   * @param s3ObjectETag         S3 object ETag (file checksum) for object validation or null if no validation should be performed
    * @param applicationName      CodeDeploy application name
    * @param deploymentGroupName  deployment group name
    * @param deploymentConfigName deployment configuration name or null for default deployment configuration
    * @param waitTimeoutSec       seconds to wait for the created deployment finish or fail
    * @param waitIntervalSec      seconds between polling CodeDeploy for the created deployment status
    */
-  public void deployRevisionAndWait(@NotNull String s3BucketName, @NotNull String s3ObjectKey, @NotNull String bundleType, @Nullable String s3ObjectVersion,
+  public void deployRevisionAndWait(@NotNull String s3BucketName, @NotNull String s3ObjectKey, @NotNull String bundleType, @Nullable String s3ObjectVersion, @Nullable String s3ObjectETag,
                                     @NotNull String applicationName, @NotNull String deploymentGroupName, @Nullable String deploymentConfigName,
                                     int waitTimeoutSec, int waitIntervalSec) {
-    doDeployAndWait(s3BucketName, s3ObjectKey, bundleType, s3ObjectVersion, applicationName, deploymentGroupName, deploymentConfigName, true, waitTimeoutSec, waitIntervalSec);
+    doDeployAndWait(s3BucketName, s3ObjectKey, bundleType, s3ObjectVersion, s3ObjectETag, applicationName, deploymentGroupName, deploymentConfigName, true, waitTimeoutSec, waitIntervalSec);
   }
 
   /**
    * The same as {@link #deployRevisionAndWait} but without waiting
    */
-  public void deployRevision(@NotNull String s3BucketName, @NotNull String s3ObjectKey, @NotNull String bundleType, @Nullable String s3ObjectVersion,
+  public void deployRevision(@NotNull String s3BucketName, @NotNull String s3ObjectKey, @NotNull String bundleType, @Nullable String s3ObjectVersion, @Nullable String s3ObjectETag,
                              @NotNull String applicationName, @NotNull String deploymentGroupName, @Nullable String deploymentConfigName) {
-    doDeployAndWait(s3BucketName, s3ObjectKey, bundleType, s3ObjectVersion, applicationName, deploymentGroupName, deploymentConfigName, false, null, null);
+    doDeployAndWait(s3BucketName, s3ObjectKey, bundleType, s3ObjectVersion, s3ObjectETag, applicationName, deploymentGroupName, deploymentConfigName, false, null, null);
   }
 
   @SuppressWarnings("ConstantConditions")
-  private void doDeployAndWait(@NotNull String s3BucketName, @NotNull String s3ObjectKey, @NotNull String bundleType, @Nullable String s3ObjectVersion,
+  private void doDeployAndWait(@NotNull String s3BucketName, @NotNull String s3ObjectKey, @NotNull String bundleType, @Nullable String s3ObjectVersion, @Nullable String s3ObjectETag,
                                @NotNull String applicationName, @NotNull String deploymentGroupName, @Nullable String deploymentConfigName,
                                boolean wait, @Nullable Integer waitTimeoutSec, @Nullable Integer waitIntervalSec) {
     try {
-        final String deploymentId = createDeployment(getRevisionLocation(s3BucketName, s3ObjectKey, bundleType, s3ObjectVersion), applicationName, deploymentGroupName, deploymentConfigName);
+        final String deploymentId = createDeployment(getRevisionLocation(s3BucketName, s3ObjectKey, bundleType, s3ObjectVersion, s3ObjectETag), applicationName, deploymentGroupName, deploymentConfigName);
 
         if (wait) {
           waitForDeployment(deploymentId, waitTimeoutSec, waitIntervalSec);
@@ -177,21 +180,22 @@ public class AWSClient {
   private void doUploadRevision(@NotNull File revision, @NotNull String s3BucketName, @NotNull String s3ObjectKey) {
     myListener.uploadRevisionStarted(revision, s3BucketName, s3ObjectKey);
 
-    myS3Client.putObject(new PutObjectRequest(s3BucketName, s3ObjectKey, revision));
+    final PutObjectResult putObjectResult = myS3Client.putObject(new PutObjectRequest(s3BucketName, s3ObjectKey, revision));
 
-    myListener.uploadRevisionFinished(revision, s3BucketName, s3ObjectKey, myS3Client.getUrl(s3BucketName, s3ObjectKey).toString());
+    myListener.uploadRevisionFinished(revision, s3BucketName, s3ObjectKey, putObjectResult.getVersionId(), putObjectResult.getETag(), myS3Client.getUrl(s3BucketName, s3ObjectKey).toString());
   }
 
   @NotNull
-  private RevisionLocation getRevisionLocation(@NotNull String s3BucketName, @NotNull String s3ObjectKey, @NotNull String bundleType, @Nullable String s3ObjectVersion) {
+  private RevisionLocation getRevisionLocation(@NotNull String s3BucketName, @NotNull String s3ObjectKey, @NotNull String bundleType, @Nullable String s3ObjectVersion, @Nullable String s3ObjectETag) {
     final S3Location loc = new S3Location().withBucket(s3BucketName).withKey(s3ObjectKey).withBundleType(bundleType);
     if (StringUtil.isNotEmpty(s3ObjectVersion)) loc.withVersion(s3ObjectVersion);
+    if (StringUtil.isNotEmpty(s3ObjectETag)) loc.withETag(s3ObjectETag);
     return new RevisionLocation().withRevisionType(RevisionLocationType.S3).withS3Location(loc);
   }
 
   private void doRegisterRevision(@NotNull RevisionLocation revisionLocation, @NotNull String applicationName) {
     final S3Location s3Location = revisionLocation.getS3Location();
-    myListener.registerRevisionStarted(applicationName, s3Location.getBucket(), s3Location.getKey(), s3Location.getBundleType(), s3Location.getVersion());
+    myListener.registerRevisionStarted(applicationName, s3Location.getBucket(), s3Location.getKey(), s3Location.getBundleType(), s3Location.getVersion(), s3Location.getETag());
 
     myCodeDeployClient.registerApplicationRevision(
       new RegisterApplicationRevisionRequest()
@@ -199,7 +203,7 @@ public class AWSClient {
         .withApplicationName(applicationName)
         .withDescription(getDescription("Application revision registered by ", 100)));
 
-    myListener.registerRevisionFinished(applicationName, s3Location.getBucket(), s3Location.getKey(), s3Location.getBundleType(), s3Location.getVersion());
+    myListener.registerRevisionFinished(applicationName, s3Location.getBucket(), s3Location.getKey(), s3Location.getBundleType(), s3Location.getVersion(), s3Location.getETag());
   }
 
   @NotNull
@@ -292,9 +296,9 @@ public class AWSClient {
 
   public static class Listener {
     void uploadRevisionStarted(@NotNull File revision, @NotNull String s3BucketName, @NotNull String s3ObjectKey) {}
-    void uploadRevisionFinished(@NotNull File revision, @NotNull String s3BucketName, @NotNull String s3ObjectKey, @NotNull String url) {}
-    void registerRevisionStarted(@NotNull String applicationName, @NotNull String s3BucketName, @NotNull String s3ObjectKey, @NotNull String bundleType, @Nullable String s3ObjectVersion) {}
-    void registerRevisionFinished(@NotNull String applicationName, @NotNull String s3BucketName, @NotNull String s3ObjectKey, @NotNull String bundleType, @Nullable String s3ObjectVersion) {}
+    void uploadRevisionFinished(@NotNull File revision, @NotNull String s3BucketName, @NotNull String s3ObjectKey, @Nullable String s3ObjectVersion, @Nullable String s3ObjectETag, @NotNull String url) {}
+    void registerRevisionStarted(@NotNull String applicationName, @NotNull String s3BucketName, @NotNull String s3ObjectKey, @NotNull String bundleType, @Nullable String s3ObjectVersion, @Nullable String s3ObjectETag) {}
+    void registerRevisionFinished(@NotNull String applicationName, @NotNull String s3BucketName, @NotNull String s3ObjectKey, @NotNull String bundleType, @Nullable String s3ObjectVersion, @Nullable String s3ObjectETag) {}
     void createDeploymentStarted(@NotNull String applicationName, @NotNull String deploymentGroupName, @Nullable String deploymentConfigName) {}
     void createDeploymentFinished(@NotNull String applicationName, @NotNull String deploymentGroupName, @Nullable String deploymentConfigName, @NotNull String deploymentId) {}
     void deploymentWaitStarted(@NotNull String deploymentId) {}
