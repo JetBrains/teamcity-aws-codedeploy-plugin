@@ -178,6 +178,6 @@ final class ParametersValidator {
   }
 
   private static boolean isReference(@NotNull String param, boolean runtime) {
-    return ReferencesResolverUtil.containsReference(param) && !runtime;
+    return ReferencesResolverUtil.containsReference(param, new String[]{}, true) && !runtime;
   }
 }
