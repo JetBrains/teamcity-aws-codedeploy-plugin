@@ -18,8 +18,23 @@ apply plugin: 'com.github.rodm.teamcity-server'
 
 dependencies {
     compile project(':aws-codedeploy-common')
+    agent project(path: ':aws-codedeploy-agent', configuration: 'plugin')
 }
 
 teamcity {
+    server {
+        descriptor = file("$rootDir/teamcity-plugin.xml")
+        tokens = [Plugin_Version: 'SNAPSHOT-' + new Date().format('yyyyMMddHHmm')]
+
+        environments {
+            teamcity {
+                homeDir = file(teamcityDir)
+                dataDir = file(teamcityDataDir)
+                javaHome = file(teamcityJavaHome)
+                version = teamcityVersion;
+            }
+        }
+    }
+
     version = teamcityVersion
 }

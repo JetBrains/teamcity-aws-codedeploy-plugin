@@ -15,11 +15,15 @@
  */
 
 dependencies {
-    compile "com.amazonaws:aws-java-sdk:${awsSDKVersion}"
-    compile "org.jetbrains.teamcity:common-api:${teamcityVersion}"
-    compile "org.jetbrains.teamcity.internal:server:${teamcityVersion}"
+    compile "com.amazonaws:aws-java-sdk-codedeploy:${awsSDKVersion}"
+    compile "com.amazonaws:aws-java-sdk-codepipeline:${awsSDKVersion}"
+    compile "com.amazonaws:aws-java-sdk-s3:${awsSDKVersion}"
+    compile "com.amazonaws:aws-java-sdk-sts:${awsSDKVersion}"
+
+    compileOnly "org.jetbrains.teamcity:common-api:${teamcityVersion}"
+    compileOnly "org.jetbrains.teamcity.internal:server:${teamcityVersion}"
     // see https://youtrack.jetbrains.com/issue/TW-44615
-    compile files("${teamcityDir}/buildAgent/lib/common-impl.jar")
+    compileOnly files("${teamcityDir}/buildAgent/lib/common-impl.jar")
 
     testCompile "org.jetbrains.teamcity:tests-support:${teamcityVersion}"
 }

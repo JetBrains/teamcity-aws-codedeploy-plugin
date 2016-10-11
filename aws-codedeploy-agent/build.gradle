@@ -23,5 +23,9 @@ dependencies {
 }
 
 teamcity {
+    agent {
+        descriptor = project(':aws-codedeploy-agent').file('teamcity-plugin.xml')
+    }
+
     version = teamcityVersion
 }
