@@ -22,7 +22,7 @@ dependencies {
 
     compileOnly "org.jetbrains.teamcity:common-api:${teamcityVersion}"
     compileOnly "org.jetbrains.teamcity.internal:server:${teamcityVersion}"
-    // see https://youtrack.jetbrains.com/issue/TW-44615
+    // the dependencies can be removed since 10.0, see https://youtrack.jetbrains.com/issue/TW-44615
     compileOnly files("${teamcityDir}/buildAgent/lib/common-impl.jar")
 
     testCompile "org.jetbrains.teamcity:tests-support:${teamcityVersion}"

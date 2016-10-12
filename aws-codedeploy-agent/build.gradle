@@ -20,6 +20,8 @@ dependencies {
     compile project(':aws-codedeploy-common')
 
     testCompile "org.jetbrains.teamcity:tests-support:${teamcityVersion}"
+    // the dependencies can be removed since 10.0, see https://youtrack.jetbrains.com/issue/TW-44615
+    testRuntime files("${teamcityDir}/buildAgent/lib/common-impl.jar")
 }
 
 teamcity {
