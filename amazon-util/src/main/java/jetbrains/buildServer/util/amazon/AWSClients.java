@@ -26,6 +26,7 @@ import com.amazonaws.regions.Region;
 import com.amazonaws.services.codedeploy.AmazonCodeDeployClient;
 import com.amazonaws.services.codepipeline.AWSCodePipelineClient;
 import com.amazonaws.services.s3.AmazonS3Client;
+import com.amazonaws.services.s3.S3ClientOptions;
 import com.amazonaws.services.securitytoken.AWSSecurityTokenServiceClient;
 import com.amazonaws.services.securitytoken.model.AssumeRoleRequest;
 import com.amazonaws.services.securitytoken.model.Credentials;
@@ -70,7 +71,9 @@ public class AWSClients {
 
   @NotNull
   public AmazonS3Client createS3Client() {
-    return withRegion(myCredentials == null ? new AmazonS3Client(myClientConfiguration) : new AmazonS3Client(myCredentials, myClientConfiguration));
+    final AmazonS3Client s3Client = withRegion(myCredentials == null ? new AmazonS3Client(myClientConfiguration) : new AmazonS3Client(myCredentials, myClientConfiguration));
+    s3Client.setS3ClientOptions(S3ClientOptions.builder().setPathStyleAccess(true).build());
+    return s3Client;
   }
 
   @NotNull
