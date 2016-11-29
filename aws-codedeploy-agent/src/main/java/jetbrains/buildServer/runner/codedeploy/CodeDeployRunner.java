@@ -28,8 +28,10 @@ import java.util.HashMap;
 import java.util.Map;
 
 import static jetbrains.buildServer.runner.codedeploy.CodeDeployConstants.*;
+import static jetbrains.buildServer.runner.codedeploy.CodeDeployUtil.*;
+import static jetbrains.buildServer.util.StringUtil.isEmptyOrSpaces;
+import static jetbrains.buildServer.util.StringUtil.nullIfEmpty;
 import static jetbrains.buildServer.util.amazon.AWSCommonParams.*;
-import static jetbrains.buildServer.util.StringUtil.*;
 
 /**
  * @author vbedrosova
@@ -70,12 +72,13 @@ public class CodeDeployRunner implements AgentBuildRunner {
         final String s3BucketName = runnerParameters.get(S3_BUCKET_NAME_PARAM);
         String s3ObjectKey = runnerParameters.get(S3_OBJECT_KEY_PARAM);
 
-        if (CodeDeployUtil.isUploadStepEnabled(runnerParameters) && !m.problemOccurred && !isInterrupted()) {
+        if (isUploadStepEnabled(runnerParameters) && !m.problemOccurred && !isInterrupted()) {
           final File readyRevision = new ApplicationRevision(
             isEmptyOrSpaces(s3ObjectKey) ? runningBuild.getBuildTypeExternalId() : s3ObjectKey,
             runnerParameters.get(REVISION_PATHS_PARAM),
-            runningBuild.getCheckoutDirectory(), runningBuild.getBuildTempDirectory(),
-            configParameters.get(CUSTOM_APPSPEC_YML_CONFIG_PARAM)).withLogger(runningBuild.getBuildLogger()).getArchive();
+            context.getWorkingDirectory(), runningBuild.getBuildTempDirectory(),
+            configParameters.get(CUSTOM_APPSPEC_YML_CONFIG_PARAM),
+            isRegisterStepEnabled(runnerParameters) || isDeployStepEnabled(runnerParameters)).withLogger(runningBuild.getBuildLogger()).getArchive();
 
           if (isEmptyOrSpaces(s3ObjectKey)) {
             s3ObjectKey = readyRevision.getName();

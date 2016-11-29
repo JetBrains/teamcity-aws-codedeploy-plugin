@@ -26,7 +26,8 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.*;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -48,13 +49,15 @@ class ApplicationRevision {
   private final PathMappings myPathMappings;
   @Nullable
   private BuildProgressLogger myLogger;
+  private final boolean myMustContainAppSpecYml;
 
-  ApplicationRevision(@NotNull String name, @NotNull String paths, @NotNull File baseDir, @NotNull File tempDir, @Nullable String customAppSpecContent) {
+  ApplicationRevision(@NotNull String name, @NotNull String paths, @NotNull File baseDir, @NotNull File tempDir, @Nullable String customAppSpecContent, boolean mustContainAppSpecYml) {
     myName = name;
     myPaths = paths;
     myBaseDir = baseDir;
     myTempDir = tempDir;
     myCustomAppSpec = customAppSpecContent;
+    myMustContainAppSpecYml = mustContainAppSpecYml;
 
     myPathMappings = new PathMappings(myBaseDir, CodeDeployUtil.getRevisionPathMappings(myPaths));
   }
@@ -94,7 +97,7 @@ class ApplicationRevision {
       }
       files.add(customAppSpecYml);
 
-    } else if (null == appSpecYml) {
+    } else if (null == appSpecYml && myMustContainAppSpecYml) {
       throw new CodeDeployRunner.CodeDeployRunnerException("No " + CodeDeployConstants.APPSPEC_YML + " file found among " + CodeDeployConstants.REVISION_PATHS_LABEL.toLowerCase() + " files and no custom AppSpec file provided", null);
     }
     return files;

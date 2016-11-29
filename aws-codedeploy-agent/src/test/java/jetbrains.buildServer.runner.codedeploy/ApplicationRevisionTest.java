@@ -26,12 +26,13 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import static jetbrains.buildServer.runner.codedeploy.CodeDeployRunner.CodeDeployRunnerException;
-import static org.assertj.core.api.BDDAssertions.*;
-
 import java.io.File;
 import java.io.IOException;
 import java.util.LinkedList;
+
+import static jetbrains.buildServer.runner.codedeploy.CodeDeployRunner.CodeDeployRunnerException;
+import static org.assertj.core.api.BDDAssertions.failBecauseExceptionWasNotThrown;
+import static org.assertj.core.api.BDDAssertions.then;
 
 /**
  * @author vbedrosova
@@ -359,7 +360,7 @@ public class ApplicationRevisionTest extends LoggingTestCase {
 
   @NotNull
   private ApplicationRevision create(@NotNull String paths, @Nullable String customAppSpec) {
-    return new ApplicationRevision("test_revision", paths, getBaseDir(), getTempDir(), customAppSpec).withLogger(new NullBuildProgressLogger() {
+    return new ApplicationRevision("test_revision", paths, getBaseDir(), getTempDir(), customAppSpec, true).withLogger(new NullBuildProgressLogger() {
       @Override
       public void message(String message) {
         ApplicationRevisionTest.this.logMessage(message);
