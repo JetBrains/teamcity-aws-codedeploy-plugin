@@ -28,7 +28,7 @@ public final class AWSUtil {
   public static String getBundleType(@NotNull String revision) {
     if (revision.endsWith(".zip")) return BundleType.Zip.name();
     if (revision.endsWith(".tar")) return BundleType.Tar.name();
-    if (revision.endsWith(".tar.gz")) return BundleType.Tgz.name();
+    if (revision.endsWith(".tar.gz") || revision.endsWith(".tgz")) return BundleType.Tgz.name();
     return null;
   }
 }
