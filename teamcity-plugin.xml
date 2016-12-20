@@ -21,7 +21,7 @@
         <name>aws-codedeploy-plugin</name>
         <display-name>AWS CodeDeploy</display-name>
         <version>@Plugin_Version@</version>
-        <description>Build runner for deploying application to AWS EC2 and on-premise instances using AWS CodeDeploy</description>
+        <description>Build runner for deploying application to AWS EC2 and on-premises instances using AWS CodeDeploy</description>
         <download-url>https://github.com/JetBrains/teamcity-aws-codedeploy-plugin</download-url>
         <vendor>
             <name>JetBrains, s.r.o.</name>
