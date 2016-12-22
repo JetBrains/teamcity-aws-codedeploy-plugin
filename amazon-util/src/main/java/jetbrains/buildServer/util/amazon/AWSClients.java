@@ -23,6 +23,7 @@ import com.amazonaws.auth.AWSSessionCredentials;
 import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.auth.BasicSessionCredentials;
 import com.amazonaws.regions.Region;
+import com.amazonaws.services.codebuild.AWSCodeBuildClient;
 import com.amazonaws.services.codedeploy.AmazonCodeDeployClient;
 import com.amazonaws.services.codepipeline.AWSCodePipelineClient;
 import com.amazonaws.services.s3.AmazonS3Client;
@@ -84,6 +85,11 @@ public class AWSClients {
   @NotNull
   public AWSCodePipelineClient createCodePipeLineClient() {
     return withRegion(myCredentials == null ? new AWSCodePipelineClient(myClientConfiguration) : new AWSCodePipelineClient(myCredentials, myClientConfiguration));
+  }
+
+  @NotNull
+  public AWSCodeBuildClient createCodeBuildClient() {
+    return withRegion(myCredentials == null ? new AWSCodeBuildClient(myClientConfiguration) : new AWSCodeBuildClient(myCredentials, myClientConfiguration));
   }
 
   @NotNull

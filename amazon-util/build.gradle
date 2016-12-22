@@ -19,6 +19,7 @@ dependencies {
     compile "com.amazonaws:aws-java-sdk-codepipeline:${awsSDKVersion}"
     compile "com.amazonaws:aws-java-sdk-s3:${awsSDKVersion}"
     compile "com.amazonaws:aws-java-sdk-sts:${awsSDKVersion}"
+    compile "com.amazonaws:aws-java-sdk-codebuild:${awsSDKVersion}"
 
     compileOnly "org.jetbrains.teamcity:common-api:${teamcityVersion}"
     compileOnly "org.jetbrains.teamcity.internal:server:${teamcityVersion}"
