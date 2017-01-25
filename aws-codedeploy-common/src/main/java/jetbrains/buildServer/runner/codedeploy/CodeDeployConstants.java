@@ -18,7 +18,8 @@ package jetbrains.buildServer.runner.codedeploy;
 
 import jetbrains.buildServer.util.CollectionsUtil;
 
-import java.util.*;
+import java.util.Collections;
+import java.util.Map;
 
 /**
  * @author vbedrosova
@@ -73,6 +74,11 @@ public interface CodeDeployConstants {
   String WAIT_TIMEOUT_SEC_LABEL = "Timeout (seconds)";
   String WAIT_POLL_INTERVAL_SEC_CONFIG_PARAM = "codedeploy.wait.poll.interval.sec";
   int WAIT_POLL_INTERVAL_SEC_DEFAULT = 20;
+
+  String ROLLBACK_ON_FAILURE_PARAM = "codedeploy_rollback_on_failure";
+  String ROLLBACK_ON_FAILURE_LABEL = "Roll back when a deployment fails";
+  String ROLLBACK_ON_ALARM_THRESHOLD_PARAM = "codedeploy_rollback_on_alarm_threshold";
+  String ROLLBACK_ON_ALARM_THRESHOLD_LABEL = "Roll back when alarm thresholds are met";
 
   String UPLOAD_STEP = "s3uploadstep";
   String REGISTER_STEP = "registerstep";

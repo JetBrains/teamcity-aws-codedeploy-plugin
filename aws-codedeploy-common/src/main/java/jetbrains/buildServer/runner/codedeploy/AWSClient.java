@@ -116,8 +116,9 @@ public class AWSClient {
    */
   public void deployRevisionAndWait(@NotNull String s3BucketName, @NotNull String s3ObjectKey, @NotNull String bundleType, @Nullable String s3ObjectVersion, @Nullable String s3ObjectETag,
                                     @NotNull String applicationName, @NotNull String deploymentGroupName, @Nullable String deploymentConfigName,
-                                    int waitTimeoutSec, int waitIntervalSec) {
-    doDeployAndWait(s3BucketName, s3ObjectKey, bundleType, s3ObjectVersion, s3ObjectETag, applicationName, deploymentGroupName, deploymentConfigName, true, waitTimeoutSec, waitIntervalSec);
+                                    int waitTimeoutSec, int waitIntervalSec,
+                                    boolean rollbackOnFailure, boolean rollbackOnAlarmThreshold) {
+    doDeployAndWait(s3BucketName, s3ObjectKey, bundleType, s3ObjectVersion, s3ObjectETag, applicationName, deploymentGroupName, deploymentConfigName, true, waitTimeoutSec, waitIntervalSec, rollbackOnFailure, rollbackOnAlarmThreshold);
   }
 
   /**
@@ -125,15 +126,16 @@ public class AWSClient {
    */
   public void deployRevision(@NotNull String s3BucketName, @NotNull String s3ObjectKey, @NotNull String bundleType, @Nullable String s3ObjectVersion, @Nullable String s3ObjectETag,
                              @NotNull String applicationName, @NotNull String deploymentGroupName, @Nullable String deploymentConfigName) {
-    doDeployAndWait(s3BucketName, s3ObjectKey, bundleType, s3ObjectVersion, s3ObjectETag, applicationName, deploymentGroupName, deploymentConfigName, false, null, null);
+    doDeployAndWait(s3BucketName, s3ObjectKey, bundleType, s3ObjectVersion, s3ObjectETag, applicationName, deploymentGroupName, deploymentConfigName, false, null, null, false, false);
   }
 
   @SuppressWarnings("ConstantConditions")
   private void doDeployAndWait(@NotNull String s3BucketName, @NotNull String s3ObjectKey, @NotNull String bundleType, @Nullable String s3ObjectVersion, @Nullable String s3ObjectETag,
                                @NotNull String applicationName, @NotNull String deploymentGroupName, @Nullable String deploymentConfigName,
-                               boolean wait, @Nullable Integer waitTimeoutSec, @Nullable Integer waitIntervalSec) {
+                               boolean wait, @Nullable Integer waitTimeoutSec, @Nullable Integer waitIntervalSec,
+                               boolean rollbackOnFailure, boolean rollbackOnAlarmThreshold) {
     try {
-        final String deploymentId = createDeployment(getRevisionLocation(s3BucketName, s3ObjectKey, bundleType, s3ObjectVersion, s3ObjectETag), applicationName, deploymentGroupName, deploymentConfigName);
+        final String deploymentId = createDeployment(getRevisionLocation(s3BucketName, s3ObjectKey, bundleType, s3ObjectVersion, s3ObjectETag), applicationName, deploymentGroupName, deploymentConfigName, rollbackOnFailure, rollbackOnAlarmThreshold);
 
         if (wait) {
           waitForDeployment(deploymentId, waitTimeoutSec, waitIntervalSec);
@@ -210,7 +212,9 @@ public class AWSClient {
   private String createDeployment(@NotNull RevisionLocation revisionLocation,
                                   @NotNull String applicationName,
                                   @NotNull String deploymentGroupName,
-                                  @Nullable String deploymentConfigName) {
+                                  @Nullable String deploymentConfigName,
+                                  boolean rollbackOnFailure,
+                                  boolean rollbackOnAlarmThreshold) {
     myListener.createDeploymentStarted(applicationName, deploymentGroupName, deploymentConfigName);
 
     final CreateDeploymentRequest request =
@@ -221,6 +225,16 @@ public class AWSClient {
         .withDescription(getDescription("Deployment created by ", 100));
 
     if (StringUtil.isNotEmpty(deploymentConfigName)) request.setDeploymentConfigName(deploymentConfigName);
+    if (rollbackOnFailure || rollbackOnAlarmThreshold) {
+      final AutoRollbackConfiguration rollbackConfiguration = new AutoRollbackConfiguration().withEnabled(true);
+      if (rollbackOnFailure) {
+        rollbackConfiguration.withEvents(AutoRollbackEvent.DEPLOYMENT_FAILURE);
+      }
+      if (rollbackOnAlarmThreshold) {
+        rollbackConfiguration.withEvents(AutoRollbackEvent.DEPLOYMENT_STOP_ON_ALARM);
+      }
+      request.setAutoRollbackConfiguration(rollbackConfiguration);
+    }
 
     final String deploymentId = myCodeDeployClient.createDeployment(request).getDeploymentId();
     myListener.createDeploymentFinished(applicationName, deploymentGroupName, deploymentConfigName, deploymentId);

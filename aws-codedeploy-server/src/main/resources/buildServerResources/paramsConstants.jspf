@@ -57,3 +57,9 @@
 <c:set var="register_step" value="<%=CodeDeployConstants.REGISTER_STEP%>"/>
 <c:set var="deploy_step" value="<%=CodeDeployConstants.DEPLOY_STEP%>"/>
 <c:set var="step_separator" value="<%=CodeDeployConstants.STEP_SEPARATOR%>"/>
+
+<c:set var="rollback_on_failure_param" value="<%=CodeDeployConstants.ROLLBACK_ON_FAILURE_PARAM%>"/>
+<c:set var="rollback_on_failure_label" value="<%=CodeDeployConstants.ROLLBACK_ON_FAILURE_LABEL%>"/>
+
+<c:set var="rollback_on_alarm_param" value="<%=CodeDeployConstants.ROLLBACK_ON_ALARM_THRESHOLD_PARAM%>"/>
+<c:set var="rollback_on_alarm_label" value="<%=CodeDeployConstants.ROLLBACK_ON_ALARM_THRESHOLD_LABEL%>"/>

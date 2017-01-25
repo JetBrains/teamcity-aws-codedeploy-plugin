@@ -60,5 +60,12 @@
         ${wait_timeout_label}: <props:displayValue name="${wait_timeout_param}" emptyValue="empty"/>
     </div>
 </c:if>
+<div class="parameter">
+    ${rollback_on_failure_label}: <strong><props:displayCheckboxValue name="${rollback_on_failure_param}"/></strong>
+</div>
+<div class="parameter">
+    ${rollback_on_alarm_label}: <strong><props:displayCheckboxValue name="${rollback_on_alarm_param}"/></strong>
+</div>
+
 
 
