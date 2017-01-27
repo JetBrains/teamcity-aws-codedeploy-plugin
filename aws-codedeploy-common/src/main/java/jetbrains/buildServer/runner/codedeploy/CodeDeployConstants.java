@@ -80,6 +80,9 @@ public interface CodeDeployConstants {
   String ROLLBACK_ON_ALARM_THRESHOLD_PARAM = "codedeploy_rollback_on_alarm_threshold";
   String ROLLBACK_ON_ALARM_THRESHOLD_LABEL = "Roll back when alarm thresholds are met";
 
+  String GREEN_FLEET_PARAM = "codedeploy_green_fleet";
+  String GREEN_FLEET__LABEL = "Green fleet (replacement environment instances)";
+
   String UPLOAD_STEP = "s3uploadstep";
   String REGISTER_STEP = "registerstep";
   String DEPLOY_STEP = "deploystep";

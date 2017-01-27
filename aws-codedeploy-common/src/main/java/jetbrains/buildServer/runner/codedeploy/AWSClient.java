@@ -21,6 +21,8 @@ import com.amazonaws.services.codedeploy.model.*;
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.model.PutObjectRequest;
 import com.amazonaws.services.s3.model.PutObjectResult;
+import jetbrains.buildServer.util.CollectionsUtil;
+import jetbrains.buildServer.util.Converter;
 import jetbrains.buildServer.util.StringUtil;
 import jetbrains.buildServer.util.amazon.AWSClients;
 import jetbrains.buildServer.util.amazon.AWSException;
@@ -29,6 +31,8 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
+import java.util.Collection;
+import java.util.Map;
 
 /**
  * @author vbedrosova
@@ -115,27 +119,32 @@ public class AWSClient {
    * @param waitIntervalSec      seconds between polling CodeDeploy for the created deployment status
    */
   public void deployRevisionAndWait(@NotNull String s3BucketName, @NotNull String s3ObjectKey, @NotNull String bundleType, @Nullable String s3ObjectVersion, @Nullable String s3ObjectETag,
-                                    @NotNull String applicationName, @NotNull String deploymentGroupName, @Nullable String deploymentConfigName,
+                                    @NotNull String applicationName, @NotNull String deploymentGroupName,
+                                    @NotNull Map<String, String> ec2Tags, @NotNull Collection<String> autoScalingGroups,
+                                    @Nullable String deploymentConfigName,
                                     int waitTimeoutSec, int waitIntervalSec,
                                     boolean rollbackOnFailure, boolean rollbackOnAlarmThreshold) {
-    doDeployAndWait(s3BucketName, s3ObjectKey, bundleType, s3ObjectVersion, s3ObjectETag, applicationName, deploymentGroupName, deploymentConfigName, true, waitTimeoutSec, waitIntervalSec, rollbackOnFailure, rollbackOnAlarmThreshold);
+    doDeployAndWait(s3BucketName, s3ObjectKey, bundleType, s3ObjectVersion, s3ObjectETag, applicationName, deploymentGroupName, ec2Tags, autoScalingGroups, deploymentConfigName, true, waitTimeoutSec, waitIntervalSec, rollbackOnFailure, rollbackOnAlarmThreshold);
   }
 
   /**
    * The same as {@link #deployRevisionAndWait} but without waiting
    */
   public void deployRevision(@NotNull String s3BucketName, @NotNull String s3ObjectKey, @NotNull String bundleType, @Nullable String s3ObjectVersion, @Nullable String s3ObjectETag,
-                             @NotNull String applicationName, @NotNull String deploymentGroupName, @Nullable String deploymentConfigName) {
-    doDeployAndWait(s3BucketName, s3ObjectKey, bundleType, s3ObjectVersion, s3ObjectETag, applicationName, deploymentGroupName, deploymentConfigName, false, null, null, false, false);
+                             @NotNull String applicationName, @NotNull String deploymentGroupName, @NotNull Map<String, String> ec2Tags, @NotNull Collection<String> autoScalingGroups,
+                             @Nullable String deploymentConfigName) {
+    doDeployAndWait(s3BucketName, s3ObjectKey, bundleType, s3ObjectVersion, s3ObjectETag, applicationName, deploymentGroupName, ec2Tags, autoScalingGroups, deploymentConfigName, false, null, null, false, false);
   }
 
   @SuppressWarnings("ConstantConditions")
   private void doDeployAndWait(@NotNull String s3BucketName, @NotNull String s3ObjectKey, @NotNull String bundleType, @Nullable String s3ObjectVersion, @Nullable String s3ObjectETag,
-                               @NotNull String applicationName, @NotNull String deploymentGroupName, @Nullable String deploymentConfigName,
+                               @NotNull String applicationName, @NotNull String deploymentGroupName,
+                               @NotNull Map<String, String> ec2Tags, @NotNull Collection<String> autoScalingGroups,
+                               @Nullable String deploymentConfigName,
                                boolean wait, @Nullable Integer waitTimeoutSec, @Nullable Integer waitIntervalSec,
                                boolean rollbackOnFailure, boolean rollbackOnAlarmThreshold) {
     try {
-        final String deploymentId = createDeployment(getRevisionLocation(s3BucketName, s3ObjectKey, bundleType, s3ObjectVersion, s3ObjectETag), applicationName, deploymentGroupName, deploymentConfigName, rollbackOnFailure, rollbackOnAlarmThreshold);
+        final String deploymentId = createDeployment(getRevisionLocation(s3BucketName, s3ObjectKey, bundleType, s3ObjectVersion, s3ObjectETag), applicationName, deploymentGroupName, ec2Tags, autoScalingGroups, deploymentConfigName, rollbackOnFailure, rollbackOnAlarmThreshold);
 
         if (wait) {
           waitForDeployment(deploymentId, waitTimeoutSec, waitIntervalSec);
@@ -212,6 +221,8 @@ public class AWSClient {
   private String createDeployment(@NotNull RevisionLocation revisionLocation,
                                   @NotNull String applicationName,
                                   @NotNull String deploymentGroupName,
+                                  @NotNull Map<String, String> ec2Tags,
+                                  @NotNull Collection<String> autoScalingGroups,
                                   @Nullable String deploymentConfigName,
                                   boolean rollbackOnFailure,
                                   boolean rollbackOnAlarmThreshold) {
@@ -225,6 +236,9 @@ public class AWSClient {
         .withDescription(getDescription("Deployment created by ", 100));
 
     if (StringUtil.isNotEmpty(deploymentConfigName)) request.setDeploymentConfigName(deploymentConfigName);
+    if (!ec2Tags.isEmpty() || !autoScalingGroups.isEmpty()) {
+        request.withTargetInstances(new TargetInstances().withTagFilters(getTagFilters(ec2Tags)).withAutoScalingGroups(autoScalingGroups));
+    }
     if (rollbackOnFailure || rollbackOnAlarmThreshold) {
       final AutoRollbackConfiguration rollbackConfiguration = new AutoRollbackConfiguration().withEnabled(true);
       if (rollbackOnFailure) {
@@ -239,6 +253,16 @@ public class AWSClient {
     final String deploymentId = myCodeDeployClient.createDeployment(request).getDeploymentId();
     myListener.createDeploymentFinished(applicationName, deploymentGroupName, deploymentConfigName, deploymentId);
     return deploymentId;
+  }
+
+  @NotNull
+  private Collection<EC2TagFilter> getTagFilters(@NotNull Map<String, String> ec2Tags) {
+    return CollectionsUtil.convertCollection(ec2Tags.entrySet(), new Converter<EC2TagFilter, Map.Entry<String, String>>() {
+      @Override
+      public EC2TagFilter createFrom(@NotNull Map.Entry<String, String> e) {
+        return new EC2TagFilter().withKey(e.getKey()).withValue(e.getValue()).withType(EC2TagFilterType.KEY_AND_VALUE);
+      }
+    });
   }
 
   private void processFailure(@NotNull Throwable t) {

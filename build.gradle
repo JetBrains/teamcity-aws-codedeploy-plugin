@@ -26,13 +26,13 @@ buildscript {
 }
 
 
-ext.teamcityVersion = hasProperty('teamcity.version') ? property('teamcity.version') : '10.0.2'
+ext.teamcityVersion = hasProperty('teamcity.version') ? property('teamcity.version') : '10.0.4'
 
 ext.teamcityDir = hasProperty('teamcity.dir') ? property('teamcity.dir') : "$rootDir/teamcity/servers/TeamCity-${teamcityVersion}"
 ext.teamcityDataDir = "$rootDir/teamcity/data/" + teamcityVersion
 ext.teamcityJavaHome = System.properties['java.home']
 
-ext.awsSDKVersion = hasProperty('aws.sdk.version') ? property('aws.sdk.version') : '1.11.69'
+ext.awsSDKVersion = hasProperty('aws.sdk.version') ? property('aws.sdk.version') : '1.11.86'
 
 ext.javaVersion = hasProperty('plugin.java.version') ? property('plugin.java.version') : '1.7'
 

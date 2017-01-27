@@ -113,4 +113,36 @@ final class CodeDeployUtil {
       return str;
     }
   }
+
+  @NotNull
+  public static Collection<String> getAutoScalingGroups(@NotNull Map<String, String> params) {
+    final String deploymentInstances = params.get(GREEN_FLEET_PARAM);
+    if (StringUtil.isEmptyOrSpaces(deploymentInstances)) return Collections.emptyList();
+
+    final List<String> ec2Tags = new ArrayList<>();
+    for (String s : deploymentInstances.trim().split(MULTILINE_SPLIT_REGEX)) {
+      if (s.contains(" ")) continue;
+      ec2Tags.add(s);
+    }
+    return ec2Tags;
+  }
+
+  @NotNull
+  public static Map<String, String> getEC2Tags(@NotNull Map<String, String> params) {
+    final String deploymentInstances = params.get(GREEN_FLEET_PARAM);
+    if (StringUtil.isEmptyOrSpaces(deploymentInstances)) return Collections.emptyMap();
+
+    final Map<String, String> autoScalingGroups = new HashMap<>();
+    for (String s : deploymentInstances.trim().split(MULTILINE_SPLIT_REGEX)) {
+      if (s.contains(" ")) {
+        final List<String> res = StringUtil.split(deploymentInstances, " ");
+        if (res.size() < 2) continue;
+        if (res.size() > 2) {
+          // report somehow
+        }
+        autoScalingGroups.put(res.get(0).trim(), res.get(1).trim());
+      }
+    }
+    return autoScalingGroups;
+  }
 }

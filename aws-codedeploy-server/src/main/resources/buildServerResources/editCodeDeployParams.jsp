@@ -87,7 +87,14 @@
 <tr data-steps="${deploy_step}">
     <th><label for="${dep_group_name_param}">${dep_group_name_label}: <l:star/></label></th>
     <td><props:textProperty name="${dep_group_name_param}" className="longField" maxlength="256"/>
-        <span class="smallNote">Pre-configured EC2 instances, must be running for deployment to succeed</span><span class="error" id="error_${dep_group_name_param}"></span>
+        <span class="smallNote">Pre-configured instances, must be running for deployment to succeed</span><span class="error" id="error_${dep_group_name_param}"></span>
+    </td>
+</tr>
+<tr data-steps="${deploy_step}">
+    <th><label for="${green_fleet_param}">${green_fleet_label}: </label></th>
+    <td><props:textProperty name="${green_fleet_param}" className="longField" maxlength="256" expandable="true"/>
+        <span class="smallNote">For blue/green deployments with manual replacement instances provision: newline-separated list of EC2 tag key/value pairs or auto scaling group names</span>
+        <span class="error" id="error_${green_fleet_param}"></span>
     </td>
 </tr>
 <tr data-steps="${deploy_step}">

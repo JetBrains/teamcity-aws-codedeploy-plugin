@@ -47,6 +47,10 @@
 </div>
 
 <div class="parameter">
+    ${green_fleet_label}: <props:displayValue name="${green_fleet_param}" emptyValue="empty"/>
+</div>
+
+<div class="parameter">
     ${dep_config_name_label}: <props:displayValue name="${dep_config_name_param}" emptyValue="default"/>
 </div>
 

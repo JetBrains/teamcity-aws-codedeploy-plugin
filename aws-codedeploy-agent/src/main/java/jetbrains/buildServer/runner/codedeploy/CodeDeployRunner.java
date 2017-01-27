@@ -101,7 +101,9 @@ public class CodeDeployRunner implements AgentBuildRunner {
           if (CodeDeployUtil.isDeploymentWaitEnabled(runnerParameters)) {
             awsClient.deployRevisionAndWait(
               s3BucketName, s3ObjectKey, bundleType, m.s3ObjectVersion, m.s3ObjectETag,
-              applicationName, deploymentGroupName, deploymentConfigName,
+              applicationName, deploymentGroupName,
+              getEC2Tags(runnerParameters), getAutoScalingGroups(runnerParameters),
+              deploymentConfigName,
               Integer.parseInt(runnerParameters.get(WAIT_TIMEOUT_SEC_PARAM)),
               getIntegerOrDefault(configParameters.get(WAIT_POLL_INTERVAL_SEC_CONFIG_PARAM), WAIT_POLL_INTERVAL_SEC_DEFAULT),
               Boolean.parseBoolean(runnerParameters.get(ROLLBACK_ON_FAILURE_PARAM)),
@@ -109,7 +111,7 @@ public class CodeDeployRunner implements AgentBuildRunner {
           } else {
             awsClient.deployRevision(
               s3BucketName, s3ObjectKey, bundleType, m.s3ObjectVersion, m.s3ObjectETag,
-              applicationName, deploymentGroupName, deploymentConfigName);
+              applicationName, deploymentGroupName, getEC2Tags(runnerParameters), getAutoScalingGroups(runnerParameters), deploymentConfigName);
           }
         }
 

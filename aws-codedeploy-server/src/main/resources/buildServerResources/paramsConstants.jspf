@@ -63,3 +63,6 @@
 
 <c:set var="rollback_on_alarm_param" value="<%=CodeDeployConstants.ROLLBACK_ON_ALARM_THRESHOLD_PARAM%>"/>
 <c:set var="rollback_on_alarm_label" value="<%=CodeDeployConstants.ROLLBACK_ON_ALARM_THRESHOLD_LABEL%>"/>
+
+<c:set var="green_fleet_param" value="<%=CodeDeployConstants.GREEN_FLEET_PARAM%>"/>
+<c:set var="green_fleet_label" value="<%=CodeDeployConstants.GREEN_FLEET__LABEL%>"/>
