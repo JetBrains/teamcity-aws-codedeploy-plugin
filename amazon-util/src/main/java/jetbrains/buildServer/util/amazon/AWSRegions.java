@@ -20,7 +20,9 @@ import com.amazonaws.regions.Region;
 import com.amazonaws.regions.Regions;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.*;
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 /**
  * @author vbedrosova
@@ -31,9 +33,11 @@ public final class AWSRegions {
   static {
     REGION_NAMES_FOR_WEB = new LinkedHashMap<String, String>();
     REGION_NAMES_FOR_WEB.put("us-east-1", "US East (N. Virginia)");
+    REGION_NAMES_FOR_WEB.put("us-east-2", "US East (Ohio)");
     REGION_NAMES_FOR_WEB.put("us-west-1", "US West (N. California)");
     REGION_NAMES_FOR_WEB.put("us-west-2", "US West (Oregon)");
     REGION_NAMES_FOR_WEB.put("eu-west-1", "EU West (Dublin)");
+    REGION_NAMES_FOR_WEB.put("eu-west-2", "EU West (London)");
     REGION_NAMES_FOR_WEB.put("eu-central-1", "EU Central (Frankfurt)");
     REGION_NAMES_FOR_WEB.put("sa-east-1", "South America (Sao Paulo)");
     REGION_NAMES_FOR_WEB.put("ap-northeast-1", "Asia Pacific (Tokyo)");
