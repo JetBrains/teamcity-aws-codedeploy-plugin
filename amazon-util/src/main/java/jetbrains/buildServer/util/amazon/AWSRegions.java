@@ -46,6 +46,11 @@ public final class AWSRegions {
     REGION_NAMES_FOR_WEB.put("ap-southeast-2", "Asia Pacific (Sydney)");
     REGION_NAMES_FOR_WEB.put("us-gov-west-1", "AWS GovCloud (US)");
     REGION_NAMES_FOR_WEB.put("cn-north-1", "China (Beijing)");
+
+    for (Regions region : Regions.values()) {
+      if (REGION_NAMES_FOR_WEB.containsKey(region.getName())) continue;
+      REGION_NAMES_FOR_WEB.put(region.getName(), region.getName());
+    }
   }
 
   @NotNull
