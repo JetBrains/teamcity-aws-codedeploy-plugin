@@ -36,6 +36,7 @@ ext.awsSDKVersion = hasProperty('aws.sdk.version') ? property('aws.sdk.version')
 
 ext.javaVersion = hasProperty('plugin.java.version') ? property('plugin.java.version') : '1.7'
 
+ext.amazonUtil = files("$rootProject.projectDir/amazon-util/amazon-util.jar")
 
 apply plugin: 'idea'
 idea {

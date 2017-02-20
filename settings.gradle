@@ -16,7 +16,6 @@
 
 rootProject.name = 'aws-codedeploy-plugin'
 
-include 'amazon-util'
 include 'aws-codedeploy-common'
 include 'aws-codedeploy-agent'
 include 'aws-codedeploy-server'
