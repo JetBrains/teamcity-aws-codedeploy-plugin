@@ -16,10 +16,10 @@
 
 package jetbrains.buildServer.runner.codedeploy;
 
+import com.amazonaws.services.codedeploy.model.BundleType;
 import jetbrains.buildServer.util.FileUtil;
 import jetbrains.buildServer.util.PathMappings;
 import jetbrains.buildServer.util.StringUtil;
-import jetbrains.buildServer.util.amazon.AWSUtil;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -59,7 +59,7 @@ final class CodeDeployUtil {
     if (split.length == 1) {
       final String revisionPath = split[0];
       if (PathMappings.isWildcard(revisionPath)) return null;
-      if (null == AWSUtil.getBundleType(revisionPath)) return null;
+      if (null == getBundleType(revisionPath)) return null;
       return revisionPath;
     }
     return null;
@@ -144,5 +144,13 @@ final class CodeDeployUtil {
       }
     }
     return autoScalingGroups;
+  }
+
+  @Nullable
+  public static String getBundleType(@NotNull String revision) {
+    if (revision.endsWith(".zip")) return BundleType.Zip.name();
+    if (revision.endsWith(".tar")) return BundleType.Tar.name();
+    if (revision.endsWith(".tar.gz") || revision.endsWith(".tgz")) return BundleType.Tgz.name();
+    return null;
   }
 }

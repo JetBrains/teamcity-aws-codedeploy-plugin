@@ -19,7 +19,6 @@ package jetbrains.buildServer.runner.codedeploy;
 import jetbrains.buildServer.RunBuildException;
 import jetbrains.buildServer.agent.*;
 import jetbrains.buildServer.messages.ErrorData;
-import jetbrains.buildServer.util.amazon.AWSUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -88,7 +87,7 @@ public class CodeDeployRunner implements AgentBuildRunner {
         }
 
         final String applicationName = runnerParameters.get(APP_NAME_PARAM);
-        final String bundleType = "" + AWSUtil.getBundleType(s3ObjectKey);
+        final String bundleType = "" + getBundleType(s3ObjectKey);
 
         if (CodeDeployUtil.isRegisterStepEnabled(runnerParameters) && !m.problemOccurred && !isInterrupted()) {
           awsClient.registerRevision(s3BucketName, s3ObjectKey, bundleType, m.s3ObjectVersion, m.s3ObjectETag, applicationName);

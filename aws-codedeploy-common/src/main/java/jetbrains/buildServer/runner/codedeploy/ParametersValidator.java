@@ -20,16 +20,15 @@ import jetbrains.buildServer.parameters.ReferencesResolverUtil;
 import jetbrains.buildServer.util.FileUtil;
 import jetbrains.buildServer.util.StringUtil;
 import jetbrains.buildServer.util.amazon.AWSCommonParams;
-import jetbrains.buildServer.util.amazon.AWSUtil;
 import org.jetbrains.annotations.NotNull;
-
-import static jetbrains.buildServer.runner.codedeploy.CodeDeployConstants.*;
-import static jetbrains.buildServer.runner.codedeploy.CodeDeployUtil.*;
 
 import java.io.File;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+
+import static jetbrains.buildServer.runner.codedeploy.CodeDeployConstants.*;
+import static jetbrains.buildServer.runner.codedeploy.CodeDeployUtil.*;
 
 /**
  * @author vbedrosova
@@ -171,7 +170,7 @@ final class ParametersValidator {
 
   private static void validateBundleType(@NotNull Map<String, String> invalids, @NotNull String param, @NotNull String key, @NotNull String name, boolean runtime) {
     if (!isReference(param, runtime)) {
-      if (null == AWSUtil.getBundleType(param)) {
+      if (null == getBundleType(param)) {
         invalids.put(key, name + " provides invalid bundle type, supported bundle types are .zip, .tar and .tar.gz");
       }
     }

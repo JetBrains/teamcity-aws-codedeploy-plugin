@@ -164,7 +164,7 @@ public class LoggingDeploymentListenerTest extends LoggingTestCase {
     create().exception(new AWSException("Some exception message", null, AWSException.EXCEPTION_BUILD_PROBLEM_TYPE, null));
     assertLog(
       "ERR Some exception message",
-      "PROBLEM identity: 2086901196 type: CODEDEPLOY_EXCEPTION descr: Some exception message",
+      "PROBLEM identity: 2086901196 type: AWS_EXCEPTION descr: Some exception message",
       "CLOSE deploy application");
   }
 
@@ -174,7 +174,7 @@ public class LoggingDeploymentListenerTest extends LoggingTestCase {
     assertLog(
       "ERR Some exception message",
       "ERR Some exception details",
-      "PROBLEM identity: 2086901196 type: CODEDEPLOY_CLIENT descr: Some exception message",
+      "PROBLEM identity: 2086901196 type: AWS_CLIENT descr: Some exception message",
       "CLOSE deploy application");
   }
 
@@ -184,7 +184,7 @@ public class LoggingDeploymentListenerTest extends LoggingTestCase {
     assertLog(
       "ERR Some exception message",
       "ERR Some exception details",
-      "PROBLEM identity: -1424436592 type: CODEDEPLOY_CLIENT descr: Some exception message",
+      "PROBLEM identity: -1424436592 type: AWS_CLIENT descr: Some exception message",
       "CLOSE deploy application");
   }
 
