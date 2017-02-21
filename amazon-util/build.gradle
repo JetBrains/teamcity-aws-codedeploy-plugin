@@ -51,8 +51,10 @@ repositories {
     maven {
         url = 'http://repository.jetbrains.com/all'
     }
-    maven {
-        property('maven.repo.local')
+    if (hasProperty('maven.repo.local')) {
+        maven {
+            property('maven.repo.local')
+        }
     }
 }
 
