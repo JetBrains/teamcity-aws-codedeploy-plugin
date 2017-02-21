@@ -51,6 +51,7 @@ repositories {
     maven {
         url = 'http://repository.jetbrains.com/all'
     }
+    mavenLocal()
 }
 
 dependencies {
@@ -68,14 +69,10 @@ dependencies {
     testCompile "org.jetbrains.teamcity:tests-support:${teamcityVersion}"
 }
 
-task writePom {
-    doLast {
-        pom {
-            project {
-                groupId 'jetbrains.buildServer.util'
-                artifactId 'amazon-util'
-                version '1.0'
-            }
-        }.writeTo("$rootDir/pom.xml")
+configure(install.repositories.mavenInstaller) {
+    pom.project {
+        groupId 'jetbrains.buildServer.util'
+        artifactId 'amazon-util'
+        version '1.0'
     }
 }
