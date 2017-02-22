@@ -14,9 +14,15 @@
  * limitations under the License.
  */
 
+plugins {
+    id "com.jfrog.bintray" version "1.7.3"
+}
+
 apply plugin: 'java'
 apply plugin: 'idea'
 apply plugin: 'maven'
+apply plugin: 'maven-publish'
+apply plugin: "com.jfrog.bintray"
 
 ext.teamcityVersion = hasProperty('teamcity.version') ? property('teamcity.version') : '10.0.4'
 
@@ -68,14 +74,26 @@ dependencies {
     testCompile "org.jetbrains.teamcity:tests-support:${teamcityVersion}"
 }
 
-task writePOM {
-    doLast {
-        pom {
-            project {
-                groupId 'jetbrains.buildServer.util'
-                artifactId 'amazon-util'
-                version '1.0'
-            }
-        }.writeTo("$rootDir/pom.xml")
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            groupId 'jetbrains.buildServer.util'
+            artifactId 'amazon-util'
+            version property('build.number')
+            from components.java
+        }
+    }
+}
+
+bintray {
+    user = getProperty('bintrayUser')
+    key = getProperty('bintrayApiKey')
+    publications = ['mavenJava']
+    pkg {
+        repo = 'teamcity'
+        name = 'amazon-util'
+        licenses = ['Apache-2.0']
+        vcsUrl = 'https://github.com/JetBrains/teamcity-aws-codedeploy-plugin'
+        userOrg = getProperty('bintrayUser')
     }
 }
