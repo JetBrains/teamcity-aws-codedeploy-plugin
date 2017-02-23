@@ -220,7 +220,7 @@ public final class AWSCommonParams {
 
   @NotNull
   private static Collection<String> getIdentityFormingParams(@NotNull Map<String, String> params) {
-    return Arrays.asList(getRegionName(params), params.get(ACCESS_KEY_ID_PARAM), params.get(IAM_ROLE_ARN_LABEL));
+    return Arrays.asList(getRegionName(params), params.get(ACCESS_KEY_ID_PARAM), params.get(IAM_ROLE_ARN_PARAM));
   }
 
   // must implement AWSSessionCredentials as AWS SDK may use "instanceof"
