@@ -74,6 +74,14 @@ dependencies {
     testCompile "org.jetbrains.teamcity:tests-support:${teamcityVersion}"
 }
 
+task sourceJar(type: Jar) {
+    from sourceSets.main.allSource
+}
+
+artifacts {
+    archives sourceJar
+}
+
 publishing {
     publications {
         mavenJava(MavenPublication) {
@@ -81,6 +89,9 @@ publishing {
             artifactId 'amazon-util'
             version property('build.number')
             from components.java
+            artifact sourceJar {
+                classifier "sources"
+            }
         }
     }
 }
