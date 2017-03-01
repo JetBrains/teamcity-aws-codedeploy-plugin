@@ -18,11 +18,13 @@ import jetbrains.buildServer.BaseTestCase;
 import jetbrains.buildServer.util.CollectionsUtil;
 import jetbrains.buildServer.util.amazon.AWSCommonParams;
 import org.jetbrains.annotations.NotNull;
+import org.testng.SkipException;
 import org.testng.annotations.Test;
 
 import java.util.Map;
-import static org.assertj.core.api.BDDAssertions.*;
+
 import static jetbrains.buildServer.util.amazon.AWSCommonParams.*;
+import static org.assertj.core.api.BDDAssertions.then;
 
 /**
  * @author vbedrosova
@@ -39,6 +41,9 @@ public class AWSCommonParamsTest extends BaseTestCase {
 
   @Test
   public void unexpected_region() {
+    if (true) {
+      throw new SkipException("We do not validate region anymore");
+    }
     then(validate(REGION_NAME_PARAM, "abrakadabra")).as("Must detect unexpected region name").
       containsEntry(REGION_NAME_PARAM, "Unsupported region name abrakadabra");
   }
