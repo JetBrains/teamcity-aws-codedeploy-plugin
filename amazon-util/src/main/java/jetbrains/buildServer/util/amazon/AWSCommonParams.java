@@ -16,7 +16,6 @@
 
 package jetbrains.buildServer.util.amazon;
 
-import com.amazonaws.auth.AWSSessionCredentials;
 import jetbrains.buildServer.parameters.ReferencesResolverUtil;
 import jetbrains.buildServer.serverSide.ServerSettings;
 import jetbrains.buildServer.util.CollectionsUtil;
@@ -89,20 +88,11 @@ public final class AWSCommonParams {
   }
 
   @NotNull
-  public static Map<String, String> validate(@NotNull Map<String, String> params, boolean acceptReferences) throws IllegalArgumentException {
+  public static Map<String, String> validate(@NotNull Map<String, String> params, boolean acceptReferences) {
     final Map<String, String> invalids = new HashMap<String, String>();
 
-    final String regionName = getRegionName(params);
-    if (StringUtil.isEmptyOrSpaces(regionName)) {
+    if (StringUtil.isEmptyOrSpaces(getRegionName(params))) {
       invalids.put(REGION_NAME_PARAM, REGION_NAME_LABEL + " mustn't be empty");
-    } else {
-      if (!isReference(regionName, acceptReferences)) {
-        try {
-          AWSRegions.getRegion(regionName);
-        } catch (IllegalArgumentException e) {
-          invalids.put(REGION_NAME_PARAM, e.getMessage());
-        }
-      }
     }
 
     if (!Boolean.parseBoolean(params.get(USE_DEFAULT_CREDENTIAL_PROVIDER_CHAIN_PARAM))) {
@@ -145,43 +135,29 @@ public final class AWSCommonParams {
 
   @NotNull
   public static AWSClients createAWSClients(@NotNull Map<String, String> params) {
-    return createAWSClients(params, false);
-  }
-
-  @NotNull
-  public static AWSClients createAWSClients(@NotNull Map<String, String> params, boolean lazy) {
     final String regionName = getRegionName(params);
+
+    final String accessKeyId = params.get(ACCESS_KEY_ID_PARAM);
+    final String secretAccessKey = getSecretAccessKey(params);
 
     final boolean useDefaultCredProvChain = Boolean.parseBoolean(params.get(USE_DEFAULT_CREDENTIAL_PROVIDER_CHAIN_PARAM));
 
-    final AWSClients awsClients =
-      useDefaultCredProvChain ?
-        fromDefaultCredentialProviderChain(regionName) :
-        fromBasicCredentials(params.get(ACCESS_KEY_ID_PARAM), getSecretAccessKey(params), regionName);
+    if (TEMP_CREDENTIALS_OPTION.equals(params.get(CREDENTIALS_TYPE_PARAM))) {
+      final String iamRoleARN = params.get(IAM_ROLE_ARN_PARAM);
+      final String externalID = params.get(EXTERNAL_ID_PARAM);
+      final String sessionName = getStringOrDefault(params.get(TEMP_CREDENTIALS_SESSION_NAME_PARAM), TEMP_CREDENTIALS_SESSION_NAME_DEFAULT_PREFIX + new Date().getTime());
+      final int sessionDuration = getIntegerOrDefault(params.get(TEMP_CREDENTIALS_DURATION_SEC_PARAM), TEMP_CREDENTIALS_DURATION_SEC_DEFAULT);
+
+      return
+        useDefaultCredProvChain ?
+          fromSessionCredentials(iamRoleARN, externalID, sessionName, sessionDuration, regionName) :
+          fromSessionCredentials(accessKeyId, secretAccessKey, iamRoleARN, externalID, sessionName, sessionDuration, regionName);
+    }
 
     return
-      TEMP_CREDENTIALS_OPTION.equals(params.get(CREDENTIALS_TYPE_PARAM)) ? createTempAWSClients(awsClients, params, lazy) : awsClients;
-  }
-
-  @NotNull
-  private static AWSClients createTempAWSClients(@NotNull final AWSClients clients, @NotNull final Map<String, String> params, boolean lazy) {
-    return fromExistingCredentials(
-      lazy ? new LazyCredentials() {
-        @NotNull
-        @Override
-        protected AWSSessionCredentials createCredentials() {
-          return createSessionCredentials(clients, params);
-        }
-      } : createSessionCredentials(clients, params),
-      clients.getRegion());
-  }
-
-  @NotNull
-  private static AWSSessionCredentials createSessionCredentials(@NotNull final AWSClients clients, @NotNull Map<String, String> params) {
-    return clients.createSessionCredentials(
-      params.get(IAM_ROLE_ARN_PARAM), params.get(EXTERNAL_ID_PARAM),
-      patchSessionName(getStringOrDefault(params.get(TEMP_CREDENTIALS_SESSION_NAME_PARAM), TEMP_CREDENTIALS_SESSION_NAME_DEFAULT_PREFIX + new Date().getTime())),
-      getIntegerOrDefault(params.get(TEMP_CREDENTIALS_DURATION_SEC_PARAM), TEMP_CREDENTIALS_DURATION_SEC_DEFAULT));
+      useDefaultCredProvChain ?
+        fromDefaultCredentialProviderChain(regionName) :
+        fromBasicCredentials(accessKeyId, secretAccessKey, regionName);
   }
 
   @NotNull
@@ -221,35 +197,5 @@ public final class AWSCommonParams {
   @NotNull
   private static Collection<String> getIdentityFormingParams(@NotNull Map<String, String> params) {
     return Arrays.asList(getRegionName(params), params.get(ACCESS_KEY_ID_PARAM), params.get(IAM_ROLE_ARN_PARAM));
-  }
-
-  // must implement AWSSessionCredentials as AWS SDK may use "instanceof"
-  private static abstract class LazyCredentials implements AWSSessionCredentials {
-    @Nullable
-    private AWSSessionCredentials myDelegate = null;
-
-    @Override
-    public String getAWSAccessKeyId() {
-      return getDelegate().getAWSAccessKeyId();
-    }
-
-    @Override
-    public String getAWSSecretKey() {
-      return getDelegate().getAWSSecretKey();
-    }
-
-    @Override
-    public String getSessionToken() {
-      return getDelegate().getSessionToken();
-    }
-
-    @NotNull
-    private AWSSessionCredentials getDelegate() {
-      if (myDelegate == null) myDelegate = createCredentials();
-      return myDelegate;
-    }
-
-    @NotNull
-    protected abstract AWSSessionCredentials createCredentials();
   }
 }
