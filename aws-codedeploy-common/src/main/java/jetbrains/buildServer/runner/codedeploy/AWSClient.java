@@ -24,7 +24,6 @@ import com.amazonaws.services.s3.model.PutObjectResult;
 import jetbrains.buildServer.util.CollectionsUtil;
 import jetbrains.buildServer.util.Converter;
 import jetbrains.buildServer.util.StringUtil;
-import jetbrains.buildServer.util.amazon.AWSClients;
 import jetbrains.buildServer.util.amazon.AWSException;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
@@ -39,14 +38,15 @@ import java.util.Map;
  */
 public class AWSClient {
 
-  @NotNull private AmazonS3Client myS3Client;
-  @NotNull private AmazonCodeDeployClient myCodeDeployClient;
+  @NotNull private final AmazonS3Client myS3Client;
+  @NotNull private final AmazonCodeDeployClient myCodeDeployClient;
   @Nullable private String myDescription;
   @NotNull private Listener myListener = new Listener();
 
-  public AWSClient(@NotNull AWSClients clients) {
-    myS3Client = clients.createS3Client();
-    myCodeDeployClient = clients.createCodeDeployClient();
+  public AWSClient(@NotNull AmazonS3Client s3Client,
+                   @NotNull AmazonCodeDeployClient codeDeployClient) {
+    myS3Client = s3Client;
+    myCodeDeployClient = codeDeployClient;
   }
 
   @NotNull
