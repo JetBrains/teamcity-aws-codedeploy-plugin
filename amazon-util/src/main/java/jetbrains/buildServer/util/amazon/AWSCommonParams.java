@@ -133,8 +133,27 @@ public final class AWSCommonParams {
     return acceptReferences && ReferencesResolverUtil.containsReference(param);
   }
 
+  public interface WithAWSClients<T> {
+    @Nullable T run(@NotNull AWSClients clients);
+  }
+
+  @Nullable
+  public static <T> T withAWSClients(@NotNull Map<String, String> params, @NotNull WithAWSClients<T> withAWSClients) throws AWSException {
+    final ClassLoader cl = Thread.currentThread().getContextClassLoader();
+    Thread.currentThread().setContextClassLoader(withAWSClients.getClass().getClassLoader());
+    try {
+      try {
+        return withAWSClients.run(createAWSClients(params));
+      } catch (Throwable e) {
+        throw new AWSException(e);
+      }
+    } finally {
+      Thread.currentThread().setContextClassLoader(cl);
+    }
+  }
+
   @NotNull
-  public static AWSClients createAWSClients(@NotNull Map<String, String> params) {
+  private static AWSClients createAWSClients(@NotNull Map<String, String> params) {
     final String regionName = getRegionName(params);
 
     final String accessKeyId = params.get(ACCESS_KEY_ID_PARAM);

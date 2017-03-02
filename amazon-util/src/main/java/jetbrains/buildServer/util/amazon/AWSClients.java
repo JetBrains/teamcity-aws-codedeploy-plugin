@@ -38,7 +38,7 @@ import org.jetbrains.annotations.Nullable;
 /**
  * @author vbedrosova
  */
-public class AWSClients {
+class AWSClients {
 
   @Nullable private final AWSCredentials myCredentials;
   @NotNull private final String myRegion;
@@ -96,92 +96,25 @@ public class AWSClients {
     return new AWSClients(credentials, region);
   }
 
-  public interface WithClient<T, C extends AmazonWebServiceClient> {
-    @Nullable T run(@NotNull C client);
-  }
-
-  private interface ClientCreator<C extends AmazonWebServiceClient> {
-    @NotNull C create();
-  }
-
-  @Nullable
-  private <T, C extends AmazonWebServiceClient> T withClient(@NotNull WithClient<T, C> t, @NotNull ClientCreator<C> clientCreator) throws AWSException {
-    final ClassLoader cl = Thread.currentThread().getContextClassLoader();
-    Thread.currentThread().setContextClassLoader(getClass().getClassLoader());
-    try {
-      try {
-        return t.run(clientCreator.create());
-      } catch (Throwable e) {
-        throw new AWSException(e);
-      }
-    } finally {
-      Thread.currentThread().setContextClassLoader(cl);
-    }
-  }
-
-  @Nullable
-  public <T> T withS3Client(@NotNull WithClient<T, AmazonS3Client> t) throws AWSException {
-    return withClient(t, new ClientCreator<AmazonS3Client>() {
-      @NotNull
-      @Override
-      public AmazonS3Client create() {
-        return createS3Client();
-      }
-    });
-  }
-
-  @Nullable
-  public <T> T withCodeDeployClient(@NotNull WithClient<T, AmazonCodeDeployClient> t) throws AWSException {
-    return withClient(t, new ClientCreator<AmazonCodeDeployClient>() {
-      @NotNull
-      @Override
-      public AmazonCodeDeployClient create() {
-        return createCodeDeployClient();
-      }
-    });
-  }
-
-  @Nullable
-  public <T> T withCodePipelineClient(@NotNull WithClient<T, AWSCodePipelineClient> t) throws AWSException {
-    return withClient(t, new ClientCreator<AWSCodePipelineClient>() {
-      @NotNull
-      @Override
-      public AWSCodePipelineClient create() {
-        return createCodePipeLineClient();
-      }
-    });
-  }
-
-  @Nullable
-  public <T> T withCodeBuildClient(@NotNull WithClient<T, AWSCodeBuildClient> t) throws AWSException {
-    return withClient(t, new ClientCreator<AWSCodeBuildClient>() {
-      @NotNull
-      @Override
-      public AWSCodeBuildClient create() {
-        return createCodeBuildClient();
-      }
-    });
-  }
-
   @NotNull
-  private AmazonS3Client createS3Client() {
+  public AmazonS3Client createS3Client() {
     final AmazonS3Client s3Client = withRegion(myCredentials == null ? new AmazonS3Client(myClientConfiguration) : new AmazonS3Client(myCredentials, myClientConfiguration));
     s3Client.setS3ClientOptions(S3ClientOptions.builder().setPathStyleAccess(true).build());
     return s3Client;
   }
 
   @NotNull
-  private AmazonCodeDeployClient createCodeDeployClient() {
+  public AmazonCodeDeployClient createCodeDeployClient() {
     return withRegion(myCredentials == null ? new AmazonCodeDeployClient(myClientConfiguration) : new AmazonCodeDeployClient(myCredentials, myClientConfiguration));
   }
 
   @NotNull
-  private AWSCodePipelineClient createCodePipeLineClient() {
+  public AWSCodePipelineClient createCodePipeLineClient() {
     return withRegion(myCredentials == null ? new AWSCodePipelineClient(myClientConfiguration) : new AWSCodePipelineClient(myCredentials, myClientConfiguration));
   }
 
   @NotNull
-  private AWSCodeBuildClient createCodeBuildClient() {
+  public AWSCodeBuildClient createCodeBuildClient() {
     return withRegion(myCredentials == null ? new AWSCodeBuildClient(myClientConfiguration) : new AWSCodeBuildClient(myCredentials, myClientConfiguration));
   }
 
