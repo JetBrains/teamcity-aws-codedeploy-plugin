@@ -133,20 +133,16 @@ public final class AWSCommonParams {
     return acceptReferences && ReferencesResolverUtil.containsReference(param);
   }
 
-  public interface WithAWSClients<T> {
-    @Nullable T run(@NotNull AWSClients clients);
+  public interface WithAWSClients<T, E extends Throwable> {
+    @Nullable T run(@NotNull AWSClients clients) throws E;
   }
 
   @Nullable
-  public static <T> T withAWSClients(@NotNull Map<String, String> params, @NotNull WithAWSClients<T> withAWSClients) throws AWSException {
+  public static <T, E extends Throwable> T withAWSClients(@NotNull Map<String, String> params, @NotNull WithAWSClients<T, E> withAWSClients) throws E {
     final ClassLoader cl = Thread.currentThread().getContextClassLoader();
-    Thread.currentThread().setContextClassLoader(withAWSClients.getClass().getClassLoader());
+    Thread.currentThread().setContextClassLoader(AWSCommonParams.class.getClassLoader());
     try {
-      try {
-        return withAWSClients.run(createAWSClients(params));
-      } catch (Throwable e) {
-        throw new AWSException(e);
-      }
+      return withAWSClients.run(createAWSClients(params));
     } finally {
       Thread.currentThread().setContextClassLoader(cl);
     }
