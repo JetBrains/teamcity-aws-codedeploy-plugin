@@ -38,7 +38,7 @@ import org.jetbrains.annotations.Nullable;
 /**
  * @author vbedrosova
  */
-class AWSClients {
+public class AWSClients {
 
   @Nullable private final AWSCredentials myCredentials;
   @NotNull private final String myRegion;
