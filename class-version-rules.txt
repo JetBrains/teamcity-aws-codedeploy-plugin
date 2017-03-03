@@ -1,0 +1,23 @@
+; this is comment line
+;
+; each line represent a patching rule
+;
+;  - => path
+;     this is exclude rule. It excludes all paths that starts with given prefix
+;  xx => path
+;     this is the rule to enforce check of java classes of version xx, where xx could
+;     be one of the following: 1.2, 1.3, 1.4, 1.5, 1.6, 1.7
+;
+;  see example below
+;
+;  all paths are relative to scan folder
+;
+;
+;  have fun
+;
+
+
+; agent part of plugin is 1.6
+1.6 => aws-codedeploy-plugin.zip!agent/
+; agent part of plugin is 1.8
+1.8 => aws-codedeploy-plugin.zip!server/
