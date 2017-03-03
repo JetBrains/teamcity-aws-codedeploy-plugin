@@ -19,5 +19,5 @@
 
 ; agent part of plugin is 1.6
 1.6 => aws-codedeploy-plugin.zip!agent/
-; agent part of plugin is 1.8
+; server part of plugin is 1.8
 1.8 => aws-codedeploy-plugin.zip!server/
