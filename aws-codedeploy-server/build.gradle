@@ -21,6 +21,9 @@ dependencies {
     agent project(path: ':aws-codedeploy-agent', configuration: 'plugin')
 }
 
+sourceCompatibility = "1.8"
+targetCompatibility = "1.8"
+
 teamcity {
     server {
         descriptor = file("$rootDir/teamcity-plugin.xml")

@@ -119,7 +119,7 @@ final class CodeDeployUtil {
     final String deploymentInstances = params.get(GREEN_FLEET_PARAM);
     if (StringUtil.isEmptyOrSpaces(deploymentInstances)) return Collections.emptyList();
 
-    final List<String> ec2Tags = new ArrayList<>();
+    final List<String> ec2Tags = new ArrayList<String>();
     for (String s : deploymentInstances.trim().split(MULTILINE_SPLIT_REGEX)) {
       if (s.contains(" ")) continue;
       ec2Tags.add(s);
@@ -132,7 +132,7 @@ final class CodeDeployUtil {
     final String deploymentInstances = params.get(GREEN_FLEET_PARAM);
     if (StringUtil.isEmptyOrSpaces(deploymentInstances)) return Collections.emptyMap();
 
-    final Map<String, String> autoScalingGroups = new HashMap<>();
+    final Map<String, String> autoScalingGroups = new HashMap<String, String>();
     for (String s : deploymentInstances.trim().split(MULTILINE_SPLIT_REGEX)) {
       if (s.contains(" ")) {
         final List<String> res = StringUtil.split(deploymentInstances, " ");

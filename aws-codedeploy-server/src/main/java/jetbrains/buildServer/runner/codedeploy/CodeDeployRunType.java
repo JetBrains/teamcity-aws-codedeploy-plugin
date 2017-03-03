@@ -17,19 +17,19 @@
 package jetbrains.buildServer.runner.codedeploy;
 
 import jetbrains.buildServer.controllers.BaseController;
-import jetbrains.buildServer.serverSide.*;
+import jetbrains.buildServer.serverSide.InvalidProperty;
+import jetbrains.buildServer.serverSide.PropertiesProcessor;
+import jetbrains.buildServer.serverSide.RunType;
+import jetbrains.buildServer.serverSide.RunTypeRegistry;
 import jetbrains.buildServer.util.CollectionsUtil;
-import jetbrains.buildServer.util.Converter;
 import jetbrains.buildServer.util.amazon.AWSCommonParams;
 import jetbrains.buildServer.web.openapi.PluginDescriptor;
 import jetbrains.buildServer.web.openapi.WebControllerManager;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import org.springframework.web.servlet.ModelAndView;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -65,7 +65,7 @@ public class CodeDeployRunType extends RunType {
                                            @NotNull String htmlPath) {
     final String resolvedHtmlPath = descriptor.getPluginResourcesPath(htmlPath);
     controllerManager.registerController(resolvedHtmlPath, new BaseController() {
-      @Nullable
+      @NotNull
       @Override
       protected ModelAndView doHandle(@NotNull HttpServletRequest request, @NotNull HttpServletResponse response) throws Exception {
         final ModelAndView mv = new ModelAndView(descriptor.getPluginResourcesPath(jspPath));
@@ -79,17 +79,7 @@ public class CodeDeployRunType extends RunType {
   @NotNull
   @Override
   public PropertiesProcessor getRunnerPropertiesProcessor() {
-    return new PropertiesProcessor() {
-      @Override
-      public Collection<InvalidProperty> process(Map<String, String> properties) {
-        return CollectionsUtil.convertCollection(ParametersValidator.validateSettings(properties).entrySet(), new Converter<InvalidProperty, Map.Entry<String, String>>() {
-          @Override
-          public InvalidProperty createFrom(@NotNull Map.Entry<String, String> source) {
-            return new InvalidProperty(source.getKey(), source.getValue());
-          }
-        });
-      }
-    };
+    return properties -> CollectionsUtil.convertCollection(ParametersValidator.validateSettings(properties).entrySet(), source -> new InvalidProperty(source.getKey(), source.getValue()));
   }
 
   @NotNull
