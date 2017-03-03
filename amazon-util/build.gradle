@@ -32,10 +32,8 @@ ext.teamcityJavaHome = System.properties['java.home']
 
 ext.awsSDKVersion = hasProperty('aws.sdk.version') ? property('aws.sdk.version') : '1.11.86'
 
-ext.javaVersion = hasProperty('plugin.java.version') ? property('plugin.java.version') : '1.7'
-
-sourceCompatibility = javaVersion
-targetCompatibility = javaVersion
+sourceCompatibility = "1.6"
+targetCompatibility = "1.6"
 
 tasks.withType(JavaCompile) {
     options.encoding = 'UTF-8'
