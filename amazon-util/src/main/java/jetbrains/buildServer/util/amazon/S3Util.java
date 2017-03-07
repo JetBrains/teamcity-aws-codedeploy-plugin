@@ -86,7 +86,7 @@ public final class S3Util {
       @NotNull
       @Override
       public Collection<T> run(@NotNull AWSClients clients) throws E {
-        return withTransferManager(clients.createS3Client(), false, executorService, withTransferManager);
+        return withTransferManager(clients.createS3Client(), true, executorService, withTransferManager);
       }
     });
   }
