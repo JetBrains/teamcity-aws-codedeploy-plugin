@@ -39,20 +39,22 @@ public final class S3Util {
     Collection<T> run(@NotNull TransferManager manager) throws E;
   }
 
-  public static <T extends Transfer, E extends Throwable> void withTransferManager(@NotNull AmazonS3Client s3Client, @NotNull final WithTransferManager<T, E> withTransferManager) throws E {
-    withTransferManager(s3Client, null, withTransferManager);
+  public static <T extends Transfer, E extends Throwable> Collection<T> withTransferManager(@NotNull AmazonS3Client s3Client, @NotNull final WithTransferManager<T, E> withTransferManager) throws E {
+    return withTransferManager(s3Client, null, withTransferManager);
   }
 
-  public static <T extends Transfer, E extends Throwable> void withTransferManager(@NotNull AmazonS3Client s3Client, @Nullable final ExecutorService executorService, @NotNull final WithTransferManager<T, E> withTransferManager) throws E {
-    final Collection<Transfer> transfers = new ArrayList<Transfer>();
+  public static <T extends Transfer, E extends Throwable> Collection<T> withTransferManager(@NotNull AmazonS3Client s3Client, @Nullable final ExecutorService executorService, @NotNull final WithTransferManager<T, E> withTransferManager) throws E {
+    final Collection<T> transfers = new ArrayList<T>();
+    final Collection<T> result = new ArrayList<T>();
     TransferManager manager = null;
     try {
-      manager = TransferManagerBuilder.standard().withS3Client(s3Client).withExecutorFactory(createExecutorFactory(executorService)).build();
+      manager = TransferManagerBuilder.standard().withS3Client(s3Client).withExecutorFactory(executorService == null ? null : createExecutorFactory(executorService)).build();
 
       transfers.addAll(withTransferManager.run(manager));
 
-      for (Transfer t : transfers) {
+      for (T t : transfers) {
         t.waitForCompletion();
+        result.add(t);
       }
 
     } catch (InterruptedException e) {
@@ -62,6 +64,7 @@ public final class S3Util {
         manager.shutdownNow();
       }
     }
+    return result;
   }
 
   @NotNull
@@ -74,17 +77,16 @@ public final class S3Util {
     };
   }
 
-  public static <T extends Transfer, E extends Throwable> void withTransferManager(@NotNull Map<String, String> params, @NotNull final WithTransferManager<T, E> withTransferManager) throws E {
-    withTransferManager(params, null, withTransferManager);
+  public static <T extends Transfer, E extends Throwable> Collection<T> withTransferManager(@NotNull Map<String, String> params, @NotNull final WithTransferManager<T, E> withTransferManager) throws E {
+    return withTransferManager(params, null, withTransferManager);
   }
 
-  public static <T extends Transfer, E extends Throwable> void withTransferManager(@NotNull Map<String, String> params, @Nullable final ExecutorService executorService, @NotNull final WithTransferManager<T, E> withTransferManager) throws E {
-    AWSCommonParams.withAWSClients(params, new AWSCommonParams.WithAWSClients<Void, E>() {
+  public static <T extends Transfer, E extends Throwable> Collection<T> withTransferManager(@NotNull Map<String, String> params, @Nullable final ExecutorService executorService, @NotNull final WithTransferManager<T, E> withTransferManager) throws E {
+    return AWSCommonParams.withAWSClients(params, new AWSCommonParams.WithAWSClients<Collection<T>, E>() {
       @NotNull
       @Override
-      public Void run(@NotNull AWSClients clients) throws E {
-        withTransferManager(clients.createS3Client(), executorService, withTransferManager);
-        return null;
+      public Collection<T> run(@NotNull AWSClients clients) throws E {
+        return withTransferManager(clients.createS3Client(), executorService, withTransferManager);
       }
     });
   }
