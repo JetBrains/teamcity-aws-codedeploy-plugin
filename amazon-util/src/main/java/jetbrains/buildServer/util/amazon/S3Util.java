@@ -40,10 +40,10 @@ public final class S3Util {
   }
 
   public static <T extends Transfer, E extends Throwable> Collection<T> withTransferManager(@NotNull AmazonS3Client s3Client, @NotNull final WithTransferManager<T, E> withTransferManager) throws E {
-    return withTransferManager(s3Client, null, withTransferManager);
+    return withTransferManager(s3Client, false, null, withTransferManager);
   }
 
-  public static <T extends Transfer, E extends Throwable> Collection<T> withTransferManager(@NotNull AmazonS3Client s3Client, @Nullable final ExecutorService executorService, @NotNull final WithTransferManager<T, E> withTransferManager) throws E {
+  public static <T extends Transfer, E extends Throwable> Collection<T> withTransferManager(@NotNull AmazonS3Client s3Client, boolean shutdownClient, @Nullable final ExecutorService executorService, @NotNull final WithTransferManager<T, E> withTransferManager) throws E {
     final Collection<T> transfers = new ArrayList<T>();
     final Collection<T> result = new ArrayList<T>();
     TransferManager manager = null;
@@ -61,7 +61,7 @@ public final class S3Util {
       // noop
     } finally {
       if (manager != null) {
-        manager.shutdownNow();
+        manager.shutdownNow(shutdownClient);
       }
     }
     return result;
@@ -86,7 +86,7 @@ public final class S3Util {
       @NotNull
       @Override
       public Collection<T> run(@NotNull AWSClients clients) throws E {
-        return withTransferManager(clients.createS3Client(), executorService, withTransferManager);
+        return withTransferManager(clients.createS3Client(), false, executorService, withTransferManager);
       }
     });
   }
