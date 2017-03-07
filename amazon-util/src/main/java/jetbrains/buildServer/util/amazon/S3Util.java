@@ -44,7 +44,7 @@ public final class S3Util {
   }
 
   public static <T extends Transfer, E extends Throwable> void withTransferManager(@NotNull AmazonS3Client s3Client, @Nullable final ExecutorService executorService, @NotNull final WithTransferManager<T, E> withTransferManager) throws E {
-    final Collection<Transfer> transfers = new ArrayList<>();
+    final Collection<Transfer> transfers = new ArrayList<Transfer>();
     TransferManager manager = null;
     try {
       manager = TransferManagerBuilder.standard().withS3Client(s3Client).withExecutorFactory(createExecutorFactory(executorService)).build();
