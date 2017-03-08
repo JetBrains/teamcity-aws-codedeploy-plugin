@@ -27,6 +27,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Map;
+import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutorService;
 
 /**
@@ -52,11 +53,16 @@ public final class S3Util {
 
       transfers.addAll(withTransferManager.run(manager));
 
-      for (T t : transfers) {
-        t.waitForCompletion();
-        result.add(t);
+      while (true) {
+        for (T t : transfers) {
+          try {
+            t.waitForCompletion();
+            result.add(t);
+          } catch (CancellationException e) {
+            // noop
+          }
+        }
       }
-
     } catch (InterruptedException e) {
       // noop
     } finally {
