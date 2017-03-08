@@ -53,14 +53,12 @@ public final class S3Util {
 
       transfers.addAll(withTransferManager.run(manager));
 
-      while (true) {
-        for (T t : transfers) {
-          try {
-            t.waitForCompletion();
-            result.add(t);
-          } catch (CancellationException e) {
-            if (Transfer.TransferState.Canceled != t.getState()) throw e;
-          }
+      for (T t : transfers) {
+        try {
+          t.waitForCompletion();
+          result.add(t);
+        } catch (CancellationException e) {
+          if (Transfer.TransferState.Canceled != t.getState()) throw e;
         }
       }
     } catch (InterruptedException e) {
