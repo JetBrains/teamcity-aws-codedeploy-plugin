@@ -59,7 +59,7 @@ public final class S3Util {
             t.waitForCompletion();
             result.add(t);
           } catch (CancellationException e) {
-            // noop
+            if (Transfer.TransferState.Canceled != t.getState()) throw e;
           }
         }
       }
