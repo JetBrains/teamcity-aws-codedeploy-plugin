@@ -32,7 +32,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * @author vbedrosova
@@ -59,13 +58,12 @@ public final class S3Util {
                                                                                              @NotNull final ExecutorService executorService,
                                                                                              @NotNull final WithTransferManager<T, E> withTransferManager) throws E {
     final Collection<T> result = new ArrayList<T>();
-    final AtomicReference<TransferManager> manager = new AtomicReference<TransferManager>(); // will actually be created after handleInterrupt in order to make sure there are threads
+    final TransferManager manager = TransferManagerBuilder.standard().withS3Client(s3Client).withExecutorFactory(createExecutorFactory(executorService)).withShutDownThreadPools(true).build();
     final AtomicBoolean isInterrupted = handleInterrupt(shutdownClient, executorService, withTransferManager, manager);
-    manager.set(TransferManagerBuilder.standard().withS3Client(s3Client).withExecutorFactory(createExecutorFactory(executorService)).withShutDownThreadPools(true).build());
 
     try {
       if (!isInterrupted.get()) {
-        final Collection<T> transfers = withTransferManager.run(manager.get());
+        final Collection<T> transfers = withTransferManager.run(manager);
 
         for (T t : transfers) {
           try {
@@ -81,14 +79,14 @@ public final class S3Util {
         }
       }
     } finally {
-      manager.get().shutdownNow(shutdownClient);
+      manager.shutdownNow(shutdownClient);
     }
     return result;
   }
 
   @NotNull
   private static <T extends Transfer, E extends Throwable> AtomicBoolean handleInterrupt(final boolean shutdownClient, @NotNull ExecutorService executorService,
-                                                                                         @NotNull final WithTransferManager<T, E> withTransferManager, @NotNull final AtomicReference<TransferManager> manager) {
+                                                                                         @NotNull final WithTransferManager<T, E> withTransferManager, @NotNull final TransferManager manager) {
     final AtomicBoolean isInterrupted = new AtomicBoolean(false);
     if (withTransferManager instanceof InterruptAwareWithTransferManager) {
       final InterruptAwareWithTransferManager interruptAwareWithTransferManager = (InterruptAwareWithTransferManager) withTransferManager;
@@ -104,7 +102,7 @@ public final class S3Util {
           }
           if (interruptAwareWithTransferManager.isInterrupted()) {
             isInterrupted.set(true);
-            manager.get().shutdownNow(shutdownClient);
+            manager.shutdownNow(shutdownClient);
           }
         }
       });
