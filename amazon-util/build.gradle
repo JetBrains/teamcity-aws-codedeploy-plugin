@@ -109,6 +109,6 @@ bintray {
         name = 'amazon-util'
         licenses = ['Apache-2.0']
         vcsUrl = 'https://github.com/JetBrains/teamcity-aws-codedeploy-plugin'
-        userOrg = ${bintrayUser}
+        userOrg = project.hasProperty('bintrayUser') ? project.property('bintrayUser') : ''
     }
 }
