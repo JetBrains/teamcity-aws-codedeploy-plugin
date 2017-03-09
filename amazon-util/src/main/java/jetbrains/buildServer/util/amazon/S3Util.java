@@ -60,21 +60,23 @@ public final class S3Util {
                                                                                              @NotNull final WithTransferManager<T, E> withTransferManager) throws E {
     final Collection<T> result = new ArrayList<T>();
     final AtomicReference<TransferManager> manager = new AtomicReference<TransferManager>(); // will actually be created after handleInterrupt in order to make sure there are threads
-    final AtomicBoolean isInterruptedFlag = handleInterrupt(shutdownClient, executorService, withTransferManager, manager);
+    final AtomicBoolean isInterrupted = handleInterrupt(shutdownClient, executorService, withTransferManager, manager);
     manager.set(TransferManagerBuilder.standard().withS3Client(s3Client).withExecutorFactory(createExecutorFactory(executorService)).withShutDownThreadPools(true).build());
 
     try {
-      final Collection<T> transfers = withTransferManager.run(manager.get());
+      if (!isInterrupted.get()) {
+        final Collection<T> transfers = withTransferManager.run(manager.get());
 
-      for (T t : transfers) {
-        try {
-          t.waitForCompletion();
-          result.add(t);
-        } catch (InterruptedException e) {
-           // noop
-        } catch (Throwable e) {
-          if (!isInterruptedFlag.get()) {
-            throw new RuntimeException(e);
+        for (T t : transfers) {
+          try {
+            t.waitForCompletion();
+            result.add(t);
+          } catch (InterruptedException e) {
+             // noop
+          } catch (Throwable e) {
+            if (!isInterrupted.get()) {
+              throw new RuntimeException(e);
+            }
           }
         }
       }
@@ -93,12 +95,12 @@ public final class S3Util {
       executorService.submit(new Runnable() {
         @Override
         public void run() {
-          while (!interruptAwareWithTransferManager.isInterrupted()) {
-            try {
+          try {
+            while (!interruptAwareWithTransferManager.isInterrupted()) {
               Thread.sleep(1000);
-            } catch (InterruptedException e) {
-              // noop
             }
+          } catch (InterruptedException e) {
+            // noop
           }
           if (interruptAwareWithTransferManager.isInterrupted()) {
             isInterrupted.set(true);
