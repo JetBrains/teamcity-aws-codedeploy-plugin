@@ -85,7 +85,7 @@ publishing {
         mavenJava(MavenPublication) {
             groupId 'jetbrains.buildServer.util'
             artifactId 'amazon-util'
-            version property('build.number')
+            version hasProperty('build.number') ? property('build.number') : ''
             from components.java
             artifact sourceJar {
                 classifier "sources"
@@ -101,14 +101,14 @@ publishing {
 }
 
 bintray {
-    user = getProperty('bintrayUser')
-    key = getProperty('bintrayApiKey')
+    user = hasProperty('bintrayUser') ? property('bintrayUser') : ''
+    key = hasProperty('bintrayApiKey') ? property('bintrayApiKey') : ''
     publications = ['mavenJava']
     pkg {
         repo = 'teamcity'
         name = 'amazon-util'
         licenses = ['Apache-2.0']
         vcsUrl = 'https://github.com/JetBrains/teamcity-aws-codedeploy-plugin'
-        userOrg = getProperty('bintrayUser')
+        userOrg = hasProperty('bintrayUser') ? property('bintrayUser') : ''
     }
 }
