@@ -32,10 +32,6 @@ ext.teamcityJavaHome = System.properties['java.home']
 
 ext.awsSDKVersion = hasProperty('aws.sdk.version') ? property('aws.sdk.version') : '1.11.86'
 
-ext.buildNumber = hasProperty('build.number') ? property('build.number') : ''
-ext.bintrayUser = hasProperty('bintrayUser') ? property('bintrayUser') : ''
-ext.bintrayApiKey = hasProperty('bintrayApiKey') ? property('bintrayApiKey') : ''
-
 sourceCompatibility = "1.6"
 targetCompatibility = "1.6"
 
@@ -89,7 +85,7 @@ publishing {
         mavenJava(MavenPublication) {
             groupId 'jetbrains.buildServer.util'
             artifactId 'amazon-util'
-            version ${buildNumber}
+            version project.hasProperty('build.number') ? project.property('build.number') : ''
             from components.java
             artifact sourceJar {
                 classifier "sources"
@@ -105,8 +101,8 @@ publishing {
 }
 
 bintray {
-    user = ${bintrayUser}
-    key = ${bintrayApiKey}
+    user = project.hasProperty('bintrayUser') ? project.property('bintrayUser') : ''
+    key = project.hasProperty('bintrayApiKey') ? project.property('bintrayApiKey') : ''
     publications = ['mavenJava']
     pkg {
         repo = 'teamcity'
