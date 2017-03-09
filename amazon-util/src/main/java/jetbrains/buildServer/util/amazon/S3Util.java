@@ -66,6 +66,7 @@ public final class S3Util {
         final Collection<T> transfers = withTransferManager.run(manager);
 
         for (T t : transfers) {
+          if (isInterrupted.get()) break;
           try {
             t.waitForCompletion();
             result.add(t);
