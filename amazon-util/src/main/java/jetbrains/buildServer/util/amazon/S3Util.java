@@ -66,7 +66,9 @@ public final class S3Util {
         try {
           t.waitForCompletion();
           result.add(t);
-        } catch (CancellationException | InterruptedException e) {
+        } catch (InterruptedException e) {
+          // noop
+        } catch (CancellationException e) {
           // noop
         }
       }
