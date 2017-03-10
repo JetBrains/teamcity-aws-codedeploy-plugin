@@ -65,7 +65,6 @@ dependencies {
     compile "com.amazonaws:aws-java-sdk-codebuild:${awsSDKVersion}"
 
     compileOnly "org.jetbrains.teamcity:common-api:${teamcityVersion}"
-    compileOnly "org.jetbrains.teamcity.internal:server:${teamcityVersion}"
     // the dependencies can be removed since 10.0, see https://youtrack.jetbrains.com/issue/TW-44615
     compileOnly files("${teamcityDir}/buildAgent/lib/common-impl.jar")
 

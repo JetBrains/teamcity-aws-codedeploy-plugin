@@ -19,7 +19,7 @@ package jetbrains.buildServer.util.amazon;
 import com.amazonaws.client.builder.ExecutorFactory;
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.transfer.*;
-import jetbrains.buildServer.log.Loggers;
+import com.intellij.openapi.diagnostic.Logger;
 import jetbrains.buildServer.serverSide.TeamCityProperties;
 import jetbrains.buildServer.util.CollectionsUtil;
 import jetbrains.buildServer.util.filters.Filter;
@@ -38,6 +38,8 @@ import java.util.concurrent.atomic.AtomicInteger;
  * @author vbedrosova
  */
 public final class S3Util {
+
+  private static final Logger LOG = Logger.getInstance(S3Util.class.getName());
 
   public static final String S3_THREAD_POOL_SIZE = "amazon.s3.transferManager.threadPool.size";
   public static final int DEFAULT_S3_THREAD_POOL_SIZE = 10;
@@ -99,7 +101,7 @@ public final class S3Util {
                 continue;
               }
 
-              Loggers.AGENT.warn("Transfer type " + transfer.getClass().getName() + " does not support interrupt");
+              LOG.warn("Transfer type " + transfer.getClass().getName() + " does not support interrupt");
             }
           }
         };

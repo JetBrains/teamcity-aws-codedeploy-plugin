@@ -17,7 +17,6 @@
 package jetbrains.buildServer.util.amazon;
 
 import jetbrains.buildServer.parameters.ReferencesResolverUtil;
-import jetbrains.buildServer.serverSide.ServerSettings;
 import jetbrains.buildServer.util.CollectionsUtil;
 import jetbrains.buildServer.util.FileUtil;
 import jetbrains.buildServer.util.StringUtil;
@@ -70,19 +69,18 @@ public final class AWSCommonParams {
   public static final String TEMP_CREDENTIALS_DURATION_SEC_PARAM = "temp_credentials_duration_sec";
   public static final int TEMP_CREDENTIALS_DURATION_SEC_DEFAULT = 1800;
 
-  @NotNull
-  private final ServerSettings myServerSettings;
+  @Nullable
+  private final String myServerUUID;
 
-  public AWSCommonParams(@NotNull ServerSettings serverSettings) {
-    myServerSettings = serverSettings;
+  public AWSCommonParams(@Nullable String serverUUID) {
+    myServerUUID = serverUUID;
   }
 
   @NotNull
   public Map<String, String> getDefaults() {
     final Map<String, String> defaults = new HashMap<String, String>(DEFAULTS);
-    final String serverUUID = myServerSettings.getServerUUID();
-    if (StringUtil.isNotEmpty(serverUUID)) {
-      defaults.put(EXTERNAL_ID_PARAM, "TeamCity-server-" + serverUUID);
+    if (StringUtil.isNotEmpty(myServerUUID)) {
+      defaults.put(EXTERNAL_ID_PARAM, "TeamCity-server-" + myServerUUID);
     }
     return defaults;
   }
