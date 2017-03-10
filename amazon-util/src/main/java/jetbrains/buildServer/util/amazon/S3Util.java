@@ -127,7 +127,7 @@ public final class S3Util {
     };
   }
 
-  private static void withTransferManager(@NotNull Map<String, String> params, @NotNull final WithTransferManager withTransferManager) throws Throwable {
+  public static void withTransferManager(@NotNull Map<String, String> params, @NotNull final WithTransferManager withTransferManager) throws Throwable {
     AWSCommonParams.withAWSClients(params, new AWSCommonParams.WithAWSClients<Void, Throwable>() {
       @NotNull
       @Override
