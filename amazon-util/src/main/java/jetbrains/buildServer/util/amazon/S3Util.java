@@ -99,7 +99,7 @@ public final class S3Util {
                 continue;
               }
 
-              Loggers.AGENT.warn("Oops, this type " + transfer.getClass().getName() + " does not support interrupt");
+              Loggers.AGENT.warn("Transfer type " + transfer.getClass().getName() + " does not support interrupt");
             }
           }
         };
