@@ -19,18 +19,21 @@ package jetbrains.buildServer.runner.codedeploy;
 import com.amazonaws.services.codedeploy.AmazonCodeDeployClient;
 import com.amazonaws.services.codedeploy.model.*;
 import com.amazonaws.services.s3.AmazonS3Client;
-import com.amazonaws.services.s3.model.PutObjectRequest;
-import com.amazonaws.services.s3.model.PutObjectResult;
+import com.amazonaws.services.s3.transfer.TransferManager;
+import com.amazonaws.services.s3.transfer.Upload;
+import com.amazonaws.services.s3.transfer.model.UploadResult;
 import jetbrains.buildServer.util.CollectionsUtil;
 import jetbrains.buildServer.util.Converter;
 import jetbrains.buildServer.util.StringUtil;
 import jetbrains.buildServer.util.amazon.AWSException;
+import jetbrains.buildServer.util.amazon.S3Util;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Map;
 
 /**
@@ -188,12 +191,23 @@ public class AWSClient {
     }
   }
 
-  private void doUploadRevision(@NotNull File revision, @NotNull String s3BucketName, @NotNull String s3ObjectKey) {
+  private void doUploadRevision(@NotNull final File revision, @NotNull final String s3BucketName, @NotNull final String s3ObjectKey) throws Throwable {
     myListener.uploadRevisionStarted(revision, s3BucketName, s3ObjectKey);
 
-    final PutObjectResult putObjectResult = myS3Client.putObject(new PutObjectRequest(s3BucketName, s3ObjectKey, revision));
+    final UploadResult uploadResult = doUploadWithTransferManager(revision, s3BucketName, s3ObjectKey);
 
-    myListener.uploadRevisionFinished(revision, s3BucketName, s3ObjectKey, putObjectResult.getVersionId(), putObjectResult.getETag(), myS3Client.getUrl(s3BucketName, s3ObjectKey).toString());
+    myListener.uploadRevisionFinished(revision, s3BucketName, s3ObjectKey, uploadResult.getVersionId(), uploadResult.getETag(), myS3Client.getUrl(s3BucketName, s3ObjectKey).toString());
+  }
+
+  @NotNull
+  private UploadResult doUploadWithTransferManager(@NotNull final File revision, @NotNull final String s3BucketName, @NotNull final String s3ObjectKey) throws Throwable {
+    return S3Util.withTransferManager(myS3Client, new S3Util.WithTransferManager<Upload>() {
+      @NotNull
+      @Override
+      public Collection<Upload> run(@NotNull TransferManager manager) throws Throwable {
+        return Collections.singletonList(manager.upload(s3BucketName, s3ObjectKey, revision));
+      }
+    }).iterator().next().waitForUploadResult();
   }
 
   @NotNull
