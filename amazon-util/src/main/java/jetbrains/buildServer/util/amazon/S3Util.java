@@ -18,13 +18,12 @@ package jetbrains.buildServer.util.amazon;
 
 import com.amazonaws.client.builder.ExecutorFactory;
 import com.amazonaws.services.s3.AmazonS3Client;
-import com.amazonaws.services.s3.transfer.Transfer;
-import com.amazonaws.services.s3.transfer.TransferManager;
-import com.amazonaws.services.s3.transfer.TransferManagerBuilder;
+import com.amazonaws.services.s3.transfer.*;
+import com.google.common.collect.ImmutableList;
+import jetbrains.buildServer.log.Loggers;
 import jetbrains.buildServer.serverSide.TeamCityProperties;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
@@ -41,74 +40,81 @@ public final class S3Util {
   public static final String S3_THREAD_POOL_SIZE = "amazon.s3.transferManager.threadPool.size";
   public static final int DEFAULT_S3_THREAD_POOL_SIZE = 10;
 
-  public interface WithTransferManager<T extends Transfer, E extends Throwable> {
+  public interface WithTransferManager {
     @NotNull
-    Collection<T> run(@NotNull TransferManager manager) throws E;
+    Collection<? extends Transfer> run(@NotNull TransferManager manager) throws Throwable;
   }
 
-  public interface InterruptAwareWithTransferManager<T extends Transfer, E extends Throwable> extends WithTransferManager<T, E> {
-    boolean isInterrupted();
+  public interface TransferManagerInterruptHook {
+    void interrupt() throws Throwable;
   }
 
-  public static <T extends Transfer, E extends Throwable> Collection<T> withTransferManager(@NotNull AmazonS3Client s3Client, @NotNull final WithTransferManager<T, E> withTransferManager) throws E {
-    return withTransferManager(s3Client, false, createDefaultExecutorService(), withTransferManager);
+  public interface InterruptAwareWithTransferManager extends WithTransferManager {
+    /**
+     * This method is executed after {@link WithTransferManager#run(TransferManager)} is completed,
+     * aiming to stop current execution
+     *
+     * @param hook a callback to interrupt
+     */
+    void setInterruptHook(@NotNull TransferManagerInterruptHook hook);
   }
 
-  private static <T extends Transfer, E extends Throwable> Collection<T> withTransferManager(@NotNull AmazonS3Client s3Client, final boolean shutdownClient,
-                                                                                             @NotNull final ExecutorService executorService,
-                                                                                             @NotNull final WithTransferManager<T, E> withTransferManager) throws E {
-    final Collection<T> result = new ArrayList<T>();
-    final TransferManager manager = TransferManagerBuilder.standard().withS3Client(s3Client).withExecutorFactory(createExecutorFactory(executorService)).withShutDownThreadPools(true).build();
-    final AtomicBoolean isInterrupted = handleInterrupt(shutdownClient, executorService, withTransferManager, manager);
+  public static void withTransferManager(@NotNull AmazonS3Client s3Client, @NotNull final WithTransferManager withTransferManager) throws Throwable {
+    withTransferManager(s3Client, false, withTransferManager);
+  }
+
+  private static void withTransferManager(@NotNull final AmazonS3Client s3Client, final boolean shutdownClient,
+                                          @NotNull final WithTransferManager withTransferManager) throws Throwable {
+
+    final TransferManager manager = TransferManagerBuilder.standard().withS3Client(s3Client).withExecutorFactory(createExecutorFactory(createDefaultExecutorService())).withShutDownThreadPools(true).build();
 
     try {
-      if (!isInterrupted.get()) {
-        final Collection<T> transfers = withTransferManager.run(manager);
+      final ImmutableList<? extends Transfer> transfers = ImmutableList.copyOf(withTransferManager.run(manager));
 
-        for (T t : transfers) {
-          if (isInterrupted.get()) break;
-          try {
-            t.waitForCompletion();
-            result.add(t);
-          } catch (InterruptedException e) {
-             // noop
-          } catch (Throwable e) {
-            if (!isInterrupted.get()) {
-              throw new RuntimeException(e);
+      final AtomicBoolean isInterrupted = new AtomicBoolean(false);
+
+      if (withTransferManager instanceof InterruptAwareWithTransferManager) {
+        final TransferManagerInterruptHook hook = new TransferManagerInterruptHook() {
+          @Override
+          public void interrupt() throws Throwable {
+            isInterrupted.set(true);
+
+            for (Transfer transfer : transfers) {
+              if (transfer instanceof Download) {
+                ((Download) transfer).abort();
+                continue;
+              }
+
+              if (transfer instanceof Upload) {
+                ((Upload) transfer).abort();
+                continue;
+              }
+
+              if (transfer instanceof MultipleFileDownload) {
+                ((MultipleFileDownload) transfer).abort();
+                continue;
+              }
+
+              Loggers.AGENT.warn("Oops, this type " + transfer.getClass().getName() + " does not support interrupt");
             }
+          }
+        };
+        ((InterruptAwareWithTransferManager) withTransferManager).setInterruptHook(hook);
+      }
+
+      for (Transfer transfer : transfers) {
+        try {
+          transfer.waitForCompletion();
+        } catch (Throwable t) {
+          if (!isInterrupted.get()) {
+            //TODO: report it back? really? log it?
+            Loggers.AGENT.warn("Oops, " + transfer.getClass().getName() + " failed. " + t.getMessage(), t);
           }
         }
       }
     } finally {
       manager.shutdownNow(shutdownClient);
     }
-    return result;
-  }
-
-  @NotNull
-  private static <T extends Transfer, E extends Throwable> AtomicBoolean handleInterrupt(final boolean shutdownClient, @NotNull ExecutorService executorService,
-                                                                                         @NotNull final WithTransferManager<T, E> withTransferManager, @NotNull final TransferManager manager) {
-    final AtomicBoolean isInterrupted = new AtomicBoolean(false);
-    if (withTransferManager instanceof InterruptAwareWithTransferManager) {
-      final InterruptAwareWithTransferManager interruptAwareWithTransferManager = (InterruptAwareWithTransferManager) withTransferManager;
-      executorService.submit(new Runnable() {
-        @Override
-        public void run() {
-          try {
-            while (!interruptAwareWithTransferManager.isInterrupted()) {
-              Thread.sleep(1000);
-            }
-          } catch (InterruptedException e) {
-            // noop
-          }
-          if (interruptAwareWithTransferManager.isInterrupted()) {
-            isInterrupted.set(true);
-            manager.shutdownNow(shutdownClient);
-          }
-        }
-      });
-    }
-    return isInterrupted;
   }
 
   @NotNull
@@ -121,16 +127,13 @@ public final class S3Util {
     };
   }
 
-  public static <T extends Transfer, E extends Throwable> Collection<T> withTransferManager(@NotNull Map<String, String> params, @NotNull final WithTransferManager<T, E> withTransferManager) throws E {
-    return withTransferManager(params, createDefaultExecutorService(), withTransferManager);
-  }
-
-  private static <T extends Transfer, E extends Throwable> Collection<T> withTransferManager(@NotNull Map<String, String> params, @NotNull final ExecutorService executorService, @NotNull final WithTransferManager<T, E> withTransferManager) throws E {
-    return AWSCommonParams.withAWSClients(params, new AWSCommonParams.WithAWSClients<Collection<T>, E>() {
+  private static void withTransferManager(@NotNull Map<String, String> params, @NotNull final WithTransferManager withTransferManager) throws Throwable {
+    AWSCommonParams.withAWSClients(params, new AWSCommonParams.WithAWSClients<Void, Throwable>() {
       @NotNull
       @Override
-      public Collection<T> run(@NotNull AWSClients clients) throws E {
-        return withTransferManager(clients.createS3Client(), true, executorService, withTransferManager);
+      public Void run(@NotNull AWSClients clients) throws Throwable {
+        withTransferManager(clients.createS3Client(), true, withTransferManager);
+        return null;
       }
     });
   }
@@ -143,8 +146,10 @@ public final class S3Util {
       public Thread newThread(@NotNull Runnable r) {
         Thread thread = new Thread(r);
         thread.setName("amazon-util-s3-transfer-manager-worker-" + threadCount.getAndIncrement());
+        thread.setContextClassLoader(getClass().getClassLoader());
         return thread;
       }
     };
     return Executors.newFixedThreadPool(TeamCityProperties.getInteger(S3_THREAD_POOL_SIZE, DEFAULT_S3_THREAD_POOL_SIZE), threadFactory);
-  }}
+  }
+}
