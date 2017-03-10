@@ -19,13 +19,13 @@ package jetbrains.buildServer.util.amazon;
 import com.amazonaws.client.builder.ExecutorFactory;
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.transfer.*;
-import com.google.common.collect.ImmutableList;
 import jetbrains.buildServer.log.Loggers;
 import jetbrains.buildServer.serverSide.TeamCityProperties;
 import jetbrains.buildServer.util.CollectionsUtil;
 import jetbrains.buildServer.util.filters.Filter;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
@@ -73,7 +73,7 @@ public final class S3Util {
     final TransferManager manager = TransferManagerBuilder.standard().withS3Client(s3Client).withExecutorFactory(createExecutorFactory(createDefaultExecutorService())).withShutDownThreadPools(true).build();
 
     try {
-      final ImmutableList<T> transfers = ImmutableList.copyOf(withTransferManager.run(manager));
+      final ArrayList<T> transfers = new ArrayList<T>(withTransferManager.run(manager));
 
       final AtomicBoolean isInterrupted = new AtomicBoolean(false);
 
