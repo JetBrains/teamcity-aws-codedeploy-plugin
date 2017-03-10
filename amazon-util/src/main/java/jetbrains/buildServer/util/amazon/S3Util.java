@@ -22,6 +22,8 @@ import com.amazonaws.services.s3.transfer.*;
 import com.google.common.collect.ImmutableList;
 import jetbrains.buildServer.log.Loggers;
 import jetbrains.buildServer.serverSide.TeamCityProperties;
+import jetbrains.buildServer.util.CollectionsUtil;
+import jetbrains.buildServer.util.filters.Filter;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Collection;
@@ -40,16 +42,16 @@ public final class S3Util {
   public static final String S3_THREAD_POOL_SIZE = "amazon.s3.transferManager.threadPool.size";
   public static final int DEFAULT_S3_THREAD_POOL_SIZE = 10;
 
-  public interface WithTransferManager {
+  public interface WithTransferManager<T extends Transfer> {
     @NotNull
-    Collection<? extends Transfer> run(@NotNull TransferManager manager) throws Throwable;
+    Collection<T> run(@NotNull TransferManager manager) throws Throwable;
   }
 
   public interface TransferManagerInterruptHook {
     void interrupt() throws Throwable;
   }
 
-  public interface InterruptAwareWithTransferManager extends WithTransferManager {
+  public interface InterruptAwareWithTransferManager<T extends Transfer> extends WithTransferManager<T> {
     /**
      * This method is executed after {@link WithTransferManager#run(TransferManager)} is completed,
      * aiming to stop current execution
@@ -59,17 +61,19 @@ public final class S3Util {
     void setInterruptHook(@NotNull TransferManagerInterruptHook hook);
   }
 
-  public static void withTransferManager(@NotNull AmazonS3Client s3Client, @NotNull final WithTransferManager withTransferManager) throws Throwable {
-    withTransferManager(s3Client, false, withTransferManager);
+  @NotNull
+  public static <T extends Transfer> Collection<T> withTransferManager(@NotNull AmazonS3Client s3Client, @NotNull final WithTransferManager<T> withTransferManager) throws Throwable {
+    return withTransferManager(s3Client, false, withTransferManager);
   }
 
-  private static void withTransferManager(@NotNull final AmazonS3Client s3Client, final boolean shutdownClient,
-                                          @NotNull final WithTransferManager withTransferManager) throws Throwable {
+  @NotNull
+  private static <T extends Transfer> Collection<T> withTransferManager(@NotNull final AmazonS3Client s3Client, final boolean shutdownClient,
+                                                                        @NotNull final WithTransferManager<T> withTransferManager) throws Throwable {
 
     final TransferManager manager = TransferManagerBuilder.standard().withS3Client(s3Client).withExecutorFactory(createExecutorFactory(createDefaultExecutorService())).withShutDownThreadPools(true).build();
 
     try {
-      final ImmutableList<? extends Transfer> transfers = ImmutableList.copyOf(withTransferManager.run(manager));
+      final ImmutableList<T> transfers = ImmutableList.copyOf(withTransferManager.run(manager));
 
       final AtomicBoolean isInterrupted = new AtomicBoolean(false);
 
@@ -79,7 +83,7 @@ public final class S3Util {
           public void interrupt() throws Throwable {
             isInterrupted.set(true);
 
-            for (Transfer transfer : transfers) {
+            for (T transfer : transfers) {
               if (transfer instanceof Download) {
                 ((Download) transfer).abort();
                 continue;
@@ -102,16 +106,22 @@ public final class S3Util {
         ((InterruptAwareWithTransferManager) withTransferManager).setInterruptHook(hook);
       }
 
-      for (Transfer transfer : transfers) {
+      for (T transfer : transfers) {
         try {
           transfer.waitForCompletion();
         } catch (Throwable t) {
           if (!isInterrupted.get()) {
-            //TODO: report it back? really? log it?
-            Loggers.AGENT.warn("Oops, " + transfer.getClass().getName() + " failed. " + t.getMessage(), t);
+            throw t;
           }
         }
       }
+
+      return CollectionsUtil.filterCollection(transfers, new Filter<T>() {
+        @Override
+        public boolean accept(@NotNull T data) {
+          return Transfer.TransferState.Completed == data.getState();
+        }
+      });
     } finally {
       manager.shutdownNow(shutdownClient);
     }
@@ -127,13 +137,13 @@ public final class S3Util {
     };
   }
 
-  public static void withTransferManager(@NotNull Map<String, String> params, @NotNull final WithTransferManager withTransferManager) throws Throwable {
-    AWSCommonParams.withAWSClients(params, new AWSCommonParams.WithAWSClients<Void, Throwable>() {
+  @NotNull
+  public static <T extends Transfer> Collection<T>  withTransferManager(@NotNull Map<String, String> params, @NotNull final WithTransferManager<T> withTransferManager) throws Throwable {
+    return AWSCommonParams.withAWSClients(params, new AWSCommonParams.WithAWSClients<Collection<T>, Throwable>() {
       @NotNull
       @Override
-      public Void run(@NotNull AWSClients clients) throws Throwable {
-        withTransferManager(clients.createS3Client(), true, withTransferManager);
-        return null;
+      public Collection<T> run(@NotNull AWSClients clients) throws Throwable {
+        return withTransferManager(clients.createS3Client(), true, withTransferManager);
       }
     });
   }
