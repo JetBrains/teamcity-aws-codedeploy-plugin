@@ -23,9 +23,10 @@ import org.testng.annotations.Test;
 
 import java.io.IOException;
 import java.util.Map;
-import static org.assertj.core.api.BDDAssertions.*;
+
 import static jetbrains.buildServer.runner.codedeploy.CodeDeployConstants.*;
 import static jetbrains.buildServer.util.amazon.AWSCommonParams.*;
+import static org.assertj.core.api.BDDAssertions.then;
 
 /**
  * @author vbedrosova
@@ -34,11 +35,11 @@ public class ParametersValidatorTest extends BaseTestCase {
   @Test
   public void mandatory_params() {
     then(validate()).as("Must detect empty params").hasSize(5).
-      containsEntry(DEPLOYMENT_STEPS_PARAM, "Deployment steps mustn't be empty").
-      containsEntry(REGION_NAME_PARAM, "AWS region mustn't be empty").
-      containsEntry(CREDENTIALS_TYPE_PARAM, "Credentials type mustn't be empty").
-      containsEntry(ACCESS_KEY_ID_PARAM, "Access key ID mustn't be empty").
-      containsEntry(SECURE_SECRET_ACCESS_KEY_PARAM, "Secret access key mustn't be empty");
+      containsEntry(DEPLOYMENT_STEPS_PARAM, "Deployment steps must not be empty").
+      containsEntry(REGION_NAME_PARAM, "AWS region must not be empty").
+      containsEntry(CREDENTIALS_TYPE_PARAM, "Credentials type must not be empty").
+      containsEntry(ACCESS_KEY_ID_PARAM, "Access key ID must not be empty").
+      containsEntry(SECURE_SECRET_ACCESS_KEY_PARAM, "Secret access key must not be empty");
   }
 
   @Test
@@ -50,37 +51,37 @@ public class ParametersValidatorTest extends BaseTestCase {
   @Test
   public void upload_mandatory_params() {
     then(validate(DEPLOYMENT_STEPS_PARAM, UPLOAD_STEP)).as("Must detect empty params").hasSize(6).
-      containsEntry(REGION_NAME_PARAM, "AWS region mustn't be empty").
-      containsEntry(CREDENTIALS_TYPE_PARAM, "Credentials type mustn't be empty").
-      containsEntry(ACCESS_KEY_ID_PARAM, "Access key ID mustn't be empty").
-      containsEntry(SECURE_SECRET_ACCESS_KEY_PARAM, "Secret access key mustn't be empty").
-      containsEntry(REVISION_PATHS_PARAM, "Application revision mustn't be empty").
-      containsEntry(S3_BUCKET_NAME_PARAM, "S3 bucket mustn't be empty");
+      containsEntry(REGION_NAME_PARAM, "AWS region must not be empty").
+      containsEntry(CREDENTIALS_TYPE_PARAM, "Credentials type must not be empty").
+      containsEntry(ACCESS_KEY_ID_PARAM, "Access key ID must not be empty").
+      containsEntry(SECURE_SECRET_ACCESS_KEY_PARAM, "Secret access key must not be empty").
+      containsEntry(REVISION_PATHS_PARAM, "Application revision must not be empty").
+      containsEntry(S3_BUCKET_NAME_PARAM, "S3 bucket must not be empty");
   }
 
   @Test
   public void register_mandatory_params() {
     then(validate(DEPLOYMENT_STEPS_PARAM, REGISTER_STEP)).as("Must detect empty params").hasSize(7).
-      containsEntry(REGION_NAME_PARAM, "AWS region mustn't be empty").
-      containsEntry(CREDENTIALS_TYPE_PARAM, "Credentials type mustn't be empty").
-      containsEntry(ACCESS_KEY_ID_PARAM, "Access key ID mustn't be empty").
-      containsEntry(SECURE_SECRET_ACCESS_KEY_PARAM, "Secret access key mustn't be empty").
-      containsEntry(S3_BUCKET_NAME_PARAM, "S3 bucket mustn't be empty").
-      containsEntry(S3_OBJECT_KEY_PARAM, "S3 object key mustn't be empty").
-      containsEntry(APP_NAME_PARAM, "Application name mustn't be empty");
+      containsEntry(REGION_NAME_PARAM, "AWS region must not be empty").
+      containsEntry(CREDENTIALS_TYPE_PARAM, "Credentials type must not be empty").
+      containsEntry(ACCESS_KEY_ID_PARAM, "Access key ID must not be empty").
+      containsEntry(SECURE_SECRET_ACCESS_KEY_PARAM, "Secret access key must not be empty").
+      containsEntry(S3_BUCKET_NAME_PARAM, "S3 bucket must not be empty").
+      containsEntry(S3_OBJECT_KEY_PARAM, "S3 object key must not be empty").
+      containsEntry(APP_NAME_PARAM, "Application name must not be empty");
   }
 
   @Test
   public void deploy_mandatory_params() {
     then(validate(DEPLOYMENT_STEPS_PARAM, DEPLOY_STEP)).as("Must detect empty params").hasSize(8).
-      containsEntry(REGION_NAME_PARAM, "AWS region mustn't be empty").
-      containsEntry(CREDENTIALS_TYPE_PARAM, "Credentials type mustn't be empty").
-      containsEntry(ACCESS_KEY_ID_PARAM, "Access key ID mustn't be empty").
-      containsEntry(SECURE_SECRET_ACCESS_KEY_PARAM, "Secret access key mustn't be empty").
-      containsEntry(S3_BUCKET_NAME_PARAM, "S3 bucket mustn't be empty").
-      containsEntry(S3_OBJECT_KEY_PARAM, "S3 object key mustn't be empty").
-      containsEntry(APP_NAME_PARAM, "Application name mustn't be empty").
-      containsEntry(DEPLOYMENT_GROUP_NAME_PARAM, "Deployment group mustn't be empty");
+      containsEntry(REGION_NAME_PARAM, "AWS region must not be empty").
+      containsEntry(CREDENTIALS_TYPE_PARAM, "Credentials type must not be empty").
+      containsEntry(ACCESS_KEY_ID_PARAM, "Access key ID must not be empty").
+      containsEntry(SECURE_SECRET_ACCESS_KEY_PARAM, "Secret access key must not be empty").
+      containsEntry(S3_BUCKET_NAME_PARAM, "S3 bucket must not be empty").
+      containsEntry(S3_OBJECT_KEY_PARAM, "S3 object key must not be empty").
+      containsEntry(APP_NAME_PARAM, "Application name must not be empty").
+      containsEntry(DEPLOYMENT_GROUP_NAME_PARAM, "Deployment group must not be empty");
   }
 
   @Test
@@ -122,7 +123,7 @@ public class ParametersValidatorTest extends BaseTestCase {
   @Test
   public void s3_bucket_slashes() {
     then(validate(DEPLOYMENT_STEPS_PARAM, UPLOAD_STEP, S3_BUCKET_NAME_PARAM, "abra/kadabra")).as("Must detect slashes in s3 bucket name").
-      containsEntry(S3_BUCKET_NAME_PARAM, "S3 bucket mustn't contain / characters. For addressing folders use S3 object key parameter");
+      containsEntry(S3_BUCKET_NAME_PARAM, "S3 bucket must not contain / characters. For addressing folders use S3 object key parameter");
   }
 
   @Test
