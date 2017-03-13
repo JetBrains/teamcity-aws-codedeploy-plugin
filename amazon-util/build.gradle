@@ -41,6 +41,10 @@ tasks.withType(JavaCompile) {
 
 test {
     useTestNG()
+
+    systemProperty 'codedeploy_access_key_id', project.hasProperty('codedeploy_access_key_id') ? project.property('codedeploy_access_key_id') : ''
+    systemProperty 'secure:codedeploy_secret_access_key', project.hasProperty('secure:codedeploy_secret_access_key') ? project.property('secure:codedeploy_secret_access_key') : ''
+
     testLogging.showStandardStreams = true
 }
 
