@@ -90,25 +90,25 @@ public final class AWSCommonParams {
     final Map<String, String> invalids = new HashMap<String, String>();
 
     if (StringUtil.isEmptyOrSpaces(getRegionName(params))) {
-      invalids.put(REGION_NAME_PARAM, REGION_NAME_LABEL + " mustn't be empty");
+      invalids.put(REGION_NAME_PARAM, REGION_NAME_LABEL + " must not be empty");
     }
 
     if (!Boolean.parseBoolean(params.get(USE_DEFAULT_CREDENTIAL_PROVIDER_CHAIN_PARAM))) {
       if (StringUtil.isEmptyOrSpaces(params.get(ACCESS_KEY_ID_PARAM))) {
-        invalids.put(ACCESS_KEY_ID_PARAM, ACCESS_KEY_ID_LABEL + " mustn't be empty");
+        invalids.put(ACCESS_KEY_ID_PARAM, ACCESS_KEY_ID_LABEL + " must not be empty");
       }
       if (StringUtil.isEmptyOrSpaces(getSecretAccessKey(params))) {
-        invalids.put(SECURE_SECRET_ACCESS_KEY_PARAM, SECRET_ACCESS_KEY_LABEL + " mustn't be empty");
+        invalids.put(SECURE_SECRET_ACCESS_KEY_PARAM, SECRET_ACCESS_KEY_LABEL + " must not be empty");
       }
     }
 
     final String credentialsType = params.get(CREDENTIALS_TYPE_PARAM);
     if (TEMP_CREDENTIALS_OPTION.equals(credentialsType)) {
       if (StringUtil.isEmptyOrSpaces(params.get(IAM_ROLE_ARN_PARAM))) {
-        invalids.put(IAM_ROLE_ARN_PARAM, IAM_ROLE_ARN_LABEL + " mustn't be empty");
+        invalids.put(IAM_ROLE_ARN_PARAM, IAM_ROLE_ARN_LABEL + " must not be empty");
       }
     } else if (StringUtil.isEmptyOrSpaces(credentialsType)) {
-      invalids.put(CREDENTIALS_TYPE_PARAM, CREDENTIALS_TYPE_LABEL + " mustn't be empty");
+      invalids.put(CREDENTIALS_TYPE_PARAM, CREDENTIALS_TYPE_LABEL + " must not be empty");
     } else if (!ACCESS_KEYS_OPTION.equals(credentialsType)) {
       invalids.put(CREDENTIALS_TYPE_PARAM, CREDENTIALS_TYPE_LABEL + " has unexpected value " + credentialsType);
     }

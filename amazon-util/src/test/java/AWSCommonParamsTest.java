@@ -33,10 +33,10 @@ public class AWSCommonParamsTest extends BaseTestCase {
   @Test
   public void mandatory_params() {
     then(validate()).as("Must detect empty params").hasSize(4).
-      containsEntry(REGION_NAME_PARAM, "AWS region mustn't be empty").
-      containsEntry(CREDENTIALS_TYPE_PARAM, "Credentials type mustn't be empty").
-      containsEntry(ACCESS_KEY_ID_PARAM, "Access key ID mustn't be empty").
-      containsEntry(SECURE_SECRET_ACCESS_KEY_PARAM, "Secret access key mustn't be empty");
+      containsEntry(REGION_NAME_PARAM, "AWS region must not be empty").
+      containsEntry(CREDENTIALS_TYPE_PARAM, "Credentials type must not be empty").
+      containsEntry(ACCESS_KEY_ID_PARAM, "Access key ID must not be empty").
+      containsEntry(SECURE_SECRET_ACCESS_KEY_PARAM, "Secret access key must not be empty");
   }
 
   @Test
@@ -56,7 +56,7 @@ public class AWSCommonParamsTest extends BaseTestCase {
 
   @Test
   public void default_credentials_provider_chain_true() {
-    then(validate(USE_DEFAULT_CREDENTIAL_PROVIDER_CHAIN_PARAM, "true")).as("Mustn't require params").
+    then(validate(USE_DEFAULT_CREDENTIAL_PROVIDER_CHAIN_PARAM, "true")).as("must not require params").
       doesNotContainKey(ACCESS_KEY_ID_PARAM).
       doesNotContainKey(SECURE_SECRET_ACCESS_KEY_PARAM);
   }
@@ -64,7 +64,7 @@ public class AWSCommonParamsTest extends BaseTestCase {
   @Test
   public void temp_credentials_mandatory_params() {
     then(validate(CREDENTIALS_TYPE_PARAM, TEMP_CREDENTIALS_OPTION)).as("Must detect empty params").
-      containsEntry(IAM_ROLE_ARN_PARAM, "IAM role ARN mustn't be empty");
+      containsEntry(IAM_ROLE_ARN_PARAM, "IAM role ARN must not be empty");
   }
 
   @NotNull
