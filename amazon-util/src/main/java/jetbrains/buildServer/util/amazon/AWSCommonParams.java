@@ -34,28 +34,37 @@ public final class AWSCommonParams {
 
   // "codedeploy_" prefix is for backward compatibility
 
-  public static final String REGION_NAME_PARAM = "codedeploy_region_name";
+  public static final String REGION_NAME_PARAM_OLD = "codedeploy_region_name";
+  public static final String REGION_NAME_PARAM = "aws.region.name";
   public static final String REGION_NAME_LABEL = "AWS region";
 
-  public static final String CREDENTIALS_TYPE_PARAM = "codedeploy_credentials_type";
+  public static final String CREDENTIALS_TYPE_PARAM_OLD = "codedeploy_credentials_type";
+  public static final String CREDENTIALS_TYPE_PARAM = "aws.credentials.type";
   public static final String CREDENTIALS_TYPE_LABEL = "Credentials type";
-  public static final String TEMP_CREDENTIALS_OPTION = "codedeploy_temp_credentials";
+  public static final String TEMP_CREDENTIALS_OPTION_OLD = "codedeploy_temp_credentials";
+  public static final String TEMP_CREDENTIALS_OPTION = "aws.temp.credentials";
   public static final String TEMP_CREDENTIALS_LABEL = "Temporary credentials";
-  public static final String ACCESS_KEYS_OPTION = "codedeploy_access_keys";
+  public static final String ACCESS_KEYS_OPTION_OLD = "codedeploy_access_keys";
+  public static final String ACCESS_KEYS_OPTION = "aws.access.keys";
   public static final String ACCESS_KEYS_LABEL = "Access keys";
 
-  public static final String USE_DEFAULT_CREDENTIAL_PROVIDER_CHAIN_PARAM = "use_default_credential_provider_chain";
+  public static final String USE_DEFAULT_CREDENTIAL_PROVIDER_CHAIN_PARAM_OLD = "use_default_credential_provider_chain";
+  public static final String USE_DEFAULT_CREDENTIAL_PROVIDER_CHAIN_PARAM = "aws.use.default.credential.provider.chain";
   public static final String USE_DEFAULT_CREDENTIAL_PROVIDER_CHAIN_LABEL = "Use default credential provider chain";
 
-  public static final String ACCESS_KEY_ID_PARAM = "codedeploy_access_key_id";
+  public static final String ACCESS_KEY_ID_PARAM_OLD = "codedeploy_access_key_id";
+  public static final String ACCESS_KEY_ID_PARAM = "aws.access.key.id";
   public static final String ACCESS_KEY_ID_LABEL = "Access key ID";
-  public static final String SECURE_SECRET_ACCESS_KEY_PARAM = "secure:codedeploy_secret_access_key";
-  public static final String SECRET_ACCESS_KEY_PARAM = "codedeploy_secret_access_key";
+  public static final String SECURE_SECRET_ACCESS_KEY_PARAM_OLD = "secure:codedeploy_secret_access_key";
+  public static final String SECURE_SECRET_ACCESS_KEY_PARAM = "secure:aws.secret.access.key";
+  public static final String SECRET_ACCESS_KEY_PARAM_OLD = "codedeploy_secret_access_key";
   public static final String SECRET_ACCESS_KEY_LABEL = "Secret access key";
 
-  public static final String IAM_ROLE_ARN_PARAM = "codedeploy_iam_role_arn";
+  public static final String IAM_ROLE_ARN_PARAM_OLD = "codedeploy_iam_role_arn";
+  public static final String IAM_ROLE_ARN_PARAM = "aws.iam.role.arn";
   public static final String IAM_ROLE_ARN_LABEL = "IAM role ARN";
-  public static final String EXTERNAL_ID_PARAM = "codedeploy_external_id";
+  public static final String EXTERNAL_ID_PARAM_OLD = "codedeploy_external_id";
+  public static final String EXTERNAL_ID_PARAM = "aws.external.id";
   public static final String EXTERNAL_ID_LABEL = "External ID";
 
   private static final Map<String, String> DEFAULTS = Collections.unmodifiableMap(CollectionsUtil.asMap(
@@ -64,9 +73,9 @@ public final class AWSCommonParams {
     USE_DEFAULT_CREDENTIAL_PROVIDER_CHAIN_PARAM, "false"
   ));
 
-  public static final String TEMP_CREDENTIALS_SESSION_NAME_PARAM = "temp_credentials_session_name";
+  public static final String TEMP_CREDENTIALS_SESSION_NAME_PARAM = "aws.temp.credentials.session.name";
   public static final String TEMP_CREDENTIALS_SESSION_NAME_DEFAULT_PREFIX = "TeamCity_AWS_support_";
-  public static final String TEMP_CREDENTIALS_DURATION_SEC_PARAM = "temp_credentials_duration_sec";
+  public static final String TEMP_CREDENTIALS_DURATION_SEC_PARAM = "aws.temp.credentials.duration.sec";
   public static final int TEMP_CREDENTIALS_DURATION_SEC_DEFAULT = 1800;
 
   @NotNull
@@ -77,8 +86,8 @@ public final class AWSCommonParams {
       invalids.put(REGION_NAME_PARAM, REGION_NAME_LABEL + " must not be empty");
     }
 
-    if (!Boolean.parseBoolean(params.get(USE_DEFAULT_CREDENTIAL_PROVIDER_CHAIN_PARAM))) {
-      if (StringUtil.isEmptyOrSpaces(params.get(ACCESS_KEY_ID_PARAM))) {
+    if (!isUseDefaultCredentialProviderChain(params)) {
+      if (StringUtil.isEmptyOrSpaces(getAccessKeyId(params))) {
         invalids.put(ACCESS_KEY_ID_PARAM, ACCESS_KEY_ID_LABEL + " must not be empty");
       }
       if (StringUtil.isEmptyOrSpaces(getSecretAccessKey(params))) {
@@ -86,29 +95,68 @@ public final class AWSCommonParams {
       }
     }
 
-    final String credentialsType = params.get(CREDENTIALS_TYPE_PARAM);
-    if (TEMP_CREDENTIALS_OPTION.equals(credentialsType)) {
-      if (StringUtil.isEmptyOrSpaces(params.get(IAM_ROLE_ARN_PARAM))) {
+    final String credentialsType = getCredentialsType(params);
+    if (isTempCredentialsOption(credentialsType)) {
+      if (StringUtil.isEmptyOrSpaces(getIamRoleArnParam(params))) {
         invalids.put(IAM_ROLE_ARN_PARAM, IAM_ROLE_ARN_LABEL + " must not be empty");
       }
     } else if (StringUtil.isEmptyOrSpaces(credentialsType)) {
       invalids.put(CREDENTIALS_TYPE_PARAM, CREDENTIALS_TYPE_LABEL + " must not be empty");
-    } else if (!ACCESS_KEYS_OPTION.equals(credentialsType)) {
+    } else if (!isAccessKeysOption(credentialsType)) {
       invalids.put(CREDENTIALS_TYPE_PARAM, CREDENTIALS_TYPE_LABEL + " has unexpected value " + credentialsType);
     }
 
     return invalids;
   }
 
+  private static boolean isAccessKeysOption(String credentialsType) {
+    return ACCESS_KEYS_OPTION.equals(credentialsType) || ACCESS_KEYS_OPTION_OLD.equals(credentialsType);
+  }
+
+  private static boolean isTempCredentialsOption(String credentialsType) {
+    return TEMP_CREDENTIALS_OPTION.equals(credentialsType) || TEMP_CREDENTIALS_OPTION_OLD.equals(credentialsType);
+  }
+
+  private static String getIamRoleArnParam(@NotNull Map<String, String> params) {
+    final String iamRoleArnParam = params.get(IAM_ROLE_ARN_PARAM);
+    return StringUtil.isNotEmpty(iamRoleArnParam) ? iamRoleArnParam : params.get(IAM_ROLE_ARN_PARAM_OLD);
+  }
+
+  @Nullable
+  private static String getCredentialsType(@NotNull Map<String, String> params) {
+    final String credentialsType = params.get(CREDENTIALS_TYPE_PARAM);
+    return StringUtil.isNotEmpty(credentialsType) ? credentialsType : params.get(CREDENTIALS_TYPE_PARAM_OLD);
+  }
+
+  @Nullable
+  private static String getAccessKeyId(@NotNull Map<String, String> params) {
+    final String accessKeyId = params.get(ACCESS_KEY_ID_PARAM);
+    return StringUtil.isNotEmpty(accessKeyId) ? accessKeyId : params.get(ACCESS_KEY_ID_PARAM_OLD);
+  }
+
+  private static boolean isUseDefaultCredentialProviderChain(@NotNull Map<String, String> params) {
+    return Boolean.parseBoolean(params.get(USE_DEFAULT_CREDENTIAL_PROVIDER_CHAIN_PARAM)) || Boolean.parseBoolean(USE_DEFAULT_CREDENTIAL_PROVIDER_CHAIN_PARAM_OLD);
+  }
+
+  @Nullable
+  private static String getExternalId(@NotNull Map<String, String> params) {
+    final String externalId = params.get(EXTERNAL_ID_PARAM);
+    return StringUtil.isNotEmpty(externalId) ? externalId : params.get(EXTERNAL_ID_PARAM_OLD);
+  }
+
   @Nullable
   private static String getSecretAccessKey(@NotNull Map<String, String> params) {
-    final String secretAccessKeyParam = params.get(SECURE_SECRET_ACCESS_KEY_PARAM);
-    return StringUtil.isNotEmpty(secretAccessKeyParam) ? secretAccessKeyParam : params.get(SECRET_ACCESS_KEY_PARAM);
+    String secretAccessKeyParam = params.get(SECURE_SECRET_ACCESS_KEY_PARAM);
+    if (StringUtil.isNotEmpty(secretAccessKeyParam)) return secretAccessKeyParam;
+
+    secretAccessKeyParam = params.get(SECURE_SECRET_ACCESS_KEY_PARAM_OLD);
+    return StringUtil.isNotEmpty(secretAccessKeyParam) ? secretAccessKeyParam : params.get(SECRET_ACCESS_KEY_PARAM_OLD);
   }
 
   @Nullable
   public static String getRegionName(@NotNull Map<String, String> params) {
-    return params.get(REGION_NAME_PARAM);
+    final String regionName = params.get(REGION_NAME_PARAM);
+    return StringUtil.isNotEmpty(regionName) ? regionName : params.get(REGION_NAME_PARAM_OLD);
   }
 
   @NotNull
@@ -142,14 +190,14 @@ public final class AWSCommonParams {
   private static AWSClients createAWSClients(@NotNull Map<String, String> params) {
     final String regionName = getRegionName(params);
 
-    final String accessKeyId = params.get(ACCESS_KEY_ID_PARAM);
+    final String accessKeyId = getAccessKeyId(params);
     final String secretAccessKey = getSecretAccessKey(params);
 
-    final boolean useDefaultCredProvChain = Boolean.parseBoolean(params.get(USE_DEFAULT_CREDENTIAL_PROVIDER_CHAIN_PARAM));
+    final boolean useDefaultCredProvChain = isUseDefaultCredentialProviderChain(params);
 
-    if (TEMP_CREDENTIALS_OPTION.equals(params.get(CREDENTIALS_TYPE_PARAM))) {
-      final String iamRoleARN = params.get(IAM_ROLE_ARN_PARAM);
-      final String externalID = params.get(EXTERNAL_ID_PARAM);
+    if (isTempCredentialsOption(getCredentialsType(params))) {
+      final String iamRoleARN = getIamRoleArnParam(params);
+      final String externalID = getExternalId(params);
       final String sessionName = getStringOrDefault(params.get(TEMP_CREDENTIALS_SESSION_NAME_PARAM), TEMP_CREDENTIALS_SESSION_NAME_DEFAULT_PREFIX + new Date().getTime());
       final int sessionDuration = getIntegerOrDefault(params.get(TEMP_CREDENTIALS_DURATION_SEC_PARAM), TEMP_CREDENTIALS_DURATION_SEC_DEFAULT);
 
@@ -201,6 +249,6 @@ public final class AWSCommonParams {
 
   @NotNull
   private static Collection<String> getIdentityFormingParams(@NotNull Map<String, String> params) {
-    return Arrays.asList(getRegionName(params), params.get(ACCESS_KEY_ID_PARAM), params.get(IAM_ROLE_ARN_PARAM));
+    return Arrays.asList(getRegionName(params), getAccessKeyId(params), getIamRoleArnParam(params));
   }
 }
