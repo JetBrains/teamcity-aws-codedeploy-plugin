@@ -58,7 +58,7 @@ public final class AWSCommonParams {
   public static final String EXTERNAL_ID_PARAM = "codedeploy_external_id";
   public static final String EXTERNAL_ID_LABEL = "External ID";
 
-  public static final Map<String, String> DEFAULTS = Collections.unmodifiableMap(CollectionsUtil.asMap(
+  private static final Map<String, String> DEFAULTS = Collections.unmodifiableMap(CollectionsUtil.asMap(
     CREDENTIALS_TYPE_PARAM, ACCESS_KEYS_OPTION,
     EXTERNAL_ID_PARAM, UUID.randomUUID().toString(),
     USE_DEFAULT_CREDENTIAL_PROVIDER_CHAIN_PARAM, "false"
@@ -68,22 +68,6 @@ public final class AWSCommonParams {
   public static final String TEMP_CREDENTIALS_SESSION_NAME_DEFAULT_PREFIX = "TeamCity_AWS_support_";
   public static final String TEMP_CREDENTIALS_DURATION_SEC_PARAM = "temp_credentials_duration_sec";
   public static final int TEMP_CREDENTIALS_DURATION_SEC_DEFAULT = 1800;
-
-  @Nullable
-  private final String myServerUUID;
-
-  public AWSCommonParams(@Nullable String serverUUID) {
-    myServerUUID = serverUUID;
-  }
-
-  @NotNull
-  public Map<String, String> getDefaults() {
-    final Map<String, String> defaults = new HashMap<String, String>(DEFAULTS);
-    if (StringUtil.isNotEmpty(myServerUUID)) {
-      defaults.put(EXTERNAL_ID_PARAM, "TeamCity-server-" + myServerUUID);
-    }
-    return defaults;
-  }
 
   @NotNull
   public static Map<String, String> validate(@NotNull Map<String, String> params, boolean acceptReferences) {
@@ -125,6 +109,15 @@ public final class AWSCommonParams {
   @Nullable
   public static String getRegionName(@NotNull Map<String, String> params) {
     return params.get(REGION_NAME_PARAM);
+  }
+
+  @NotNull
+  public static Map<String, String> getDefaults(@Nullable String serverUUID) {
+    final Map<String, String> defaults = new HashMap<String, String>(DEFAULTS);
+    if (StringUtil.isNotEmpty(serverUUID)) {
+      defaults.put(EXTERNAL_ID_PARAM, "TeamCity-server-" + serverUUID);
+    }
+    return defaults;
   }
 
   private static boolean isReference(@NotNull String param, boolean acceptReferences) {
