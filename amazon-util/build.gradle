@@ -42,8 +42,8 @@ tasks.withType(JavaCompile) {
 test {
     useTestNG()
 
-    systemProperty 'codedeploy_access_key_id', project.hasProperty('codedeploy_access_key_id') ? project.property('codedeploy_access_key_id') : ''
-    systemProperty 'secure:codedeploy_secret_access_key', project.hasProperty('secure:codedeploy_secret_access_key') ? project.property('secure:codedeploy_secret_access_key') : ''
+    systemProperty 'aws.access.key.id', project.hasProperty('aws.access.key.id') ? project.property('aws.access.key.id') : ''
+    systemProperty 'secure:aws.secret.access.key', project.hasProperty('secure:aws.secret.access.key') ? project.property('secure:aws.secret.access.key') : ''
 
     testLogging.showStandardStreams = true
 }
