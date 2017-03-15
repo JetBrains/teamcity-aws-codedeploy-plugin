@@ -17,10 +17,7 @@
 package jetbrains.buildServer.runner.codedeploy;
 
 import jetbrains.buildServer.controllers.BaseController;
-import jetbrains.buildServer.serverSide.InvalidProperty;
-import jetbrains.buildServer.serverSide.PropertiesProcessor;
-import jetbrains.buildServer.serverSide.RunType;
-import jetbrains.buildServer.serverSide.RunTypeRegistry;
+import jetbrains.buildServer.serverSide.*;
 import jetbrains.buildServer.util.CollectionsUtil;
 import jetbrains.buildServer.util.amazon.AWSCommonParams;
 import jetbrains.buildServer.web.openapi.PluginDescriptor;
@@ -44,15 +41,15 @@ public class CodeDeployRunType extends RunType {
   @NotNull
   private final String myViewParamsPath;
   @NotNull
-  private final AWSCommonParams myAWSCommonParams;
+  private final ServerSettings myServerSettings;
 
   public CodeDeployRunType(@NotNull RunTypeRegistry registry,
                            @NotNull PluginDescriptor descriptor,
                            @NotNull WebControllerManager controllerManager,
-                           @NotNull AWSCommonParams awsCommonParams) {
+                           @NotNull ServerSettings serverSettings) {
     registry.registerRunType(this);
 
-    myAWSCommonParams = awsCommonParams;
+    myServerSettings = serverSettings;
 
     myEditParamsPath = registerController(descriptor, controllerManager, EDIT_PARAMS_JSP, EDIT_PARAMS_HTML);
     myViewParamsPath = registerController(descriptor, controllerManager, VIEW_PARAMS_JSP, VIEW_PARAMS_HTML);
@@ -86,7 +83,7 @@ public class CodeDeployRunType extends RunType {
   @Override
   public Map<String, String> getDefaultRunnerProperties() {
     final Map<String, String> defaults = new HashMap<String, String>(DEFAULTS);
-    defaults.putAll(myAWSCommonParams.getDefaults());
+    defaults.putAll(AWSCommonParams.getDefaults(myServerSettings.getServerUUID()));
     return defaults;
   }
 
