@@ -19,7 +19,7 @@ apply plugin: 'com.github.rodm.teamcity-server'
 dependencies {
     compile project(':aws-codedeploy-common')
     agent project(path: ':aws-codedeploy-agent', configuration: 'plugin')
-    // requiered to build with TeamCity 9.1.x
+    // required to build with TeamCity 9.1.x
     compileOnly "org.jetbrains.teamcity.internal:server:${teamcityVersion}"
 }
 
