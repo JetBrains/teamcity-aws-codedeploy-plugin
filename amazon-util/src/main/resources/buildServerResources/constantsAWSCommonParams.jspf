@@ -26,7 +26,7 @@
 <c:set var="region_name_param_new" value="<%=AWSCommonParams.REGION_NAME_PARAM%>"/>
 
 <%--new parameter naming--%>
-<c:if test="${newParameterNaming or not empty propertiesBean[region_name_param_new]}">
+<c:if test="${not empty propertiesBean[region_name_param_new]}">
     <c:set var="region_name_param" value="${region_name_param_new}"/>
     <c:set var="credentials_type_param" value="<%=AWSCommonParams.CREDENTIALS_TYPE_PARAM%>"/>
     <c:set var="temp_credentials_option" value="<%=AWSCommonParams.TEMP_CREDENTIALS_OPTION%>"/>
