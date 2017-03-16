@@ -73,7 +73,6 @@
         <th><label for="${secure_secret_access_key_param}">${secret_access_key_label}: <l:star/></label></th>
         <td><props:passwordProperty name="${secure_secret_access_key_param}" className="longField" maxlength="256"/>
             <span class="smallNote">AWS account secret access key</span><span class="error" id="error_${secure_secret_access_key_param}"></span>
-            <input type="hidden" name="${secret_access_key_param}"/>
         </td>
     </tr>
 </l:settingsGroup>
@@ -94,15 +93,6 @@
         BS.VisibilityHandlers.updateVisibility('runnerParams');
     };
 
-    window.awsCommonParamsStoreKeySecure = function () {
-        var key = '${propertiesBean.properties[secret_access_key_param]}';
-        if (key && key != 'null') {
-            $j(BS.Util.escapeId('${secure_secret_access_key_param}')).val(key); // copy the value to the new secure param
-            $j('#${secret_access_key_param}').val(''); //reset the old non-secure param, so that no one will see it again
-        }
-    };
-
-    awsCommonParamsStoreKeySecure();
     awsCommonParamsUpdateVisibility();
 </script>
 

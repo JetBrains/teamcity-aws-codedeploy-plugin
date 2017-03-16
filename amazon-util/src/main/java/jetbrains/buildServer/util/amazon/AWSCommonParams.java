@@ -58,6 +58,7 @@ public final class AWSCommonParams {
   public static final String SECURE_SECRET_ACCESS_KEY_PARAM_OLD = "secure:codedeploy_secret_access_key";
   public static final String SECURE_SECRET_ACCESS_KEY_PARAM = "secure:aws.secret.access.key";
   public static final String SECRET_ACCESS_KEY_PARAM_OLD = "codedeploy_secret_access_key";
+  public static final String SECRET_ACCESS_KEY_PARAM = "aws.secret.access.key";
   public static final String SECRET_ACCESS_KEY_LABEL = "Secret access key";
 
   public static final String IAM_ROLE_ARN_PARAM_OLD = "codedeploy_iam_role_arn";
