@@ -15,6 +15,7 @@
   --%>
 <%@ page import="jetbrains.buildServer.util.amazon.AWSCommonParams" %>
 <%@ page import="jetbrains.buildServer.util.amazon.AWSRegions" %>
+<%@ page import="java.util.Map" %>
 
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="props" tagdir="/WEB-INF/tags/props" %>
