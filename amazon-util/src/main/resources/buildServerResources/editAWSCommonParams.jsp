@@ -79,13 +79,13 @@
 
 <script type="application/javascript">
     window.awsCommonParamsUpdateVisibility = function () {
-        if ($j('#${access_keys_option}').is(':checked')) {
+        if ($j(BS.Util.escapeId('${access_keys_option}')).is(':checked')) {
             BS.Util.hide('${iam_role_arn_param}_row', '${external_id_param}_row');
         } else {
             BS.Util.show('${iam_role_arn_param}_row', '${external_id_param}_row');
         }
 
-        if ($j('#${use_default_cred_chain_param}').is(':checked')) {
+        if ($j(BS.Util.escapeId('${use_default_cred_chain_param}')).is(':checked')) {
             BS.Util.hide('${access_key_id_param}_row', '${secret_access_key_param}_row');
         } else {
             BS.Util.show('${access_key_id_param}_row', '${secret_access_key_param}_row');
