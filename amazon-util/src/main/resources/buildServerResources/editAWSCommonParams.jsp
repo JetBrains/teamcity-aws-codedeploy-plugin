@@ -79,16 +79,25 @@
 
 <script type="application/javascript">
     window.awsCommonParamsUpdateVisibility = function () {
+        alert('in awsCommonParamsUpdateVisibility');
         if ($j(BS.Util.escapeId('${access_keys_option}')).is(':checked')) {
-            BS.Util.hide('${iam_role_arn_param}_row', '${external_id_param}_row');
+            alert('hide role');
+            $j(BS.Util.escapeId('${iam_role_arn_param}_row')).hide();
+            $j(BS.Util.escapeId('${external_id_param}_row')).hide();
         } else {
-            BS.Util.show('${iam_role_arn_param}_row', '${external_id_param}_row');
+            alert('show role');
+            $j(BS.Util.escapeId('${iam_role_arn_param}_row')).show();
+            $j(BS.Util.escapeId('${external_id_param}_row')).show();
         }
 
         if ($j(BS.Util.escapeId('${use_default_cred_chain_param}')).is(':checked')) {
-            BS.Util.hide('${access_key_id_param}_row', '${secret_access_key_param}_row');
+            alert('hide keys');
+            $j(BS.Util.escapeId('${access_key_id_param}_row')).hide();
+            $j(BS.Util.escapeId('${secret_access_key_param}_row')).hide();
         } else {
-            BS.Util.show('${access_key_id_param}_row', '${secret_access_key_param}_row');
+            alert('show keys');
+            $j(BS.Util.escapeId('${access_key_id_param}_row')).show();
+            $j(BS.Util.escapeId('${secret_access_key_param}_row')).show();
         }
         BS.VisibilityHandlers.updateVisibility('runnerParams');
     };
