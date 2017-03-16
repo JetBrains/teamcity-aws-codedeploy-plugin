@@ -31,7 +31,7 @@
     }
 
     if (params.containsKey(AWSCommonParams.CREDENTIALS_TYPE_PARAM_OLD)) {
-      String credentialsType = params.get(AWSCommonParams.CREDENTIALS_TYPE_PARAM);
+      String credentialsType = params.get(AWSCommonParams.CREDENTIALS_TYPE_PARAM_OLD);
       if (AWSCommonParams.TEMP_CREDENTIALS_OPTION_OLD.equals(credentialsType)) {
         credentialsType = AWSCommonParams.TEMP_CREDENTIALS_OPTION;
       } else if (AWSCommonParams.ACCESS_KEYS_OPTION_OLD.equals(credentialsType)) {
