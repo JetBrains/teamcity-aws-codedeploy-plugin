@@ -118,21 +118,19 @@ public final class AWSCommonParams {
     return TEMP_CREDENTIALS_OPTION.equals(credentialsType) || TEMP_CREDENTIALS_OPTION_OLD.equals(credentialsType);
   }
 
+  @Nullable
   private static String getIamRoleArnParam(@NotNull Map<String, String> params) {
-    final String iamRoleArnParam = params.get(IAM_ROLE_ARN_PARAM);
-    return StringUtil.isNotEmpty(iamRoleArnParam) ? iamRoleArnParam : params.get(IAM_ROLE_ARN_PARAM_OLD);
+    return getNewOrOld(params, IAM_ROLE_ARN_PARAM, IAM_ROLE_ARN_PARAM_OLD);
   }
 
   @Nullable
   private static String getCredentialsType(@NotNull Map<String, String> params) {
-    final String credentialsType = params.get(CREDENTIALS_TYPE_PARAM);
-    return StringUtil.isNotEmpty(credentialsType) ? credentialsType : params.get(CREDENTIALS_TYPE_PARAM_OLD);
+    return getNewOrOld(params, CREDENTIALS_TYPE_PARAM, CREDENTIALS_TYPE_PARAM_OLD);
   }
 
   @Nullable
   private static String getAccessKeyId(@NotNull Map<String, String> params) {
-    final String accessKeyId = params.get(ACCESS_KEY_ID_PARAM);
-    return StringUtil.isNotEmpty(accessKeyId) ? accessKeyId : params.get(ACCESS_KEY_ID_PARAM_OLD);
+    return getNewOrOld(params, ACCESS_KEY_ID_PARAM, ACCESS_KEY_ID_PARAM_OLD);
   }
 
   private static boolean isUseDefaultCredentialProviderChain(@NotNull Map<String, String> params) {
@@ -141,8 +139,7 @@ public final class AWSCommonParams {
 
   @Nullable
   private static String getExternalId(@NotNull Map<String, String> params) {
-    final String externalId = params.get(EXTERNAL_ID_PARAM);
-    return StringUtil.isNotEmpty(externalId) ? externalId : params.get(EXTERNAL_ID_PARAM_OLD);
+    return getNewOrOld(params, EXTERNAL_ID_PARAM, EXTERNAL_ID_PARAM_OLD);
   }
 
   @Nullable
@@ -156,8 +153,13 @@ public final class AWSCommonParams {
 
   @Nullable
   public static String getRegionName(@NotNull Map<String, String> params) {
-    final String regionName = params.get(REGION_NAME_PARAM);
-    return StringUtil.isNotEmpty(regionName) ? regionName : params.get(REGION_NAME_PARAM_OLD);
+    return getNewOrOld(params, REGION_NAME_PARAM, REGION_NAME_PARAM_OLD);
+  }
+
+  @Nullable
+  private static String getNewOrOld(@NotNull Map<String, String> params, @NotNull String newKey, @NotNull String oldKey) {
+    final String newVal = params.get(newKey);
+    return StringUtil.isNotEmpty(newVal) ? newVal : params.get(oldKey);
   }
 
   @NotNull
