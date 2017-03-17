@@ -123,7 +123,7 @@ public class CodeDeployRunType extends RunType {
     final Map<String, String> invalids = ParametersValidator.validateSettings(parameters);
     return
       invalids.isEmpty() ?
-      STEP_LABELS.get(parameters.get(DEPLOYMENT_STEPS_PARAM)) + " application revision" :
+      STEP_LABELS.get(CodeDeployUtil.getDeploymentSteps(parameters)) + " application revision" :
       CodeDeployUtil.printStrings(invalids.values());
   }
 }

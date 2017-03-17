@@ -45,11 +45,11 @@ final class CodeDeployUtil {
   }
 
   static boolean isDeploymentWaitEnabled(@NotNull Map<String, String> params) {
-    return isDeployStepEnabled(params) && Boolean.parseBoolean(params.get(WAIT_FLAG_PARAM));
+    return isDeployStepEnabled(params) && Boolean.parseBoolean(getWaitFlag(params));
   }
 
   private static boolean isStepEnabled(@NotNull String step, @NotNull Map<String, String> params) {
-    final String steps = params.get(DEPLOYMENT_STEPS_PARAM);
+    final String steps = getDeploymentSteps(params);
     return steps != null && steps.contains(step);
   }
 
@@ -116,7 +116,7 @@ final class CodeDeployUtil {
 
   @NotNull
   public static Collection<String> getAutoScalingGroups(@NotNull Map<String, String> params) {
-    final String deploymentInstances = params.get(GREEN_FLEET_PARAM);
+    final String deploymentInstances = getGreenFleet(params);
     if (StringUtil.isEmptyOrSpaces(deploymentInstances)) return Collections.emptyList();
 
     final List<String> ec2Tags = new ArrayList<String>();
@@ -129,7 +129,7 @@ final class CodeDeployUtil {
 
   @NotNull
   public static Map<String, String> getEC2Tags(@NotNull Map<String, String> params) {
-    final String deploymentInstances = params.get(GREEN_FLEET_PARAM);
+    final String deploymentInstances = getGreenFleet(params);
     if (StringUtil.isEmptyOrSpaces(deploymentInstances)) return Collections.emptyMap();
 
     final Map<String, String> autoScalingGroups = new HashMap<String, String>();
@@ -152,5 +152,71 @@ final class CodeDeployUtil {
     if (revision.endsWith(".tar")) return BundleType.Tar.name();
     if (revision.endsWith(".tar.gz") || revision.endsWith(".tgz")) return BundleType.Tgz.name();
     return null;
+  }
+
+  @Nullable
+  private static String getNewOrOld(@NotNull Map<String, String> params, @NotNull String newKey, @NotNull String oldKey) {
+    final String newVal = params.get(newKey);
+    return StringUtil.isNotEmpty(newVal) ? newVal : params.get(oldKey);
+  }
+
+  @Nullable
+  public static String getDeploymentSteps(@NotNull Map<String, String> params) {
+    return getNewOrOld(params, DEPLOYMENT_STEPS_PARAM, DEPLOYMENT_STEPS_PARAM_OLD);
+  }
+
+  @Nullable
+  public static String getRevisionPaths(@NotNull Map<String, String> params) {
+    return getNewOrOld(params, REVISION_PATHS_PARAM, REVISION_PATHS_PARAM_OLD);
+  }
+
+  @Nullable
+  public static String getS3BucketName(@NotNull Map<String, String> params) {
+    return getNewOrOld(params, S3_BUCKET_NAME_PARAM, S3_BUCKET_NAME_PARAM_OLD);
+  }
+
+  @Nullable
+  public static String getS3ObjectKey(@NotNull Map<String, String> params) {
+    return getNewOrOld(params, S3_OBJECT_KEY_PARAM, S3_OBJECT_KEY_PARAM_OLD);
+  }
+
+  @Nullable
+  public static String getAppName(@NotNull Map<String, String> params) {
+    return getNewOrOld(params, APP_NAME_PARAM, APP_NAME_PARAM_OLD);
+  }
+
+  @Nullable
+  public static String getDeploymentGroupName(@NotNull Map<String, String> params) {
+    return getNewOrOld(params, DEPLOYMENT_GROUP_NAME_PARAM, DEPLOYMENT_GROUP_NAME_PARAM_OLD);
+  }
+
+  @Nullable
+  public static String getDeploymentConfigName(@NotNull Map<String, String> params) {
+    return getNewOrOld(params, DEPLOYMENT_CONFIG_NAME_PARAM, DEPLOYMENT_CONFIG_NAME_PARAM_OLD);
+  }
+
+  @Nullable
+  public static String getWaitFlag(@NotNull Map<String, String> params) {
+    return getNewOrOld(params, WAIT_FLAG_PARAM, WAIT_FLAG_PARAM_OLD);
+  }
+
+  @Nullable
+  public static String getWaitTimeOutSec(@NotNull Map<String, String> params) {
+    return getNewOrOld(params, WAIT_TIMEOUT_SEC_PARAM, WAIT_TIMEOUT_SEC_PARAM_OLD);
+  }
+
+  @Nullable
+  public static String getRollbackOnFailure(@NotNull Map<String, String> params) {
+    return getNewOrOld(params, ROLLBACK_ON_FAILURE_PARAM, ROLLBACK_ON_FAILURE_PARAM_OLD);
+  }
+
+  @Nullable
+  public static String getRollbackOnAlarmThreshold(@NotNull Map<String, String> params) {
+    return getNewOrOld(params, ROLLBACK_ON_ALARM_THRESHOLD_PARAM, ROLLBACK_ON_ALARM_THRESHOLD_PARAM_OLD);
+  }
+
+  @Nullable
+  public static String getGreenFleet(@NotNull Map<String, String> params) {
+    return getNewOrOld(params, GREEN_FLEET_PARAM, GREEN_FLEET_PARAM_OLD);
   }
 }

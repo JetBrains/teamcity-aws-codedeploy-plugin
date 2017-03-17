@@ -130,7 +130,7 @@
         $j('#runnerParams .stepNote.facultativeNote').each(function() {
             BS.Util.hide(this);
         });
-        BS.Util.show($j('#${deployment_steps_param} option:selected').attr('id') + '_note');
+        BS.Util.show($j(BS.Util.escapeId('${deployment_steps_param}') + ' option:selected').attr('id') + '_note');
     };
 
     window.codeDeployUpdateVisibility = function () {
@@ -139,7 +139,7 @@
             BS.Util.hide(this);
         });
 
-        var deploySteps = $j('#${deployment_steps_param} option:selected').val();
+        var deploySteps = $j(BS.Util.escapeId('${deployment_steps_param}') + ' option:selected').val();
         $j.each(deploySteps.split('${step_separator}'), function(i, val) {
             if (val) {
                 $j("#runnerParams tr[data-steps*='" + val + "']").each(function() {
@@ -149,7 +149,7 @@
         });
 
         if (deploySteps.indexOf('${deploy_step}') >= 0) {
-            if ($j('#${wait_flag_param}').is(':checked')) {
+            if ($j(BS.Util.escapeId('${wait_flag_param}')).is(':checked')) {
                 BS.Util.show('${wait_timeout_param}_row');
             } else {
                 BS.Util.hide('${wait_timeout_param}_row');

@@ -18,6 +18,72 @@
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 
 <%@ page import="jetbrains.buildServer.runner.codedeploy.CodeDeployConstants" %>
+<%@ page import="java.util.Map" %>
+
+<%
+    final Map<String, String> params = ((jetbrains.buildServer.controllers.BasePropertiesBean)request.getAttribute("propertiesBean")).getProperties();
+
+    if (params.containsKey(CodeDeployConstants.DEPLOYMENT_STEPS_PARAM_OLD)) {
+        params.put(CodeDeployConstants.DEPLOYMENT_STEPS_PARAM, params.get(CodeDeployConstants.DEPLOYMENT_STEPS_PARAM_OLD));
+        params.remove(CodeDeployConstants.DEPLOYMENT_STEPS_PARAM_OLD);
+    }
+
+    if (params.containsKey(CodeDeployConstants.REVISION_PATHS_PARAM_OLD)) {
+        params.put(CodeDeployConstants.REVISION_PATHS_PARAM, params.get(CodeDeployConstants.REVISION_PATHS_PARAM_OLD));
+        params.remove(CodeDeployConstants.REVISION_PATHS_PARAM_OLD);
+    }
+
+    if (params.containsKey(CodeDeployConstants.S3_BUCKET_NAME_PARAM_OLD)) {
+        params.put(CodeDeployConstants.S3_BUCKET_NAME_PARAM, params.get(CodeDeployConstants.S3_BUCKET_NAME_PARAM_OLD));
+        params.remove(CodeDeployConstants.S3_BUCKET_NAME_PARAM_OLD);
+    }
+
+    if (params.containsKey(CodeDeployConstants.S3_OBJECT_KEY_PARAM_OLD)) {
+        params.put(CodeDeployConstants.S3_OBJECT_KEY_PARAM, params.get(CodeDeployConstants.S3_OBJECT_KEY_PARAM_OLD));
+        params.remove(CodeDeployConstants.S3_OBJECT_KEY_PARAM_OLD);
+    }
+
+    if (params.containsKey(CodeDeployConstants.APP_NAME_PARAM_OLD)) {
+        params.put(CodeDeployConstants.APP_NAME_PARAM, params.get(CodeDeployConstants.APP_NAME_PARAM_OLD));
+        params.remove(CodeDeployConstants.APP_NAME_PARAM_OLD);
+    }
+
+    if (params.containsKey(CodeDeployConstants.DEPLOYMENT_GROUP_NAME_PARAM_OLD)) {
+        params.put(CodeDeployConstants.DEPLOYMENT_GROUP_NAME_PARAM, params.get(CodeDeployConstants.DEPLOYMENT_GROUP_NAME_PARAM_OLD));
+        params.remove(CodeDeployConstants.DEPLOYMENT_GROUP_NAME_PARAM_OLD);
+    }
+
+    if (params.containsKey(CodeDeployConstants.DEPLOYMENT_CONFIG_NAME_PARAM_OLD)) {
+        params.put(CodeDeployConstants.DEPLOYMENT_CONFIG_NAME_PARAM, params.get(CodeDeployConstants.DEPLOYMENT_CONFIG_NAME_PARAM_OLD));
+        params.remove(CodeDeployConstants.DEPLOYMENT_CONFIG_NAME_PARAM_OLD);
+    }
+
+    if (params.containsKey(CodeDeployConstants.WAIT_FLAG_PARAM_OLD)) {
+        params.put(CodeDeployConstants.WAIT_FLAG_PARAM, params.get(CodeDeployConstants.WAIT_FLAG_PARAM_OLD));
+        params.remove(CodeDeployConstants.WAIT_FLAG_PARAM_OLD);
+    }
+
+    if (params.containsKey(CodeDeployConstants.WAIT_TIMEOUT_SEC_PARAM_OLD)) {
+        params.put(CodeDeployConstants.WAIT_TIMEOUT_SEC_PARAM, params.get(CodeDeployConstants.WAIT_TIMEOUT_SEC_PARAM_OLD));
+        params.remove(CodeDeployConstants.WAIT_TIMEOUT_SEC_PARAM_OLD);
+    }
+
+    if (params.containsKey(CodeDeployConstants.ROLLBACK_ON_FAILURE_PARAM_OLD)) {
+        params.put(CodeDeployConstants.ROLLBACK_ON_FAILURE_PARAM, params.get(CodeDeployConstants.ROLLBACK_ON_FAILURE_PARAM_OLD));
+        params.remove(CodeDeployConstants.ROLLBACK_ON_FAILURE_PARAM_OLD);
+    }
+
+    if (params.containsKey(CodeDeployConstants.ROLLBACK_ON_ALARM_THRESHOLD_PARAM_OLD)) {
+        params.put(CodeDeployConstants.ROLLBACK_ON_ALARM_THRESHOLD_PARAM, params.get(CodeDeployConstants.ROLLBACK_ON_ALARM_THRESHOLD_PARAM_OLD));
+        params.remove(CodeDeployConstants.ROLLBACK_ON_ALARM_THRESHOLD_PARAM_OLD);
+    }
+
+    if (params.containsKey(CodeDeployConstants.GREEN_FLEET_PARAM_OLD)) {
+        params.put(CodeDeployConstants.GREEN_FLEET_PARAM, params.get(CodeDeployConstants.GREEN_FLEET_PARAM_OLD));
+        params.remove(CodeDeployConstants.GREEN_FLEET_PARAM_OLD);
+    }
+
+%>
 
 <jsp:useBean id="propertiesBean" scope="request" type="jetbrains.buildServer.controllers.BasePropertiesBean"/>
 <jsp:useBean id="deploymentScenarios" scope="request" type="java.util.Map<java.lang.String, java.lang.String>"/>
@@ -65,4 +131,4 @@
 <c:set var="rollback_on_alarm_label" value="<%=CodeDeployConstants.ROLLBACK_ON_ALARM_THRESHOLD_LABEL%>"/>
 
 <c:set var="green_fleet_param" value="<%=CodeDeployConstants.GREEN_FLEET_PARAM%>"/>
-<c:set var="green_fleet_label" value="<%=CodeDeployConstants.GREEN_FLEET__LABEL%>"/>
+<c:set var="green_fleet_label" value="<%=CodeDeployConstants.GREEN_FLEET_LABEL%>"/>

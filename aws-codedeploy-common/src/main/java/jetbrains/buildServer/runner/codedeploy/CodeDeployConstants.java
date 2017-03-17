@@ -47,41 +47,53 @@ public interface CodeDeployConstants {
   String FAILURE_BUILD_PROBLEM_TYPE = "CODEDEPLOY_FAILURE";
 
 
-  String DEPLOYMENT_STEPS_PARAM = "codedeploy_deployment_steps";
+  String DEPLOYMENT_STEPS_PARAM_OLD = "codedeploy_deployment_steps";
+  String DEPLOYMENT_STEPS_PARAM = "codedeploy.deployment.steps";
   String DEPLOYMENT_STEPS_LABEL = "Deployment steps";
 
-  String REVISION_PATHS_PARAM = "codedeploy_revision_paths";
+  String REVISION_PATHS_PARAM_OLD= "codedeploy_revision_paths";
+  String REVISION_PATHS_PARAM = "codedeploy.revision.paths";
   String REVISION_PATHS_LABEL = "Application revision";
 
-  String S3_BUCKET_NAME_PARAM = "codedeploy_s3_bucket_name";
+  String S3_BUCKET_NAME_PARAM_OLD = "codedeploy_s3_bucket_name";
+  String S3_BUCKET_NAME_PARAM = "codedeploy.s3.bucket.name";
   String S3_BUCKET_NAME_LABEL = "S3 bucket";
   String REVISION_PATHS_NOTE = "Ant-style wildcards as well as target directories like out/**/*.zip => dist supported";
 
-  String S3_OBJECT_KEY_PARAM = "codedeploy_s3_object_key";
+  String S3_OBJECT_KEY_PARAM_OLD = "codedeploy_s3_object_key";
+  String S3_OBJECT_KEY_PARAM = "codedeploy.s3.object.key";
   String S3_OBJECT_KEY_LABEL = "S3 object key";
 
-  String APP_NAME_PARAM = "codedeploy_application_name";
+  String APP_NAME_PARAM_OLD = "codedeploy_application_name";
+  String APP_NAME_PARAM = "codedeploy.application.name";
   String APP_NAME_LABEL = "Application name";
 
-  String DEPLOYMENT_GROUP_NAME_PARAM = "codedeploy_deployment_group_name";
+  String DEPLOYMENT_GROUP_NAME_PARAM_OLD = "codedeploy_deployment_group_name";
+  String DEPLOYMENT_GROUP_NAME_PARAM = "codedeploy.deployment.group.name";
   String DEPLOYMENT_GROUP_NAME_LABEL = "Deployment group";
-  String DEPLOYMENT_CONFIG_NAME_PARAM = "codedeploy_deployment_config_name";
+  String DEPLOYMENT_CONFIG_NAME_PARAM_OLD = "codedeploy_deployment_config_name";
+  String DEPLOYMENT_CONFIG_NAME_PARAM = "codedeploy.deployment.config.name";
   String DEPLOYMENT_CONFIG_NAME_LABEL = "Deployment configuration";
 
-  String WAIT_FLAG_PARAM = "codedeploy_wait";
+  String WAIT_FLAG_PARAM_OLD = "codedeploy_wait";
+  String WAIT_FLAG_PARAM = "codedeploy.wait";
   String WAIT_FLAG_LABEL = "Wait for deployment finish";
-  String WAIT_TIMEOUT_SEC_PARAM = "codedeploy_wait_timeout_sec";
+  String WAIT_TIMEOUT_SEC_PARAM_OLD = "codedeploy_wait_timeout_sec";
+  String WAIT_TIMEOUT_SEC_PARAM = "codedeploy.wait.timeout.sec";
   String WAIT_TIMEOUT_SEC_LABEL = "Timeout (seconds)";
   String WAIT_POLL_INTERVAL_SEC_CONFIG_PARAM = "codedeploy.wait.poll.interval.sec";
   int WAIT_POLL_INTERVAL_SEC_DEFAULT = 20;
 
-  String ROLLBACK_ON_FAILURE_PARAM = "codedeploy_rollback_on_failure";
+  String ROLLBACK_ON_FAILURE_PARAM_OLD = "codedeploy_rollback_on_failure";
+  String ROLLBACK_ON_FAILURE_PARAM = "codedeploy.rollback.on.failure";
   String ROLLBACK_ON_FAILURE_LABEL = "Roll back when a deployment fails";
-  String ROLLBACK_ON_ALARM_THRESHOLD_PARAM = "codedeploy_rollback_on_alarm_threshold";
+  String ROLLBACK_ON_ALARM_THRESHOLD_PARAM_OLD = "codedeploy_rollback_on_alarm_threshold";
+  String ROLLBACK_ON_ALARM_THRESHOLD_PARAM = "codedeploy.rollback.on.alarm.threshold";
   String ROLLBACK_ON_ALARM_THRESHOLD_LABEL = "Roll back when alarm thresholds are met";
 
-  String GREEN_FLEET_PARAM = "codedeploy_green_fleet";
-  String GREEN_FLEET__LABEL = "Green fleet (replacement environment instances)";
+  String GREEN_FLEET_PARAM_OLD = "codedeploy_green_fleet";
+  String GREEN_FLEET_PARAM = "codedeploy.green.fleet";
+  String GREEN_FLEET_LABEL = "Green fleet (replacement environment instances)";
 
   String UPLOAD_STEP = "s3uploadstep";
   String REGISTER_STEP = "registerstep";

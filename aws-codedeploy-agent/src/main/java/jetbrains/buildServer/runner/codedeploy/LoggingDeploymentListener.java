@@ -27,7 +27,9 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Map;
 
 /**
  * @author vbedrosova
@@ -196,9 +198,9 @@ class LoggingDeploymentListener extends AWSClient.Listener {
   @NotNull
   private Collection<String> getIdentityFormingParameters() {
     return Arrays.asList(
-      myRunnerParameters.get(CodeDeployConstants.S3_BUCKET_NAME_PARAM),
-      myRunnerParameters.get(CodeDeployConstants.APP_NAME_PARAM),
-      myRunnerParameters.get(CodeDeployConstants.DEPLOYMENT_GROUP_NAME_PARAM));
+      CodeDeployUtil.getS3BucketName(myRunnerParameters),
+      CodeDeployUtil.getAppName(myRunnerParameters),
+      CodeDeployUtil.getDeploymentGroupName(myRunnerParameters));
   }
 
   protected void debug(@NotNull String message) {

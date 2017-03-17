@@ -75,13 +75,13 @@ public class CodeDeployRunner implements AgentBuildRunner {
                 }
               });
 
-            final String s3BucketName = runnerParameters.get(S3_BUCKET_NAME_PARAM);
-            String s3ObjectKey = runnerParameters.get(S3_OBJECT_KEY_PARAM);
+            final String s3BucketName = getS3BucketName(runnerParameters);
+            String s3ObjectKey = getS3ObjectKey(runnerParameters);
 
             if (isUploadStepEnabled(runnerParameters) && !m.problemOccurred && !isInterrupted()) {
               final File readyRevision = new ApplicationRevision(
                 isEmptyOrSpaces(s3ObjectKey) ? runningBuild.getBuildTypeExternalId() : s3ObjectKey,
-                runnerParameters.get(REVISION_PATHS_PARAM),
+                getRevisionPaths(runnerParameters),
                 context.getWorkingDirectory(), runningBuild.getBuildTempDirectory(),
                 configParameters.get(CUSTOM_APPSPEC_YML_CONFIG_PARAM),
                 isRegisterStepEnabled(runnerParameters) || isDeployStepEnabled(runnerParameters)).withLogger(runningBuild.getBuildLogger()).getArchive();
@@ -93,7 +93,7 @@ public class CodeDeployRunner implements AgentBuildRunner {
               awsClient.uploadRevision(readyRevision, s3BucketName, s3ObjectKey);
             }
 
-            final String applicationName = runnerParameters.get(APP_NAME_PARAM);
+            final String applicationName = getAppName(runnerParameters);
             final String bundleType = "" + getBundleType(s3ObjectKey);
 
             if (CodeDeployUtil.isRegisterStepEnabled(runnerParameters) && !m.problemOccurred && !isInterrupted()) {
@@ -101,8 +101,8 @@ public class CodeDeployRunner implements AgentBuildRunner {
             }
 
             if (CodeDeployUtil.isDeployStepEnabled(runnerParameters) && !m.problemOccurred && !isInterrupted()) {
-              final String deploymentGroupName = runnerParameters.get(DEPLOYMENT_GROUP_NAME_PARAM);
-              final String deploymentConfigName = nullIfEmpty(runnerParameters.get(DEPLOYMENT_CONFIG_NAME_PARAM));
+              final String deploymentGroupName = getDeploymentGroupName(runnerParameters);
+              final String deploymentConfigName = nullIfEmpty(getDeploymentConfigName(runnerParameters));
 
               if (CodeDeployUtil.isDeploymentWaitEnabled(runnerParameters)) {
                 awsClient.deployRevisionAndWait(
@@ -110,10 +110,10 @@ public class CodeDeployRunner implements AgentBuildRunner {
                   applicationName, deploymentGroupName,
                   getEC2Tags(runnerParameters), getAutoScalingGroups(runnerParameters),
                   deploymentConfigName,
-                  Integer.parseInt(runnerParameters.get(WAIT_TIMEOUT_SEC_PARAM)),
+                  Integer.parseInt(getWaitTimeOutSec(runnerParameters)),
                   getIntegerOrDefault(configParameters.get(WAIT_POLL_INTERVAL_SEC_CONFIG_PARAM), WAIT_POLL_INTERVAL_SEC_DEFAULT),
-                  Boolean.parseBoolean(runnerParameters.get(ROLLBACK_ON_FAILURE_PARAM)),
-                  Boolean.parseBoolean(runnerParameters.get(ROLLBACK_ON_ALARM_THRESHOLD_PARAM)));
+                  Boolean.parseBoolean(getRollbackOnFailure(runnerParameters)),
+                  Boolean.parseBoolean(getRollbackOnAlarmThreshold(runnerParameters)));
               } else {
                 awsClient.deployRevision(
                   s3BucketName, s3ObjectKey, bundleType, m.s3ObjectVersion, m.s3ObjectETag,
@@ -139,7 +139,7 @@ public class CodeDeployRunner implements AgentBuildRunner {
         final Map<String, String> params = new HashMap<String, String>(runnerParameters);
         params.put(TEMP_CREDENTIALS_SESSION_NAME_PARAM, runningBuild.getBuildTypeExternalId() + runningBuild.getBuildId());
         if (CodeDeployUtil.isDeploymentWaitEnabled(runnerParameters)) {
-          params.put(TEMP_CREDENTIALS_DURATION_SEC_PARAM, String.valueOf(2 * Integer.parseInt(runnerParameters.get(WAIT_TIMEOUT_SEC_PARAM))));
+          params.put(TEMP_CREDENTIALS_DURATION_SEC_PARAM, String.valueOf(2 * Integer.parseInt(getWaitTimeOutSec(params))));
         }
         return params;
       }

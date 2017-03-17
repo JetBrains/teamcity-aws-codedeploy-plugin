@@ -76,7 +76,7 @@ final class ParametersValidator {
     boolean registerStepEnabled = false;
     boolean deployStepEnabled = false;
 
-    final String deploymentSteps = runnerParams.get(DEPLOYMENT_STEPS_PARAM);
+    final String deploymentSteps = getDeploymentSteps(runnerParams);
     if (StringUtil.isEmptyOrSpaces(deploymentSteps)) {
       invalids.put(DEPLOYMENT_STEPS_PARAM, DEPLOYMENT_STEPS_LABEL + " must not be empty");
     } else {
@@ -90,7 +90,7 @@ final class ParametersValidator {
     }
 
     if (uploadStepEnabled) {
-      final String revisionPaths = runnerParams.get(REVISION_PATHS_PARAM);
+      final String revisionPaths = getRevisionPaths(runnerParams);
       if (StringUtil.isEmptyOrSpaces(revisionPaths)) {
         invalids.put(REVISION_PATHS_PARAM, REVISION_PATHS_LABEL + " must not be empty");
       } else if (!isReference(revisionPaths, runtime)) {
@@ -104,14 +104,14 @@ final class ParametersValidator {
     }
 
     if (uploadStepEnabled || registerStepEnabled || deployStepEnabled) {
-      final String s3BucketName = runnerParams.get(S3_BUCKET_NAME_PARAM);
+      final String s3BucketName = getS3BucketName(runnerParams);
       if (StringUtil.isEmptyOrSpaces(s3BucketName)) {
         invalids.put(S3_BUCKET_NAME_PARAM, S3_BUCKET_NAME_LABEL + " must not be empty");
       } else if (s3BucketName.contains("/")) {
         invalids.put(S3_BUCKET_NAME_PARAM, S3_BUCKET_NAME_LABEL + " must not contain / characters. For addressing folders use " + S3_OBJECT_KEY_LABEL + " parameter");
       }
 
-      final String s3ObjectKey = runnerParams.get(S3_OBJECT_KEY_PARAM);
+      final String s3ObjectKey = getS3ObjectKey(runnerParams);
       if (StringUtil.isEmptyOrSpaces(s3ObjectKey)) {
         if (!uploadStepEnabled) {
           invalids.put(S3_OBJECT_KEY_PARAM, S3_OBJECT_KEY_LABEL + " must not be empty");
@@ -125,18 +125,18 @@ final class ParametersValidator {
     }
 
     if (registerStepEnabled || deployStepEnabled) {
-      if (StringUtil.isEmptyOrSpaces(runnerParams.get(APP_NAME_PARAM))) {
+      if (StringUtil.isEmptyOrSpaces(getAppName(runnerParams))) {
         invalids.put(APP_NAME_PARAM, APP_NAME_LABEL + " must not be empty");
       }
     }
 
     if (deployStepEnabled) {
-      if (StringUtil.isEmptyOrSpaces(runnerParams.get(DEPLOYMENT_GROUP_NAME_PARAM))) {
+      if (StringUtil.isEmptyOrSpaces(getDeploymentGroupName(runnerParams))) {
         invalids.put(DEPLOYMENT_GROUP_NAME_PARAM, DEPLOYMENT_GROUP_NAME_LABEL + " must not be empty");
       }
 
       if (isDeploymentWaitEnabled(runnerParams)) {
-        final String waitTimeoutSec = runnerParams.get(WAIT_TIMEOUT_SEC_PARAM);
+        final String waitTimeoutSec = getWaitTimeOutSec(runnerParams);
         if (StringUtil.isEmptyOrSpaces(waitTimeoutSec)) {
           invalids.put(WAIT_TIMEOUT_SEC_PARAM, WAIT_TIMEOUT_SEC_LABEL + " must not be empty");
         } else {
