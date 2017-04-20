@@ -14,15 +14,9 @@
  * limitations under the License.
  */
 
-plugins {
-    id "com.jfrog.bintray" version "1.7.3"
-}
-
 apply plugin: 'java'
 apply plugin: 'idea'
 apply plugin: 'maven'
-apply plugin: 'maven-publish'
-apply plugin: "com.jfrog.bintray"
 
 ext.teamcityVersion = hasProperty('teamcity.version') ? property('teamcity.version') : '10.0.4'
 
@@ -31,6 +25,17 @@ ext.teamcityDataDir = "$rootDir/teamcity/data/" + teamcityVersion
 ext.teamcityJavaHome = System.properties['java.home']
 
 ext.awsSDKVersion = hasProperty('aws.sdk.version') ? property('aws.sdk.version') : '1.11.86'
+
+ext.buildNumber = project.hasProperty('build.number') ? project.property('build.number') : 'SNAPSHOT-' + new Date().format('yyyyMMddHHmm')
+ext.mavenGroupId = 'jetbrains.buildServer.util'
+ext.mavenArtifactId = 'amazon-util'
+
+ext.mavenArtifactsPath = hasProperty('maven.artifacts.path') ? property('maven.artifacts.path') : "$libsDir"
+ext.defaultPomFile = "$mavenPomDir/amazon-util-pom.xml"
+ext.pomFile = hasProperty('maven.pom.file') ? property('maven.pom.file') : "$defaultPomFile"
+ext.mavenRepository = hasProperty('maven.repository') ? property('maven.repository') : ''
+ext.mavenRepositoryUser = hasProperty('maven.repository.user') ? property('maven.repository.user') : ''
+ext.mavenRepositoryPassword = hasProperty('maven.repository.password') ? property('maven.repository.password') : ''
 
 sourceCompatibility = "1.6"
 targetCompatibility = "1.6"
@@ -61,6 +66,11 @@ repositories {
     }
 }
 
+configurations {
+    ftpDeployer
+    mavenArtifacts
+}
+
 dependencies {
     compile "com.amazonaws:aws-java-sdk-codedeploy:${awsSDKVersion}"
     compile "com.amazonaws:aws-java-sdk-codepipeline:${awsSDKVersion}"
@@ -73,45 +83,78 @@ dependencies {
     compileOnly files("${teamcityDir}/buildAgent/lib/common-impl.jar")
 
     testCompile "org.jetbrains.teamcity:tests-support:${teamcityVersion}"
+
+    ftpDeployer "org.apache.maven.wagon:wagon-ftp:2.2"
 }
 
 task sourceJar(type: Jar) {
-    from sourceSets.main.allSource
+    from sourceSets.main.allJava
+    archiveName 'amazon-util-sources.jar'
 }
 
-artifacts {
-    archives sourceJar
-}
-
-publishing {
-    publications {
-        mavenJava(MavenPublication) {
-            groupId 'jetbrains.buildServer.util'
-            artifactId 'amazon-util'
-            version project.hasProperty('build.number') ? project.property('build.number') : ''
-            from components.java
-            artifact sourceJar {
-                classifier "sources"
+task writePom {
+    doLast {
+        pom {
+            project {
+                groupId "$mavenGroupId"
+                artifactId "$mavenArtifactId"
+                version "$buildNumber"
             }
-            pom.withXml {
-                asNode().dependencies.'*'.findAll() {
-                    it.scope.text() == 'runtime' && project.configurations.compile.allDependencies.find { dep -> dep.name == it.artifactId.text()
-                    }
-                }.each { it.scope*.value = 'compile' }
+        }
+        .whenConfigured{ pom -> pom.dependencies.removeAll { it.scope.contains('test') } }
+        .writeTo("$defaultPomFile")
+    }
+}
+
+task prepareArtifacts {
+    doLast {
+        artifacts.mavenArtifacts file: file("$mavenArtifactsPath/amazon-util.jar"), name: 'amazon-util', type: 'jar'
+        artifacts.mavenArtifacts file: file("$mavenArtifactsPath/amazon-util-sources.jar"), name: 'amazon-util-sources', type: 'jar', classifier: 'sources'
+    }
+}
+
+task readPom {
+    doLast {
+        def root = new XmlParser().parse(file("$pomFile"))
+
+        def sw = new StringWriter()
+        def printer = new XmlNodePrinter(new PrintWriter(sw))
+        printer.preserveWhitespace = true
+        printer.print(root)
+
+        readPom.ext.result = sw.toString()
+    }
+}
+
+task prepareUploadMavenArtifactsTask {
+    dependsOn tasks.prepareArtifacts
+    dependsOn tasks.readPom
+
+    doFirst {
+        tasks.uploadMavenArtifacts.repositories.mavenDeployer {
+            configuration = configurations.ftpDeployer
+
+            repository(url: "$mavenRepository") {
+                authentication(userName: "${mavenRepositoryUser}", password: "${mavenRepositoryPassword}")
+            }
+
+            addFilter('amazon-util') {artifact, file ->
+                artifact.name == 'amazon-util'
+            }.withXml { provider ->
+                def builder = provider.asString()
+                builder.length = 0
+                builder << tasks.readPom.result
+            }
+
+            addFilter('amazon-util-sources') {artifact, file ->
+                artifact.name == 'amazon-util-sources'
+            }.withXml { provider ->
+                def builder = provider.asString()
+                builder.length = 0
+                builder << tasks.readPom.result
             }
         }
     }
-}
 
-bintray {
-    user = project.hasProperty('bintrayUser') ? project.property('bintrayUser') : ''
-    key = project.hasProperty('bintrayApiKey') ? project.property('bintrayApiKey') : ''
-    publications = ['mavenJava']
-    pkg {
-        repo = 'teamcity'
-        name = 'amazon-util'
-        licenses = ['Apache-2.0']
-        vcsUrl = 'https://github.com/JetBrains/teamcity-aws-codedeploy-plugin'
-        userOrg = project.hasProperty('bintrayUser') ? project.property('bintrayUser') : ''
-    }
+    tasks.uploadMavenArtifacts.dependsOn tasks.prepareUploadMavenArtifactsTask
 }
