@@ -20,7 +20,7 @@
 <%@include file="constantsAWSCommonParams.jspf"%>
 
 <c:if test="${'false' eq requireRegion}">
-    <input type="hidden" name="${region}" value="${region_name_default}"/>
+    <input type="hidden" name="${region_name_param}" value="${region_name_default}"/>
 </c:if>
 <c:if test="${not 'false' eq requireRegion}">
     <tr>
