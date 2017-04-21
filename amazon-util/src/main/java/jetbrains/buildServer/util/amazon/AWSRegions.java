@@ -53,6 +53,8 @@ public final class AWSRegions {
     }
   }
 
+  public static String DEFAULT_REGION = "us-east-1";
+
   @NotNull
   public static String getRegionNameForWeb(@NotNull String regionCode){
     final String niceName = REGION_NAMES_FOR_WEB.get(regionCode);

@@ -19,17 +19,22 @@
 
 <%@include file="constantsAWSCommonParams.jspf"%>
 
-<tr>
-    <th><label for="${region_name_param}">${region_name_label}: <l:star/></label></th>
-    <td><props:selectProperty name="${region_name_param}" className="longField" enableFilter="true">
-        <props:option value="${null}">-- Select region --</props:option>
-        <c:forEach var="region" items="${allRegions.keySet()}">
-            <props:option value="${region}"><c:out value="${allRegions[region]}"/></props:option>
-        </c:forEach>
-    </props:selectProperty>
-        <span class="smallNote">All resources must be located in this region</span><span class="error" id="error_${region_name_param}"></span>
-    </td>
-</tr>
+<c:if test="${'false' eq requireRegion}">
+    <input type="hidden" name="${region}" value="${region_name_default}"/>
+</c:if>
+<c:if test="${not 'false' eq requireRegion}">
+    <tr>
+        <th><label for="${region_name_param}">${region_name_label}: <l:star/></label></th>
+        <td><props:selectProperty name="${region_name_param}" className="longField" enableFilter="true">
+            <props:option value="${null}">-- Select region --</props:option>
+            <c:forEach var="region" items="${allRegions.keySet()}">
+                <props:option value="${region}"><c:out value="${allRegions[region]}"/></props:option>
+            </c:forEach>
+        </props:selectProperty>
+            <span class="smallNote">All resources must be located in this region</span><span class="error" id="error_${region_name_param}"></span>
+        </td>
+    </tr>
+</c:if>
 
 <l:settingsGroup title="AWS Security Credentials">
     <tr>
