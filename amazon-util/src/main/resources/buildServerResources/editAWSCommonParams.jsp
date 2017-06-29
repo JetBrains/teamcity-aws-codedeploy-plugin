@@ -22,7 +22,7 @@
 <c:if test="${not empty param.requireRegion and false eq param.requireRegion}">
     <input type="hidden" name="${region_name_param}" value="${region_name_default}"/>
 </c:if>
-<c:if test="${empty param.requireRegion or true ne param.requireRegion}">
+<c:if test="${empty param.requireRegion or true eq param.requireRegion}">
     <tr>
         <th><label for="${region_name_param}">${region_name_label}: <l:star/></label></th>
         <td><props:selectProperty name="${region_name_param}" className="longField" enableFilter="true">
