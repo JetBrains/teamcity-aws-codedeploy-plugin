@@ -17,10 +17,13 @@
 <%@ taglib prefix="props" tagdir="/WEB-INF/tags/props" %>
 <%@ taglib prefix="l" tagdir="/WEB-INF/tags/layout" %>
 
+<jsp:useBean id="propertiesBean" scope="request" type="jetbrains.buildServer.controllers.BasePropertiesBean"/>
+
 <%@include file="constantsAWSCommonParams.jspf"%>
 
 <c:if test="${not empty param.requireRegion and false eq param.requireRegion}">
-    <props:hiddenProperty name="${region_name_param}" value="${region_name_default}"/>
+    <c:set var="regionName" value="${propertiesBean.properties[region_name_param]}"/>
+    <props:hiddenProperty name="${region_name_param}" value="${empty regionName ? region_name_default : regionName}"/>
 </c:if>
 <c:if test="${empty param.requireRegion or true eq param.requireRegion}">
     <tr>
