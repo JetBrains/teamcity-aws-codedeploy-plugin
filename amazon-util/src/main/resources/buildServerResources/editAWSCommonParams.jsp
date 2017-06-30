@@ -17,8 +17,6 @@
 <%@ taglib prefix="props" tagdir="/WEB-INF/tags/props" %>
 <%@ taglib prefix="l" tagdir="/WEB-INF/tags/layout" %>
 
-<jsp:useBean id="propertiesBean" scope="request" type="jetbrains.buildServer.controllers.BasePropertiesBean"/>
-
 <%@include file="constantsAWSCommonParams.jspf"%>
 
 <c:if test="${not empty param.requireRegion and false eq param.requireRegion}">
