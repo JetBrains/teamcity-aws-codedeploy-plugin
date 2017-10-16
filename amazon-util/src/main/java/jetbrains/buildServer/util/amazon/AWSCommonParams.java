@@ -190,7 +190,7 @@ public final class AWSCommonParams {
   }
 
   @NotNull
-  public static AWSClients createAWSClients(@NotNull Map<String, String> params) {
+  private static AWSClients createAWSClients(@NotNull Map<String, String> params) {
     final String regionName = getRegionName(params);
 
     final String accessKeyId = getAccessKeyId(params);
