@@ -50,6 +50,11 @@ public class AWSClients {
     myClientConfiguration = createClientConfiguration();
   }
 
+  @Nullable
+  public AWSCredentials getCredentials() {
+    return myCredentials;
+  }
+
   @NotNull
   public static AWSClients fromDefaultCredentialProviderChain(@NotNull String region) {
     return fromExistingCredentials(null, region);
