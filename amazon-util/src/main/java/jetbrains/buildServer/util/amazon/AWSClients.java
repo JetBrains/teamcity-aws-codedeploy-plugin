@@ -134,7 +134,7 @@ public class AWSClients {
   }
 
   @NotNull
-  private AWSSessionCredentials createSessionCredentials(@NotNull String iamRoleARN, @Nullable String externalID, @NotNull String sessionName, int sessionDuration) throws AWSException {
+  public AWSSessionCredentials createSessionCredentials(@NotNull String iamRoleARN, @Nullable String externalID, @NotNull String sessionName, int sessionDuration) throws AWSException {
     final AssumeRoleRequest assumeRoleRequest = new AssumeRoleRequest().withRoleArn(iamRoleARN).withRoleSessionName(patchSessionName(sessionName)).withDurationSeconds(patchSessionDuration(sessionDuration));
     if (StringUtil.isNotEmpty(externalID)) assumeRoleRequest.setExternalId(externalID);
     try {
