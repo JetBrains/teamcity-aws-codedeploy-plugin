@@ -23,6 +23,8 @@ import jetbrains.buildServer.util.StringUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.*;
 
 import static jetbrains.buildServer.util.amazon.AWSClients.*;
@@ -33,6 +35,13 @@ import static jetbrains.buildServer.util.amazon.AWSClients.*;
 public final class AWSCommonParams {
 
   // "codedeploy_" prefix is for backward compatibility
+
+  public static final String ENVIRONMENT_NAME_PARAM = "aws.environment";
+  public static final String ENVIRONMENT_NAME_LABEL = "AWS environment";
+  public static final String ENVIRONMENT_TYPE_CUSTOM = "custom";
+
+  public static final String SERVICE_ENDPOINT_PARAM = "aws.service.endpoint";
+  public static final String SERVICE_ENDPOINT_LABEL = "Service endpoint";
 
   public static final String REGION_NAME_PARAM_OLD = "codedeploy_region_name";
   public static final String REGION_NAME_PARAM = "aws.region.name";
@@ -105,6 +114,19 @@ public final class AWSCommonParams {
       invalids.put(CREDENTIALS_TYPE_PARAM, CREDENTIALS_TYPE_LABEL + " must not be empty");
     } else if (!isAccessKeysOption(credentialsType)) {
       invalids.put(CREDENTIALS_TYPE_PARAM, CREDENTIALS_TYPE_LABEL + " has unexpected value " + credentialsType);
+    }
+
+    if (ENVIRONMENT_TYPE_CUSTOM.equals(params.get(ENVIRONMENT_NAME_PARAM))) {
+      final String serviceEndpoint = params.get(SERVICE_ENDPOINT_PARAM);
+      if (StringUtil.isEmptyOrSpaces(serviceEndpoint)) {
+        invalids.put(SERVICE_ENDPOINT_PARAM, SERVICE_ENDPOINT_LABEL + " must not be empty");
+      } else {
+        try {
+          new URL(serviceEndpoint);
+        } catch (MalformedURLException e) {
+          invalids.put(SERVICE_ENDPOINT_PARAM, "Invalid URL format for " + SERVICE_ENDPOINT_LABEL);
+        }
+      }
     }
 
     return invalids;
@@ -198,22 +220,29 @@ public final class AWSCommonParams {
 
     final boolean useDefaultCredProvChain = isUseDefaultCredentialProviderChain(params);
 
+    final AWSClients awsClients;
     if (isTempCredentialsOption(getCredentialsType(params))) {
       final String iamRoleARN = getIamRoleArnParam(params);
       final String externalID = getExternalId(params);
       final String sessionName = getStringOrDefault(params.get(TEMP_CREDENTIALS_SESSION_NAME_PARAM), TEMP_CREDENTIALS_SESSION_NAME_DEFAULT_PREFIX + new Date().getTime());
       final int sessionDuration = getIntegerOrDefault(params.get(TEMP_CREDENTIALS_DURATION_SEC_PARAM), TEMP_CREDENTIALS_DURATION_SEC_DEFAULT);
 
-      return
-        useDefaultCredProvChain ?
-          fromSessionCredentials(iamRoleARN, externalID, sessionName, sessionDuration, regionName) :
-          fromSessionCredentials(accessKeyId, secretAccessKey, iamRoleARN, externalID, sessionName, sessionDuration, regionName);
+      awsClients = useDefaultCredProvChain
+              ? fromSessionCredentials(iamRoleARN, externalID, sessionName, sessionDuration, regionName)
+              : fromSessionCredentials(accessKeyId, secretAccessKey, iamRoleARN, externalID, sessionName, sessionDuration, regionName);
+    } else {
+      awsClients = useDefaultCredProvChain ?
+              fromDefaultCredentialProviderChain(regionName) :
+              fromBasicCredentials(accessKeyId, secretAccessKey, regionName);
     }
 
-    return
-      useDefaultCredProvChain ?
-        fromDefaultCredentialProviderChain(regionName) :
-        fromBasicCredentials(accessKeyId, secretAccessKey, regionName);
+    final String environmentType = params.get(ENVIRONMENT_NAME_PARAM);
+    if (ENVIRONMENT_TYPE_CUSTOM.equals(environmentType)) {
+      final String serviceEndpoint = params.get(SERVICE_ENDPOINT_PARAM);
+      awsClients.setServiceEndpoint(serviceEndpoint);
+    }
+
+    return awsClients;
   }
 
   @NotNull

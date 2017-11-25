@@ -18,15 +18,13 @@ package jetbrains.buildServer.util.amazon;
 
 import com.amazonaws.AmazonWebServiceClient;
 import com.amazonaws.ClientConfiguration;
-import com.amazonaws.auth.AWSCredentials;
-import com.amazonaws.auth.AWSSessionCredentials;
-import com.amazonaws.auth.BasicAWSCredentials;
-import com.amazonaws.auth.BasicSessionCredentials;
+import com.amazonaws.auth.*;
+import com.amazonaws.client.builder.AwsClientBuilder;
 import com.amazonaws.services.codebuild.AWSCodeBuildClient;
 import com.amazonaws.services.codedeploy.AmazonCodeDeployClient;
 import com.amazonaws.services.codepipeline.AWSCodePipelineClient;
-import com.amazonaws.services.s3.AmazonS3Client;
-import com.amazonaws.services.s3.S3ClientOptions;
+import com.amazonaws.services.s3.AmazonS3;
+import com.amazonaws.services.s3.AmazonS3ClientBuilder;
 import com.amazonaws.services.securitytoken.AWSSecurityTokenServiceClient;
 import com.amazonaws.services.securitytoken.model.AssumeRoleRequest;
 import com.amazonaws.services.securitytoken.model.Credentials;
@@ -41,6 +39,8 @@ import org.jetbrains.annotations.Nullable;
 public class AWSClients {
 
   @Nullable private final AWSCredentials myCredentials;
+  @Nullable private String myServiceEndpoint;
+  @Nullable private String myS3SignerType;
   @NotNull private final String myRegion;
   @NotNull private final ClientConfiguration myClientConfiguration;
 
@@ -102,10 +102,26 @@ public class AWSClients {
   }
 
   @NotNull
-  public AmazonS3Client createS3Client() {
-    final AmazonS3Client s3Client = withRegion(myCredentials == null ? new AmazonS3Client(myClientConfiguration) : new AmazonS3Client(myCredentials, myClientConfiguration));
-    s3Client.setS3ClientOptions(S3ClientOptions.builder().setPathStyleAccess(true).build());
-    return s3Client;
+  public AmazonS3 createS3Client() {
+    if (StringUtil.isNotEmpty(myS3SignerType)) {
+      myClientConfiguration.setSignerOverride(myS3SignerType);
+    }
+
+    final AmazonS3ClientBuilder builder = AmazonS3ClientBuilder.standard()
+            .withClientConfiguration(myClientConfiguration)
+            .withPathStyleAccessEnabled(true);
+
+    if (myCredentials != null) {
+      builder.setCredentials(new AWSStaticCredentialsProvider(myCredentials));
+    }
+
+    if (StringUtil.isNotEmpty(myServiceEndpoint)) {
+      builder.setEndpointConfiguration(new AwsClientBuilder.EndpointConfiguration(myServiceEndpoint, myRegion));
+    } else {
+      builder.withRegion(myRegion);
+    }
+
+    return builder.build();
   }
 
   @NotNull
@@ -131,6 +147,14 @@ public class AWSClients {
   @NotNull
   public String getRegion() {
     return myRegion;
+  }
+
+  public void setServiceEndpoint(@NotNull final String serviceEndpoint) {
+    myServiceEndpoint = serviceEndpoint;
+  }
+
+  public void setS3SignerType(@NotNull final String s3SignerType) {
+    myS3SignerType = s3SignerType;
   }
 
   @NotNull
@@ -166,7 +190,7 @@ public class AWSClients {
 
   @NotNull
   private static ClientConfiguration createClientConfiguration() {
-    return new ClientConfiguration().withUserAgent("JetBrains TeamCity " + ServerVersionHolder.getVersion().getDisplayVersion());
+    return new ClientConfiguration().withUserAgentPrefix("JetBrains TeamCity " + ServerVersionHolder.getVersion().getDisplayVersion());
   }
 
   // must implement AWSSessionCredentials as AWS SDK may use "instanceof"

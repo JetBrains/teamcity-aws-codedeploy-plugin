@@ -15,7 +15,7 @@
  */
 
 import com.amazonaws.regions.Regions;
-import com.amazonaws.services.s3.AmazonS3Client;
+import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.AmazonS3Exception;
 import com.amazonaws.services.s3.model.ObjectListing;
 import com.amazonaws.services.s3.model.S3ObjectSummary;
@@ -35,7 +35,6 @@ import org.testng.annotations.Test;
 import java.io.File;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -54,7 +53,7 @@ public class S3UtilTest extends BaseTestCase {
   @Override
   protected void setUpClass() throws Exception {
     super.setUpClass();
-    final AmazonS3Client s3Client = createS3Client();
+    final AmazonS3 s3Client = createS3Client();
     if (s3Client.doesBucketExist(BUCKET_NAME)) {
       deleteBucket(BUCKET_NAME, s3Client);
     }
@@ -133,7 +132,7 @@ public class S3UtilTest extends BaseTestCase {
   @Test
   public void download() throws Throwable {
     final File testDownload = createTempFile("This is a test download");
-    final AmazonS3Client s3Client = createS3Client();
+    final AmazonS3 s3Client = createS3Client();
     s3Client.putObject(BUCKET_NAME, "testDownload", testDownload);
     assertEquals(testDownload.length(), createS3Client().getObject(BUCKET_NAME, "testDownload").getObjectMetadata().getContentLength());
 
@@ -148,11 +147,11 @@ public class S3UtilTest extends BaseTestCase {
     assertEquals(testDownload.length(), result.length());
   }
 
-  private void deleteBucket(@NotNull String name, @NotNull AmazonS3Client s3Client) throws Exception {
+  private void deleteBucket(@NotNull String name, @NotNull AmazonS3 s3Client) throws Exception {
     ObjectListing listing = s3Client.listObjects(name);
     while (true) {
-      for (Iterator<?> iterator = listing.getObjectSummaries().iterator(); iterator.hasNext();) {
-        s3Client.deleteObject(name, ((S3ObjectSummary)iterator.next()).getKey());
+      for (S3ObjectSummary s3ObjectSummary : listing.getObjectSummaries()) {
+        s3Client.deleteObject(name, (s3ObjectSummary).getKey());
       }
 
       // more object_listing to retrieve?
@@ -161,15 +160,19 @@ public class S3UtilTest extends BaseTestCase {
       } else {
         break;
       }
-    };
+    }
 
     s3Client.deleteBucket(name);
   }
 
   @NotNull
-  private AmazonS3Client createS3Client() {
+  private AmazonS3 createS3Client() {
     final Map<String, String> params = getParameters();
-    return AWSClients.fromBasicCredentials(params.get(ACCESS_KEY_ID_PARAM), params.get(SECURE_SECRET_ACCESS_KEY_PARAM), params.get(REGION_NAME_PARAM)).createS3Client();
+    return AWSClients.fromBasicCredentials(
+            params.get(ACCESS_KEY_ID_PARAM),
+            params.get(SECURE_SECRET_ACCESS_KEY_PARAM),
+            params.get(REGION_NAME_PARAM)
+    ).createS3Client();
   }
 
   @NotNull

@@ -70,6 +70,13 @@
     }
 %>
 
+<c:set var="environment_name_param" value="<%=AWSCommonParams.ENVIRONMENT_NAME_PARAM%>"/>
+<c:set var="environment_name_label" value="<%=AWSCommonParams.ENVIRONMENT_NAME_LABEL%>"/>
+<c:set var="environment_type_custom" value="<%=AWSCommonParams.ENVIRONMENT_TYPE_CUSTOM%>"/>
+
+<c:set var="service_endpoint_param" value="<%=AWSCommonParams.SERVICE_ENDPOINT_PARAM%>"/>
+<c:set var="service_endpoint_label" value="<%=AWSCommonParams.SERVICE_ENDPOINT_LABEL%>"/>
+
 <c:set var="allRegions" value="<%=AWSRegions.getAllRegions()%>"/>
 
 <c:set var="region_name_param" value="<%=AWSCommonParams.REGION_NAME_PARAM%>"/>

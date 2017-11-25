@@ -17,7 +17,7 @@
 package jetbrains.buildServer.util.amazon;
 
 import com.amazonaws.client.builder.ExecutorFactory;
-import com.amazonaws.services.s3.AmazonS3Client;
+import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.transfer.*;
 import com.intellij.openapi.diagnostic.Logger;
 import jetbrains.buildServer.serverSide.TeamCityProperties;
@@ -64,12 +64,12 @@ public final class S3Util {
   }
 
   @NotNull
-  public static <T extends Transfer> Collection<T> withTransferManager(@NotNull AmazonS3Client s3Client, @NotNull final WithTransferManager<T> withTransferManager) throws Throwable {
+  public static <T extends Transfer> Collection<T> withTransferManager(@NotNull AmazonS3 s3Client, @NotNull final WithTransferManager<T> withTransferManager) throws Throwable {
     return withTransferManager(s3Client, false, withTransferManager);
   }
 
   @NotNull
-  private static <T extends Transfer> Collection<T> withTransferManager(@NotNull final AmazonS3Client s3Client, final boolean shutdownClient,
+  private static <T extends Transfer> Collection<T> withTransferManager(@NotNull final AmazonS3 s3Client, final boolean shutdownClient,
                                                                         @NotNull final WithTransferManager<T> withTransferManager) throws Throwable {
 
     final TransferManager manager = TransferManagerBuilder.standard().withS3Client(s3Client).withExecutorFactory(createExecutorFactory(createDefaultExecutorService())).withShutDownThreadPools(true).build();
