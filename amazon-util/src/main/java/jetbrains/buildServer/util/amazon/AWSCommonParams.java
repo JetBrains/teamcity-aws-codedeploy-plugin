@@ -41,7 +41,7 @@ public final class AWSCommonParams {
   public static final String ENVIRONMENT_TYPE_CUSTOM = "custom";
 
   public static final String SERVICE_ENDPOINT_PARAM = "aws.service.endpoint";
-  public static final String SERVICE_ENDPOINT_LABEL = "Service endpoint";
+  public static final String SERVICE_ENDPOINT_LABEL = "Endpoint URL";
 
   public static final String REGION_NAME_PARAM_OLD = "codedeploy_region_name";
   public static final String REGION_NAME_PARAM = "aws.region.name";
