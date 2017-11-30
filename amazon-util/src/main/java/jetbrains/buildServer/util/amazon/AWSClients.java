@@ -150,7 +150,7 @@ public class AWSClients {
   }
 
   public void setServiceEndpoint(@NotNull final String serviceEndpoint) {
-    myServiceEndpoint = serviceEndpoint;
+    myServiceEndpoint = StringUtil.trimEnd(serviceEndpoint,"/");
   }
 
   public void setS3SignerType(@NotNull final String s3SignerType) {
