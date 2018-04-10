@@ -19,6 +19,7 @@
 
 <%@include file="constantsAWSCommonParams.jspf"%>
 
+<c:set var="regionName" value="${propertiesBean.properties[region_name_param]}"/>
 <c:choose>
     <c:when test="${empty param.requireEnvironment or true eq param.requireEnvironment}">
         <props:selectSectionProperty name="${environment_name_param}" title="${environment_name_label}:">
@@ -32,29 +33,37 @@
                         <span class="error" id="error_${service_endpoint_param}"></span>
                     </td>
                 </tr>
+                <tr>
+                    <th><label for="${region_name_param}">${region_name_label}: <l:star/></label></th>
+                    <td>
+                        <props:textProperty name="${region_name_param}" className="longField" maxlength="256"
+                                            value="${empty regionName ? region_name_default : regionName}"/>
+                        <span class="error" id="error_${region_name_param}"></span>
+                    </td>
+                </tr>
             </props:selectSectionPropertyContent>
         </props:selectSectionProperty>
     </c:when>
-</c:choose>
-
-<c:set var="regionName" value="${propertiesBean.properties[region_name_param]}"/>
-<c:choose>
-    <c:when test="${not empty param.requireRegion and false eq param.requireRegion}">
-        <props:hiddenProperty name="${region_name_param}" value="${empty regionName ? region_name_default : regionName}"/>
-    </c:when>
     <c:otherwise>
-        <tr>
-            <th><label for="${region_name_param}">${region_name_label}: <l:star/></label></th>
-            <td>
-                <props:selectProperty name="${region_name_param}" className="longField" enableFilter="true">
-                    <props:option value="${null}">-- Select region --</props:option>
-                    <c:forEach var="region" items="${allRegions.keySet()}">
-                        <props:option value="${region}"><c:out value="${allRegions[region]}"/></props:option>
-                    </c:forEach>
-                </props:selectProperty>
-                <span class="smallNote">All resources must be located in this region</span><span class="error" id="error_${region_name_param}"></span>
-            </td>
-        </tr>
+        <c:choose>
+            <c:when test="${not empty param.requireRegion and false eq param.requireRegion}">
+                <props:hiddenProperty name="${region_name_param}" value="${empty regionName ? region_name_default : regionName}"/>
+            </c:when>
+            <c:otherwise>
+                <tr>
+                    <th><label for="${region_name_param}">${region_name_label}: <l:star/></label></th>
+                    <td>
+                        <props:selectProperty name="${region_name_param}" className="longField" enableFilter="true">
+                            <props:option value="${null}">-- Select region --</props:option>
+                            <c:forEach var="region" items="${allRegions.keySet()}">
+                                <props:option value="${region}"><c:out value="${allRegions[region]}"/></props:option>
+                            </c:forEach>
+                        </props:selectProperty>
+                        <span class="smallNote">All resources must be located in this region</span><span class="error" id="error_${region_name_param}"></span>
+                    </td>
+                </tr>
+            </c:otherwise>
+        </c:choose>
     </c:otherwise>
 </c:choose>
 
