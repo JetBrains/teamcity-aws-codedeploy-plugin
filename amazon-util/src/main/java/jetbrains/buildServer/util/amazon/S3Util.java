@@ -69,7 +69,7 @@ public final class S3Util {
   }
 
   @NotNull
-  private static <T extends Transfer> Collection<T> withTransferManager(@NotNull final AmazonS3 s3Client, final boolean shutdownClient,
+  public static <T extends Transfer> Collection<T> withTransferManager(@NotNull final AmazonS3 s3Client, final boolean shutdownClient,
                                                                         @NotNull final WithTransferManager<T> withTransferManager) throws Throwable {
 
     final TransferManager manager = TransferManagerBuilder.standard().withS3Client(s3Client).withExecutorFactory(createExecutorFactory(createDefaultExecutorService())).withShutDownThreadPools(true).build();
