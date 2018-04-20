@@ -24,7 +24,9 @@ import com.amazonaws.services.s3.transfer.Transfer;
 import com.amazonaws.services.s3.transfer.TransferManager;
 import com.amazonaws.services.s3.transfer.Upload;
 import jetbrains.buildServer.BaseTestCase;
+import jetbrains.buildServer.TestNGUtil;
 import jetbrains.buildServer.util.CollectionsUtil;
+import jetbrains.buildServer.util.StringUtil;
 import jetbrains.buildServer.util.amazon.AWSClients;
 import jetbrains.buildServer.util.amazon.S3Util;
 import org.jetbrains.annotations.NotNull;
@@ -54,7 +56,7 @@ public class S3UtilTest extends BaseTestCase {
   protected void setUpClass() throws Exception {
     super.setUpClass();
     final AmazonS3 s3Client = createS3Client();
-    if (s3Client.doesBucketExist(BUCKET_NAME)) {
+    if (s3Client.doesBucketExistV2(BUCKET_NAME)) {
       deleteBucket(BUCKET_NAME, s3Client);
     }
     s3Client.createBucket(BUCKET_NAME);
@@ -168,6 +170,10 @@ public class S3UtilTest extends BaseTestCase {
   @NotNull
   private AmazonS3 createS3Client() {
     final Map<String, String> params = getParameters();
+    if (StringUtil.isEmptyOrSpaces(params.get(ACCESS_KEY_ID_PARAM))
+            || StringUtil.isEmptyOrSpaces(params.get(SECURE_SECRET_ACCESS_KEY_PARAM))) {
+      TestNGUtil.skip("No credentials specified for tests");
+    }
     return AWSClients.fromBasicCredentials(
             params.get(ACCESS_KEY_ID_PARAM),
             params.get(SECURE_SECRET_ACCESS_KEY_PARAM),
