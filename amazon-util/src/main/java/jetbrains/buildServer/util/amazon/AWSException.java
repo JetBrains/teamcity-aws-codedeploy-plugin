@@ -33,6 +33,7 @@ public class AWSException extends RuntimeException {
   public static String SERVICE_PROBLEM_TYPE = "AWS_SERVICE";
   public static String CLIENT_PROBLEM_TYPE = "AWS_CLIENT";
   public static String EXCEPTION_BUILD_PROBLEM_TYPE = "AWS_EXCEPTION";
+  private static final String NETWORK_PROBLEM_MESSAGE = "Unable to execute HTTP request";
 
   public static Map<String, String> PROBLEM_TYPES = CollectionsUtil.asMap(
     SERVICE_PROBLEM_TYPE, "Amazon service exception",
@@ -61,7 +62,14 @@ public class AWSException extends RuntimeException {
   public static String getMessage(@NotNull Throwable t) {
     if (t instanceof AWSException) return t.getMessage();
     if (t instanceof AmazonServiceException)  return "AWS error: " + removeTrailingDot(((AmazonServiceException) t).getErrorMessage());
-    if (t instanceof AmazonClientException) return "AWS client error: " + removeTrailingDot(t.getMessage());
+    if (t instanceof AmazonClientException) {
+      final String message = t.getMessage();
+      if (message.contains(NETWORK_PROBLEM_MESSAGE)) {
+        return "Unable to access AWS. Check your network settings and try again.";
+      } else {
+        return "AWS client error: " + removeTrailingDot(message);
+      }
+    }
     return "Unexpected error: " + removeTrailingDot(t.getMessage());
   }
 
