@@ -16,16 +16,24 @@
 
 package jetbrains.buildServer.util.amazon;
 
+import com.amazonaws.ClientConfiguration;
+import com.amazonaws.auth.*;
+import com.amazonaws.services.securitytoken.AWSSecurityTokenService;
+import com.amazonaws.services.securitytoken.AWSSecurityTokenServiceClientBuilder;
+import com.amazonaws.services.securitytoken.model.AssumeRoleRequest;
+import com.amazonaws.services.securitytoken.model.Credentials;
 import jetbrains.buildServer.parameters.ReferencesResolverUtil;
 import jetbrains.buildServer.util.CollectionsUtil;
 import jetbrains.buildServer.util.FileUtil;
 import jetbrains.buildServer.util.StringUtil;
+import jetbrains.buildServer.version.ServerVersionHolder;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicReference;
 
 import static jetbrains.buildServer.util.amazon.AWSClients.*;
 
@@ -148,16 +156,62 @@ public final class AWSCommonParams {
   }
 
   @Nullable
-  private static String getCredentialsType(@NotNull Map<String, String> params) {
+  public static String getCredentialsType(@NotNull Map<String, String> params) {
     return getNewOrOld(params, CREDENTIALS_TYPE_PARAM, CREDENTIALS_TYPE_PARAM_OLD);
   }
 
   @Nullable
-  private static String getAccessKeyId(@NotNull Map<String, String> params) {
+  public static String getAccessKeyId(@NotNull Map<String, String> params) {
     return getNewOrOld(params, ACCESS_KEY_ID_PARAM, ACCESS_KEY_ID_PARAM_OLD);
   }
 
-  private static boolean isUseDefaultCredentialProviderChain(@NotNull Map<String, String> params) {
+  @Nullable
+  public static AWSCredentialsProvider getCredentialsProvider(@NotNull final Map<String, String> params){
+    final String credentialsType = getCredentialsType(params);
+    final boolean useDefaultCredProvChain = isUseDefaultCredentialProviderChain(params);
+    if (useDefaultCredProvChain)
+      return null;
+
+    if (isAccessKeysOption(credentialsType)){
+      return new AWSCredentialsProvider() {
+        @Override
+        public AWSCredentials getCredentials() {
+          return new BasicAWSCredentials(getAccessKeyId(params), getSecretAccessKey(params));
+        }
+
+        @Override
+        public void refresh() {
+          // do nothing
+        }
+      };
+    } else if (isTempCredentialsOption(credentialsType)) {
+      return new AWSSessionCredentialsProvider() {
+        private final AtomicReference<AWSSessionCredentials> mySessionCredentials = new AtomicReference<AWSSessionCredentials>();
+        @Override
+        public AWSSessionCredentials getCredentials() {
+          if (mySessionCredentials.get() == null){
+            synchronized (this){
+              if (mySessionCredentials.get() == null){
+                mySessionCredentials.set(createSessionCredentials(params));
+              }
+            }
+          }
+          return mySessionCredentials.get();
+        }
+
+        @Override
+        public void refresh() {
+          synchronized (this){
+            mySessionCredentials.set(createSessionCredentials(params));
+          }
+        }
+      };
+    }
+
+    return null;
+  }
+
+  public static boolean isUseDefaultCredentialProviderChain(@NotNull Map<String, String> params) {
     return Boolean.parseBoolean(params.get(USE_DEFAULT_CREDENTIAL_PROVIDER_CHAIN_PARAM)) || Boolean.parseBoolean(USE_DEFAULT_CREDENTIAL_PROVIDER_CHAIN_PARAM_OLD);
   }
 
@@ -197,6 +251,22 @@ public final class AWSCommonParams {
 
   private static boolean isReference(@NotNull String param, boolean acceptReferences) {
     return acceptReferences && ReferencesResolverUtil.containsReference(param);
+  }
+
+  static int patchSessionDuration(int sessionDuration) {
+    if (sessionDuration < 900) return 900;
+    if (sessionDuration > 3600) return 3600;
+    return sessionDuration;
+  }
+
+  @NotNull
+  static String patchSessionName(@NotNull String sessionName) {
+    return StringUtil.truncateStringValue(sessionName.replaceAll(UNSUPPORTED_SESSION_NAME_CHARS, "_"), MAX_SESSION_NAME_LENGTH);
+  }
+
+  @NotNull
+  static ClientConfiguration createClientConfiguration() {
+    return new ClientConfiguration().withUserAgentPrefix("JetBrains TeamCity " + ServerVersionHolder.getVersion().getDisplayVersion());
   }
 
   public interface WithAWSClients<T, E extends Throwable> {
@@ -247,6 +317,39 @@ public final class AWSCommonParams {
     return awsClients;
   }
 
+  private static AWSSessionCredentials createSessionCredentials(Map<String, String> params) throws AWSException {
+    final String iamRoleARN = getIamRoleArnParam(params);
+    final String externalID = getExternalId(params);
+    final String sessionName = getStringOrDefault(params.get(TEMP_CREDENTIALS_SESSION_NAME_PARAM), TEMP_CREDENTIALS_SESSION_NAME_DEFAULT_PREFIX + new Date().getTime());
+    final int sessionDuration = getIntegerOrDefault(params.get(TEMP_CREDENTIALS_DURATION_SEC_PARAM), TEMP_CREDENTIALS_DURATION_SEC_DEFAULT);
+
+    final AssumeRoleRequest assumeRoleRequest = new AssumeRoleRequest()
+      .withRoleArn(iamRoleARN)
+      .withRoleSessionName(patchSessionName(sessionName))
+      .withDurationSeconds(patchSessionDuration(sessionDuration));
+
+    if (StringUtil.isNotEmpty(externalID)) assumeRoleRequest.setExternalId(externalID);
+
+    try {
+      final AWSSecurityTokenService securityTokenService = createSecurityTokenService(params);
+      final Credentials credentials = securityTokenService.assumeRole(assumeRoleRequest).getCredentials();
+      return new BasicSessionCredentials(credentials.getAccessKeyId(), credentials.getSecretAccessKey(), credentials.getSessionToken());
+    } catch (Exception e) {
+      throw new AWSException(e);
+    }
+  }
+
+  @NotNull
+  private static AWSSecurityTokenService createSecurityTokenService(Map<String, String> params) {
+    final String region = getRegionName(params);
+    return AWSSecurityTokenServiceClientBuilder
+      .standard()
+      .withRegion(region)
+      .withCredentials(getCredentialsProvider(params))
+      .build();
+  }
+
+
   @NotNull
   public static String getStringOrDefault(@Nullable String val, @NotNull String defaultVal) {
     return StringUtil.isEmptyOrSpaces(val) ? defaultVal : val;
@@ -284,5 +387,35 @@ public final class AWSCommonParams {
   @NotNull
   private static Collection<String> getIdentityFormingParams(@NotNull Map<String, String> params) {
     return Arrays.asList(getRegionName(params), getAccessKeyId(params), getIamRoleArnParam(params));
+  }
+
+  // must implement AWSSessionCredentials as AWS SDK may use "instanceof"
+  static abstract class LazyCredentials implements AWSSessionCredentials {
+    @Nullable
+    private AWSSessionCredentials myDelegate = null;
+
+    @Override
+    public String getAWSAccessKeyId() {
+      return getDelegate().getAWSAccessKeyId();
+    }
+
+    @Override
+    public String getAWSSecretKey() {
+      return getDelegate().getAWSSecretKey();
+    }
+
+    @Override
+    public String getSessionToken() {
+      return getDelegate().getSessionToken();
+    }
+
+    @NotNull
+    private AWSSessionCredentials getDelegate() {
+      if (myDelegate == null) myDelegate = createCredentials();
+      return myDelegate;
+    }
+
+    @NotNull
+    protected abstract AWSSessionCredentials createCredentials();
   }
 }

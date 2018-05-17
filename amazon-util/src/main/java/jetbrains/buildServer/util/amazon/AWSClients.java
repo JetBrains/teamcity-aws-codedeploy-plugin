@@ -29,7 +29,6 @@ import com.amazonaws.services.securitytoken.AWSSecurityTokenServiceClient;
 import com.amazonaws.services.securitytoken.model.AssumeRoleRequest;
 import com.amazonaws.services.securitytoken.model.Credentials;
 import jetbrains.buildServer.util.StringUtil;
-import jetbrains.buildServer.version.ServerVersionHolder;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -47,7 +46,7 @@ public class AWSClients {
   private AWSClients(@Nullable AWSCredentials credentials, @NotNull String region) {
     myCredentials = credentials;
     myRegion = region;
-    myClientConfiguration = createClientConfiguration();
+    myClientConfiguration = AWSCommonParams.createClientConfiguration();
   }
 
   @Nullable
@@ -79,7 +78,7 @@ public class AWSClients {
                                                   @NotNull final String iamRoleARN, @Nullable final String externalID,
                                                   @NotNull final String sessionName, final int sessionDuration,
                                                   @NotNull final String region) {
-    return fromExistingCredentials(new LazyCredentials() {
+    return fromExistingCredentials(new AWSCommonParams.LazyCredentials() {
       @NotNull
       @Override
       protected AWSSessionCredentials createCredentials() {
@@ -92,7 +91,7 @@ public class AWSClients {
   public static AWSClients fromSessionCredentials(@NotNull final String iamRoleARN, @Nullable final String externalID,
                                                   @NotNull final String sessionName, final int sessionDuration,
                                                   @NotNull final String region) {
-    return fromExistingCredentials(new LazyCredentials() {
+    return fromExistingCredentials(new AWSCommonParams.LazyCredentials() {
       @NotNull
       @Override
       protected AWSSessionCredentials createCredentials() {
@@ -169,7 +168,7 @@ public class AWSClients {
 
   @NotNull
   private AWSSessionCredentials createSessionCredentials(@NotNull String iamRoleARN, @Nullable String externalID, @NotNull String sessionName, int sessionDuration) throws AWSException {
-    final AssumeRoleRequest assumeRoleRequest = new AssumeRoleRequest().withRoleArn(iamRoleARN).withRoleSessionName(patchSessionName(sessionName)).withDurationSeconds(patchSessionDuration(sessionDuration));
+    final AssumeRoleRequest assumeRoleRequest = new AssumeRoleRequest().withRoleArn(iamRoleARN).withRoleSessionName(AWSCommonParams.patchSessionName(sessionName)).withDurationSeconds(AWSCommonParams.patchSessionDuration(sessionDuration));
     if (StringUtil.isNotEmpty(externalID)) assumeRoleRequest.setExternalId(externalID);
     try {
       final Credentials credentials = createSecurityTokenServiceClient().assumeRole(assumeRoleRequest).getCredentials();
@@ -179,52 +178,7 @@ public class AWSClients {
     }
   }
 
-  private int patchSessionDuration(int sessionDuration) {
-    if (sessionDuration < 900) return 900;
-    if (sessionDuration > 3600) return 3600;
-    return sessionDuration;
-  }
-
   public static final String UNSUPPORTED_SESSION_NAME_CHARS = "[^\\w+=,.@-]";
   public static final int MAX_SESSION_NAME_LENGTH = 64;
 
-  @NotNull
-  private static String patchSessionName(@NotNull String sessionName) {
-    return StringUtil.truncateStringValue(sessionName.replaceAll(UNSUPPORTED_SESSION_NAME_CHARS, "_"), MAX_SESSION_NAME_LENGTH);
-  }
-
-  @NotNull
-  private static ClientConfiguration createClientConfiguration() {
-    return new ClientConfiguration().withUserAgentPrefix("JetBrains TeamCity " + ServerVersionHolder.getVersion().getDisplayVersion());
-  }
-
-  // must implement AWSSessionCredentials as AWS SDK may use "instanceof"
-  private static abstract class LazyCredentials implements AWSSessionCredentials {
-    @Nullable
-    private AWSSessionCredentials myDelegate = null;
-
-    @Override
-    public String getAWSAccessKeyId() {
-      return getDelegate().getAWSAccessKeyId();
-    }
-
-    @Override
-    public String getAWSSecretKey() {
-      return getDelegate().getAWSSecretKey();
-    }
-
-    @Override
-    public String getSessionToken() {
-      return getDelegate().getSessionToken();
-    }
-
-    @NotNull
-    private AWSSessionCredentials getDelegate() {
-      if (myDelegate == null) myDelegate = createCredentials();
-      return myDelegate;
-    }
-
-    @NotNull
-    protected abstract AWSSessionCredentials createCredentials();
-  }
 }
