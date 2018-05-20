@@ -81,7 +81,6 @@
             <br/>
             <a href="http://console.aws.amazon.com/iam" target="_blank">Open IAM Console</a>
         </td>
-        <td></td>
     </tr>
     <tr id="${iam_role_arn_param}_row">
         <th><label for="${iam_role_arn_param}">${iam_role_arn_label}: <l:star/></label></th>
