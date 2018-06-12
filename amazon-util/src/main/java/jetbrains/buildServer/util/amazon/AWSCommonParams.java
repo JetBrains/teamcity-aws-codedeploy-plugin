@@ -167,12 +167,17 @@ public final class AWSCommonParams {
 
   @Nullable
   public static AWSCredentialsProvider getCredentialsProvider(@NotNull final Map<String, String> params){
+    return getCredentialsProvider(params, false);
+  }
+
+  private static AWSCredentialsProvider getCredentialsProvider(@NotNull final Map<String, String> params,
+                                                               final boolean fixedCredentials){
     final String credentialsType = getCredentialsType(params);
     final boolean useDefaultCredProvChain = isUseDefaultCredentialProviderChain(params);
     if (useDefaultCredProvChain)
       return null;
 
-    if (isAccessKeysOption(credentialsType)){
+    if (isAccessKeysOption(credentialsType) || fixedCredentials){
       return new AWSCredentialsProvider() {
         @Override
         public AWSCredentials getCredentials() {
@@ -345,7 +350,7 @@ public final class AWSCommonParams {
     return AWSSecurityTokenServiceClientBuilder
       .standard()
       .withRegion(region)
-      .withCredentials(getCredentialsProvider(params))
+      .withCredentials(getCredentialsProvider(params, true))
       .build();
   }
 
