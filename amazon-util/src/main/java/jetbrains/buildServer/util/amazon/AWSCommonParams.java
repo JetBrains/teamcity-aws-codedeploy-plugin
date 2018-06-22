@@ -69,7 +69,7 @@ public final class AWSCommonParams {
 
   public static final String USE_DEFAULT_CREDENTIAL_PROVIDER_CHAIN_PARAM_OLD = "use_default_credential_provider_chain";
   public static final String USE_DEFAULT_CREDENTIAL_PROVIDER_CHAIN_PARAM = "aws.use.default.credential.provider.chain";
-  public static final String USE_DEFAULT_CREDENTIAL_PROVIDER_CHAIN_LABEL = "Use default credential provider chain";
+  public static final String USE_DEFAULT_CREDENTIAL_PROVIDER_CHAIN_LABEL = "Default Credential Provider Chain";
 
   public static final String ACCESS_KEY_ID_PARAM_OLD = "codedeploy_access_key_id";
   public static final String ACCESS_KEY_ID_PARAM = "aws.access.key.id";

@@ -69,7 +69,13 @@
 
 <l:settingsGroup title="AWS Security Credentials">
     <tr>
-        <th><label for="${credentials_type_param}">${credentials_type_label}: <l:star/></label></th>
+        <th>
+            <label for="${credentials_type_param}">${credentials_type_label}: <l:star/></label>
+            <br/>
+            <div style="font-weight: normal">
+                <a href="http://console.aws.amazon.com/iam" target="_blank">Open IAM Console</a>
+            </div>
+        </th>
         <td><props:radioButtonProperty name="${credentials_type_param}" value="${access_keys_option}" id="${access_keys_option}" onclick="awsCommonParamsUpdateVisibility()"/>
             <label for="${access_keys_option}">${access_keys_label}</label>
             <span class="smallNote">Use pre-configured AWS account access keys</span>
@@ -78,8 +84,6 @@
             <label for="${temp_credentials_option}">${temp_credentials_label}</label>
             <span class="smallNote">Get temporary access keys via AWS STS</span>
             <span class="error" id="error_${credentials_type_param}"></span>
-            <br/>
-            <a href="http://console.aws.amazon.com/iam" target="_blank">Open IAM Console</a>
         </td>
     </tr>
     <tr id="${iam_role_arn_param}_row">
@@ -105,7 +109,7 @@
         </td>
     </tr>
     <tr id="${secret_access_key_param}_row">
-        <th><label for="${secure_secret_access_key_param}">${secret_access_key_label}: <l:star/></label></th>
+        <th class="nowrap"><label for="${secure_secret_access_key_param}">${secret_access_key_label}: <l:star/></label></th>
         <td><props:passwordProperty name="${secure_secret_access_key_param}" className="longField" maxlength="256"/>
             <span class="smallNote">AWS account secret access key</span><span class="error" id="error_${secure_secret_access_key_param}"></span>
         </td>
