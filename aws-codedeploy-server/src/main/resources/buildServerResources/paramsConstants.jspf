@@ -132,3 +132,6 @@
 
 <c:set var="green_fleet_param" value="<%=CodeDeployConstants.GREEN_FLEET_PARAM%>"/>
 <c:set var="green_fleet_label" value="<%=CodeDeployConstants.GREEN_FLEET_LABEL%>"/>
+
+<c:set var="file_exists_behavior_param" value="<%=CodeDeployConstants.FILE_EXISTS_BEHAVIOR_PARAM%>"/>
+<c:set var="file_exists_behavior_label" value="<%=CodeDeployConstants.FILE_EXISTS_BEHAVIOR_LABEL%>"/>

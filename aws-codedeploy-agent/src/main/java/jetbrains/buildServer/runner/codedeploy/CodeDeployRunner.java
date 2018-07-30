@@ -17,6 +17,7 @@
 package jetbrains.buildServer.runner.codedeploy;
 
 import com.amazonaws.services.codedeploy.AmazonCodeDeployClient;
+import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3Client;
 import jetbrains.buildServer.RunBuildException;
 import jetbrains.buildServer.agent.*;
@@ -113,11 +114,12 @@ public class CodeDeployRunner implements AgentBuildRunner {
                   Integer.parseInt(getWaitTimeOutSec(runnerParameters)),
                   getIntegerOrDefault(configParameters.get(WAIT_POLL_INTERVAL_SEC_CONFIG_PARAM), WAIT_POLL_INTERVAL_SEC_DEFAULT),
                   Boolean.parseBoolean(getRollbackOnFailure(runnerParameters)),
-                  Boolean.parseBoolean(getRollbackOnAlarmThreshold(runnerParameters)));
+                  Boolean.parseBoolean(getRollbackOnAlarmThreshold(runnerParameters)),
+                  getFileExistsBehavior(runnerParameters));
               } else {
                 awsClient.deployRevision(
                   s3BucketName, s3ObjectKey, bundleType, m.s3ObjectVersion, m.s3ObjectETag,
-                  applicationName, deploymentGroupName, getEC2Tags(runnerParameters), getAutoScalingGroups(runnerParameters), deploymentConfigName);
+                  applicationName, deploymentGroupName, getEC2Tags(runnerParameters), getAutoScalingGroups(runnerParameters), deploymentConfigName, getFileExistsBehavior(runnerParameters));
               }
             }
 
@@ -164,7 +166,7 @@ public class CodeDeployRunner implements AgentBuildRunner {
   }
 
   @NotNull
-  private AWSClient createAWSClient(@NotNull final AmazonS3Client s3Client, @NotNull final AmazonCodeDeployClient codeDeployClient, @NotNull final AgentRunningBuild runningBuild) {
+  private AWSClient createAWSClient(@NotNull final AmazonS3 s3Client, @NotNull final AmazonCodeDeployClient codeDeployClient, @NotNull final AgentRunningBuild runningBuild) {
     return new AWSClient(s3Client, codeDeployClient).withDescription("TeamCity build \"" + runningBuild.getBuildTypeName() + "\" #" + runningBuild.getBuildNumber());
   }
 
