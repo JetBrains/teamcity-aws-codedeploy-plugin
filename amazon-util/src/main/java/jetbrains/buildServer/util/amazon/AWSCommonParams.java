@@ -128,14 +128,10 @@ public final class AWSCommonParams {
 
     if (ENVIRONMENT_TYPE_CUSTOM.equals(params.get(ENVIRONMENT_NAME_PARAM))) {
       final String serviceEndpoint = params.get(SERVICE_ENDPOINT_PARAM);
-      if (StringUtil.isEmptyOrSpaces(serviceEndpoint)) {
-        invalids.put(SERVICE_ENDPOINT_PARAM, SERVICE_ENDPOINT_LABEL + " must not be empty");
-      } else {
-        try {
-          new URL(serviceEndpoint);
-        } catch (MalformedURLException e) {
-          invalids.put(SERVICE_ENDPOINT_PARAM, "Invalid URL format for " + SERVICE_ENDPOINT_LABEL);
-        }
+      try {
+        new URL(serviceEndpoint);
+      } catch (MalformedURLException e) {
+        invalids.put(SERVICE_ENDPOINT_PARAM, "Invalid URL format for " + SERVICE_ENDPOINT_LABEL);
       }
     }
 
