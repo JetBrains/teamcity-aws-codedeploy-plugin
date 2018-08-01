@@ -182,7 +182,7 @@ final class CodeDeployUtil {
 
   @Nullable
   public static String getFileExistsBehavior(@NotNull Map<String, String> params) {
-    return getNewOrOld(params, FILE_EXISTS_BEHAVIOR_PARAM, FILE_EXISTS_BEHAVIOR_PARAM_OLD);
+    return params.get(FILE_EXISTS_BEHAVIOR_PARAM);
   }
 
   @Nullable

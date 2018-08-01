@@ -128,10 +128,14 @@
 <tr class="groupingTitle" data-steps="${deploy_step}">
     <td colspan="2">File Exists Behavior</td>
 </tr>
+
 <tr data-steps="${deploy_step}">
     <th><label for="${file_exists_behavior_param}">${file_exists_behavior_label}: </label></th>
-    <td><props:textProperty name="${file_exists_behavior_param}" className="longField" maxlength="256"/>
-        <span class="smallNote">Use to set behavior when deployment finds a file that already exists, left blank will use default DISALLOW (OVERWRITE, RETAIN)</span><span class="error" id="error_${file_exists_behavior_param}"></span>
+    <td><props:selectProperty name="${file_exists_behavior_param}" className="mediumField">
+        <props:option value="">&lt;Default&gt;</props:option>
+        <props:option value="OVERWRITE">Overwrite</props:option>
+        <props:option value="RETAIN">Retain</props:option>
+    </props:selectProperty>
     </td>
 </tr>
 
