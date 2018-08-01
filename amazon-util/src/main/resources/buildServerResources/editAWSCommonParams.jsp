@@ -30,7 +30,6 @@
                     <td>
                         <props:textProperty name="${service_endpoint_param}" className="longField"/>
                         <span class="smallNote">Specify the URL for AWS service</span>
-                        <span class="error" id="error_${service_endpoint_param}"></span>
                     </td>
                 </tr>
                 <tr>
