@@ -32,7 +32,7 @@ ext.teamcityDir = hasProperty('teamcity.dir') ? property('teamcity.dir') : "$roo
 ext.teamcityDataDir = "$rootDir/teamcity/data/" + teamcityVersion
 ext.teamcityJavaHome = System.properties['java.home']
 
-ext.amazonUtilVersion = hasProperty('amazon.util.version') ? property('amazon.util.version') : '3'
+ext.amazonUtilVersion = hasProperty('amazon.util.version') ? property('amazon.util.version') : '30'
 
 apply plugin: 'idea'
 idea {

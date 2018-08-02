@@ -125,6 +125,20 @@
     <td><props:checkboxProperty name="${rollback_on_alarm_param}" uncheckedValue="false"/></td>
 </tr>
 
+<tr class="groupingTitle" data-steps="${deploy_step}">
+    <td colspan="2">File Exists Behavior</td>
+</tr>
+
+<tr data-steps="${deploy_step}">
+    <th><label for="${file_exists_behavior_param}">${file_exists_behavior_label}: </label></th>
+    <td><props:selectProperty name="${file_exists_behavior_param}" className="mediumField">
+        <props:option value="">&lt;Default&gt;</props:option>
+        <props:option value="OVERWRITE">Overwrite</props:option>
+        <props:option value="RETAIN">Retain</props:option>
+    </props:selectProperty>
+    </td>
+</tr>
+
 <script type="application/javascript">
     window.codeDeployUpdateStepNote = function () {
         $j('#runnerParams .stepNote.facultativeNote').each(function() {

@@ -18,6 +18,7 @@ package jetbrains.buildServer.runner.codedeploy;
 
 import com.amazonaws.services.codedeploy.AmazonCodeDeployClient;
 import com.amazonaws.services.codedeploy.model.*;
+import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.transfer.TransferManager;
 import com.amazonaws.services.s3.transfer.Upload;
@@ -41,12 +42,12 @@ import java.util.Map;
  */
 public class AWSClient {
 
-  @NotNull private final AmazonS3Client myS3Client;
+  @NotNull private final AmazonS3 myS3Client;
   @NotNull private final AmazonCodeDeployClient myCodeDeployClient;
   @Nullable private String myDescription;
   @NotNull private Listener myListener = new Listener();
 
-  public AWSClient(@NotNull AmazonS3Client s3Client,
+  public AWSClient(@NotNull AmazonS3 s3Client,
                    @NotNull AmazonCodeDeployClient codeDeployClient) {
     myS3Client = s3Client;
     myCodeDeployClient = codeDeployClient;
@@ -126,8 +127,8 @@ public class AWSClient {
                                     @NotNull Map<String, String> ec2Tags, @NotNull Collection<String> autoScalingGroups,
                                     @Nullable String deploymentConfigName,
                                     int waitTimeoutSec, int waitIntervalSec,
-                                    boolean rollbackOnFailure, boolean rollbackOnAlarmThreshold) {
-    doDeployAndWait(s3BucketName, s3ObjectKey, bundleType, s3ObjectVersion, s3ObjectETag, applicationName, deploymentGroupName, ec2Tags, autoScalingGroups, deploymentConfigName, true, waitTimeoutSec, waitIntervalSec, rollbackOnFailure, rollbackOnAlarmThreshold);
+                                    boolean rollbackOnFailure, boolean rollbackOnAlarmThreshold, @Nullable String fileExistsBehavior) {
+    doDeployAndWait(s3BucketName, s3ObjectKey, bundleType, s3ObjectVersion, s3ObjectETag, applicationName, deploymentGroupName, ec2Tags, autoScalingGroups, deploymentConfigName, true, waitTimeoutSec, waitIntervalSec, rollbackOnFailure, rollbackOnAlarmThreshold, fileExistsBehavior);
   }
 
   /**
@@ -135,8 +136,8 @@ public class AWSClient {
    */
   public void deployRevision(@NotNull String s3BucketName, @NotNull String s3ObjectKey, @NotNull String bundleType, @Nullable String s3ObjectVersion, @Nullable String s3ObjectETag,
                              @NotNull String applicationName, @NotNull String deploymentGroupName, @NotNull Map<String, String> ec2Tags, @NotNull Collection<String> autoScalingGroups,
-                             @Nullable String deploymentConfigName) {
-    doDeployAndWait(s3BucketName, s3ObjectKey, bundleType, s3ObjectVersion, s3ObjectETag, applicationName, deploymentGroupName, ec2Tags, autoScalingGroups, deploymentConfigName, false, null, null, false, false);
+                             @Nullable String deploymentConfigName, @Nullable String fileExistsBehavior) {
+    doDeployAndWait(s3BucketName, s3ObjectKey, bundleType, s3ObjectVersion, s3ObjectETag, applicationName, deploymentGroupName, ec2Tags, autoScalingGroups, deploymentConfigName, false, null, null, false, false, fileExistsBehavior);
   }
 
   @SuppressWarnings("ConstantConditions")
@@ -145,9 +146,9 @@ public class AWSClient {
                                @NotNull Map<String, String> ec2Tags, @NotNull Collection<String> autoScalingGroups,
                                @Nullable String deploymentConfigName,
                                boolean wait, @Nullable Integer waitTimeoutSec, @Nullable Integer waitIntervalSec,
-                               boolean rollbackOnFailure, boolean rollbackOnAlarmThreshold) {
+                               boolean rollbackOnFailure, boolean rollbackOnAlarmThreshold, @Nullable String fileExistsBehavior) {
     try {
-        final String deploymentId = createDeployment(getRevisionLocation(s3BucketName, s3ObjectKey, bundleType, s3ObjectVersion, s3ObjectETag), applicationName, deploymentGroupName, ec2Tags, autoScalingGroups, deploymentConfigName, rollbackOnFailure, rollbackOnAlarmThreshold);
+        final String deploymentId = createDeployment(getRevisionLocation(s3BucketName, s3ObjectKey, bundleType, s3ObjectVersion, s3ObjectETag), applicationName, deploymentGroupName, ec2Tags, autoScalingGroups, deploymentConfigName, rollbackOnFailure, rollbackOnAlarmThreshold, fileExistsBehavior);
 
         if (wait) {
           waitForDeployment(deploymentId, waitTimeoutSec, waitIntervalSec);
@@ -239,7 +240,8 @@ public class AWSClient {
                                   @NotNull Collection<String> autoScalingGroups,
                                   @Nullable String deploymentConfigName,
                                   boolean rollbackOnFailure,
-                                  boolean rollbackOnAlarmThreshold) {
+                                  boolean rollbackOnAlarmThreshold,
+                                  @Nullable String fileExistsBehavior) {
     myListener.createDeploymentStarted(applicationName, deploymentGroupName, deploymentConfigName);
 
     final CreateDeploymentRequest request =
@@ -247,6 +249,7 @@ public class AWSClient {
         .withRevision(revisionLocation)
         .withApplicationName(applicationName)
         .withDeploymentGroupName(deploymentGroupName)
+        .withFileExistsBehavior(fileExistsBehavior)
         .withDescription(getDescription("Deployment created by ", 100));
 
     if (StringUtil.isNotEmpty(deploymentConfigName)) request.setDeploymentConfigName(deploymentConfigName);

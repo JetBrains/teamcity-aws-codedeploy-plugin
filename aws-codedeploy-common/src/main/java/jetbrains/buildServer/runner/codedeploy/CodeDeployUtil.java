@@ -181,6 +181,11 @@ final class CodeDeployUtil {
   }
 
   @Nullable
+  public static String getFileExistsBehavior(@NotNull Map<String, String> params) {
+    return params.get(FILE_EXISTS_BEHAVIOR_PARAM);
+  }
+
+  @Nullable
   public static String getAppName(@NotNull Map<String, String> params) {
     return getNewOrOld(params, APP_NAME_PARAM, APP_NAME_PARAM_OLD);
   }

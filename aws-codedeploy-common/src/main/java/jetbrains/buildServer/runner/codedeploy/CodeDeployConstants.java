@@ -68,6 +68,9 @@ public interface CodeDeployConstants {
   String APP_NAME_PARAM = "codedeploy.application.name";
   String APP_NAME_LABEL = "Application name";
 
+  String FILE_EXISTS_BEHAVIOR_PARAM = "codedeploy.file.exists.behavior";
+  String FILE_EXISTS_BEHAVIOR_LABEL = "Behavior when file exists";
+
   String DEPLOYMENT_GROUP_NAME_PARAM_OLD = "codedeploy_deployment_group_name";
   String DEPLOYMENT_GROUP_NAME_PARAM = "codedeploy.deployment.group.name";
   String DEPLOYMENT_GROUP_NAME_LABEL = "Deployment group";
