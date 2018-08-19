@@ -17,12 +17,14 @@
 package jetbrains.buildServer.util.amazon;
 
 import com.amazonaws.ClientConfiguration;
+import com.amazonaws.Protocol;
 import com.amazonaws.auth.*;
 import com.amazonaws.services.securitytoken.AWSSecurityTokenService;
 import com.amazonaws.services.securitytoken.AWSSecurityTokenServiceClientBuilder;
 import com.amazonaws.services.securitytoken.model.AssumeRoleRequest;
 import com.amazonaws.services.securitytoken.model.Credentials;
 import jetbrains.buildServer.parameters.ReferencesResolverUtil;
+import jetbrains.buildServer.serverSide.TeamCityProperties;
 import jetbrains.buildServer.util.CollectionsUtil;
 import jetbrains.buildServer.util.FileUtil;
 import jetbrains.buildServer.util.StringUtil;
@@ -35,6 +37,8 @@ import java.net.URL;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 
+import static jetbrains.buildServer.serverSide.TeamCityProperties.getInteger;
+import static jetbrains.buildServer.serverSide.TeamCityProperties.getPropertyOrNull;
 import static jetbrains.buildServer.util.amazon.AWSClients.*;
 
 /**
@@ -43,6 +47,9 @@ import static jetbrains.buildServer.util.amazon.AWSClients.*;
 public final class AWSCommonParams {
 
   // "codedeploy_" prefix is for backward compatibility
+
+  private static final String DEFAULT_SUFFIX = "aws";
+  private static final int DEFAULT_CONNECTION_TIMEOUT = 60 * 1000;
 
   public static final String ENVIRONMENT_NAME_PARAM = "aws.environment";
   public static final String ENVIRONMENT_NAME_LABEL = "AWS environment";
@@ -272,6 +279,43 @@ public final class AWSCommonParams {
   @NotNull
   static ClientConfiguration createClientConfiguration() {
     return new ClientConfiguration().withUserAgentPrefix("JetBrains TeamCity " + ServerVersionHolder.getVersion().getDisplayVersion());
+  }
+
+  public static ClientConfiguration createClientConfigurationEx(@Nullable String suffix){
+    if (StringUtil.isEmpty(suffix)){
+      suffix = "aws";
+    }
+    final ClientConfiguration config = new ClientConfiguration();
+
+    int connectionTimeout = TeamCityProperties.getInteger(String.format("teamcity.%s.timeout", suffix), DEFAULT_CONNECTION_TIMEOUT);
+    config.setConnectionTimeout(connectionTimeout);
+    config.setSocketTimeout(connectionTimeout);
+    // version copy-pasted from jetbrains.buildServer.updates.VersionChecker.retrieveUpdates()
+    config.setUserAgentPrefix("TeamCity Server " + ServerVersionHolder.getVersion().getDisplayVersion() + " (build " + ServerVersionHolder.getVersion().getBuildNumber() + ")");
+    config.setProtocol(Protocol.HTTPS);
+
+    final String PREFIX = "teamcity.http.proxy.";
+
+    config.setProxyHost(getPropertyEx(PREFIX + "host", suffix, "aws", config.getProxyHost()));
+    config.setProxyPort(getIntegerEx(PREFIX + "port", suffix, "aws", config.getProxyPort()));
+    config.setProxyDomain(getPropertyEx(PREFIX + "domain", suffix, "aws", config.getProxyDomain()));
+    config.setProxyUsername(getPropertyEx(PREFIX + "user", suffix, "aws", config.getProxyUsername()));
+    config.setProxyPassword(getPropertyEx(PREFIX + "password", suffix, "aws", config.getProxyPassword()));
+    config.setProxyWorkstation(getPropertyEx(PREFIX + "workstation", suffix, "aws", config.getProxyWorkstation()));
+    return config;
+  }
+
+  private static String getPropertyEx(@NotNull String baseName, @NotNull String suffix, @NotNull String defaultSuffix, @Nullable String defaultValue){
+    final String propertyOrNull = getPropertyOrNull(baseName + "." + suffix, getPropertyOrNull(baseName + "." + defaultSuffix));
+
+    return propertyOrNull == null ? defaultValue : propertyOrNull;
+  }
+
+  private static Integer getIntegerEx(@NotNull String baseName, @NotNull String suffix, @NotNull String defaultSuffix, int defaultValue){
+    final int intValue = getInteger(baseName + "."+ suffix, getInteger(baseName + "." + defaultSuffix));
+
+    return intValue == 0 ? defaultValue : intValue;
+
   }
 
   public interface WithAWSClients<T, E extends Throwable> {
