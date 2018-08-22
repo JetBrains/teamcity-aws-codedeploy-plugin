@@ -23,6 +23,7 @@ import jetbrains.buildServer.util.amazon.AWSCommonParams;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -48,6 +49,7 @@ final class ParametersValidator {
         invalids.put(REVISION_PATHS_PARAM, REVISION_PATHS_LABEL + " " + revisionPath + " doesn't exist");
       }
     }
+
 
     if (isDeploymentWaitEnabled(runnerParams)) {
       final String waitIntervalSec = configParams.get(WAIT_POLL_INTERVAL_SEC_CONFIG_PARAM);
@@ -135,6 +137,11 @@ final class ParametersValidator {
         invalids.put(DEPLOYMENT_GROUP_NAME_PARAM, DEPLOYMENT_GROUP_NAME_LABEL + " must not be empty");
       }
 
+      final String fileExistsParam = getFileExistsBehavior(runnerParams);
+      if (StringUtil.isNotEmpty(fileExistsParam)) {
+        validateFileExistsBehavior(invalids, fileExistsParam, FILE_EXISTS_BEHAVIOR_PARAM, FILE_EXISTS_BEHAVIOR_PARAM, runtime);
+      }
+
       if (isDeploymentWaitEnabled(runnerParams)) {
         final String waitTimeoutSec = getWaitTimeOutSec(runnerParams);
         if (StringUtil.isEmptyOrSpaces(waitTimeoutSec)) {
@@ -164,6 +171,15 @@ final class ParametersValidator {
     if (!isReference(param, runtime)) {
       if (!param.matches("[a-zA-Z_0-9!\\-\\.*'()/]*")) {
         invalids.put(key, name + " must contain only safe characters");
+      }
+    }
+  }
+
+  private static void validateFileExistsBehavior(@NotNull Map<String, String> invalids, @NotNull String param, @NotNull String key, @NotNull String name, boolean runtime) {
+    if (!isReference(param, runtime)) {
+      String[] allowedValues = {"DISALLOW", "OVERWRITE", "RETAIN"};
+      if (!Arrays.asList(allowedValues).contains(param)) {
+        invalids.put(key, name + " must contain either DISALLOW, OVERWRITE, or RETAIN");
       }
     }
   }
