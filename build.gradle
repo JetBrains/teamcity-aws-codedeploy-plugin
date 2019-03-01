@@ -63,7 +63,7 @@ configure(subprojects) {
     repositories {
         mavenCentral()
         maven {
-            url = 'http://repository.jetbrains.com/all'
+            url = 'https://repository.jetbrains.com/all'
         }
     }
 }

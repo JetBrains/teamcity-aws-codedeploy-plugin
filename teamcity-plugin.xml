@@ -25,7 +25,7 @@
         <download-url>https://github.com/JetBrains/teamcity-aws-codedeploy-plugin</download-url>
         <vendor>
             <name>JetBrains, s.r.o.</name>
-            <url>http://www.jetbrains.com</url>
+            <url>https://www.jetbrains.com</url>
         </vendor>
     </info>
     <deployment use-separate-classloader="true"/>

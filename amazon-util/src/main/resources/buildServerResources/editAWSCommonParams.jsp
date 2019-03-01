@@ -73,7 +73,7 @@
             <label for="${credentials_type_param}">${credentials_type_label}: <l:star/></label>
             <br/>
             <div style="font-weight: normal">
-                <a href="http://console.aws.amazon.com/iam" target="_blank">Open IAM Console</a>
+                <a href="https://console.aws.amazon.com/iam" target="_blank">Open IAM Console</a>
             </div>
         </th>
         <td><props:radioButtonProperty name="${credentials_type_param}" value="${access_keys_option}" id="${access_keys_option}" onclick="awsCommonParamsUpdateVisibility()"/>
