@@ -24,6 +24,7 @@ import com.amazonaws.services.securitytoken.AWSSecurityTokenServiceClientBuilder
 import com.amazonaws.services.securitytoken.model.AssumeRoleRequest;
 import com.amazonaws.services.securitytoken.model.Credentials;
 import jetbrains.buildServer.parameters.ReferencesResolverUtil;
+import jetbrains.buildServer.serverSide.SProject;
 import jetbrains.buildServer.serverSide.TeamCityProperties;
 import jetbrains.buildServer.util.CollectionsUtil;
 import jetbrains.buildServer.util.FileUtil;
@@ -76,6 +77,7 @@ public final class AWSCommonParams {
 
   public static final String USE_DEFAULT_CREDENTIAL_PROVIDER_CHAIN_PARAM_OLD = "use_default_credential_provider_chain";
   public static final String USE_DEFAULT_CREDENTIAL_PROVIDER_CHAIN_PARAM = "aws.use.default.credential.provider.chain";
+  public static final String ENABLE_DEFAULT_CREDENTIALS_CHAIN = "aws.enable.default.credentials.chain";
   public static final String USE_DEFAULT_CREDENTIAL_PROVIDER_CHAIN_LABEL = "Default Credential Provider Chain";
 
   public static final String ACCESS_KEY_ID_PARAM_OLD = "codedeploy_access_key_id";
@@ -322,24 +324,28 @@ public final class AWSCommonParams {
     @Nullable T run(@NotNull AWSClients clients) throws E;
   }
 
-  public static <T, E extends Throwable> T withAWSClients(@NotNull Map<String, String> params, @NotNull WithAWSClients<T, E> withAWSClients) throws E {
+  public static <T, E extends Throwable> T withAWSClients(@NotNull Map<String, String> params,
+                                                          @NotNull SProject project,
+                                                          @NotNull WithAWSClients<T, E> withAWSClients) throws E {
     final ClassLoader cl = Thread.currentThread().getContextClassLoader();
     Thread.currentThread().setContextClassLoader(AWSCommonParams.class.getClassLoader());
     try {
-      return withAWSClients.run(createAWSClients(params));
+      return withAWSClients.run(createAWSClients(project, params));
     } finally {
       Thread.currentThread().setContextClassLoader(cl);
     }
   }
 
   @NotNull
-  private static AWSClients createAWSClients(@NotNull Map<String, String> params) {
+  private static AWSClients createAWSClients(@NotNull SProject project, @NotNull Map<String, String> params) {
     final String regionName = getRegionName(params);
+
+    final boolean disableDefaultChain = Boolean.parseBoolean(project.getParameterValue(ENABLE_DEFAULT_CREDENTIALS_CHAIN));
 
     final String accessKeyId = getAccessKeyId(params);
     final String secretAccessKey = getSecretAccessKey(params);
 
-    final boolean useDefaultCredProvChain = isUseDefaultCredentialProviderChain(params);
+    final boolean useDefaultCredProvChain = !disableDefaultChain && isUseDefaultCredentialProviderChain(params);
 
     final AWSClients awsClients;
     if (isTempCredentialsOption(getCredentialsType(params))) {
