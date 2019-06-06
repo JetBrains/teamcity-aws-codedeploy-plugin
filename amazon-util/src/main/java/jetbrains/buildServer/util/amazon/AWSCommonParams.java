@@ -324,8 +324,8 @@ public final class AWSCommonParams {
     @Nullable T run(@NotNull AWSClients clients) throws E;
   }
 
-  public static <T, E extends Throwable> T withAWSClients(@NotNull Map<String, String> params,
-                                                          @NotNull SProject project,
+  public static <T, E extends Throwable> T withAWSClients(@NotNull SProject project,
+                                                          @NotNull Map<String, String> params,
                                                           @NotNull WithAWSClients<T, E> withAWSClients) throws E {
     final ClassLoader cl = Thread.currentThread().getContextClassLoader();
     Thread.currentThread().setContextClassLoader(AWSCommonParams.class.getClassLoader());

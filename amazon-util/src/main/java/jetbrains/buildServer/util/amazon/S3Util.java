@@ -20,6 +20,7 @@ import com.amazonaws.client.builder.ExecutorFactory;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.transfer.*;
 import com.intellij.openapi.diagnostic.Logger;
+import jetbrains.buildServer.serverSide.SProject;
 import jetbrains.buildServer.serverSide.TeamCityProperties;
 import jetbrains.buildServer.util.CollectionsUtil;
 import jetbrains.buildServer.util.filters.Filter;
@@ -140,8 +141,8 @@ public final class S3Util {
   }
 
   @NotNull
-  public static <T extends Transfer> Collection<T>  withTransferManager(@NotNull Map<String, String> params, @NotNull final WithTransferManager<T> withTransferManager) throws Throwable {
-    return AWSCommonParams.withAWSClients(params, new AWSCommonParams.WithAWSClients<Collection<T>, Throwable>() {
+  public static <T extends Transfer> Collection<T>  withTransferManager(@NotNull SProject project, @NotNull Map<String, String> params, @NotNull final WithTransferManager<T> withTransferManager) throws Throwable {
+    return AWSCommonParams.withAWSClients(project, params, new AWSCommonParams.WithAWSClients<Collection<T>, Throwable>() {
       @NotNull
       @Override
       public Collection<T> run(@NotNull AWSClients clients) throws Throwable {

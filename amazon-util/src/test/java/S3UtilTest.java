@@ -25,13 +25,18 @@ import com.amazonaws.services.s3.transfer.TransferManager;
 import com.amazonaws.services.s3.transfer.Upload;
 import jetbrains.buildServer.BaseTestCase;
 import jetbrains.buildServer.TestNGUtil;
+import jetbrains.buildServer.serverSide.SProject;
 import jetbrains.buildServer.util.CollectionsUtil;
 import jetbrains.buildServer.util.StringUtil;
 import jetbrains.buildServer.util.amazon.AWSClients;
+import jetbrains.buildServer.util.amazon.AWSCommonParams;
 import jetbrains.buildServer.util.amazon.S3Util;
 import org.jetbrains.annotations.NotNull;
+import org.jmock.Expectations;
+import org.jmock.Mockery;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
+import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import java.io.File;
@@ -50,6 +55,19 @@ import static jetbrains.buildServer.util.amazon.AWSCommonParams.*;
 public class S3UtilTest extends BaseTestCase {
 
   public static final String BUCKET_NAME = "amazon.util.s3.util.test";
+  private Mockery m;
+  private SProject myProject;
+
+  @BeforeMethod(alwaysRun = true)
+  @Override
+  protected void setUp() throws Exception {
+    super.setUp();
+    m = new Mockery();
+    myProject = m.mock(SProject.class);
+    m.checking(new Expectations(){{
+      allowing(myProject).getParameterValue(AWSCommonParams.ENABLE_DEFAULT_CREDENTIALS_CHAIN); will(returnValue("true"));
+    }});
+  }
 
   @BeforeClass
   @Override
@@ -69,7 +87,7 @@ public class S3UtilTest extends BaseTestCase {
 
   @Test
   public void shutdown_manager() throws Throwable{
-    S3Util.withTransferManager(getParameters(), new S3Util.WithTransferManager<Transfer>() {
+    S3Util.withTransferManager(myProject, getParameters(), new S3Util.WithTransferManager<Transfer>() {
       @NotNull
       @Override
       public Collection<Transfer> run(@NotNull TransferManager manager) throws Throwable {
@@ -82,7 +100,7 @@ public class S3UtilTest extends BaseTestCase {
   @Test
   public void upload() throws Throwable {
     final File testUpload = createTempFile("This is a test upload");
-    S3Util.withTransferManager(getParameters(), new S3Util.WithTransferManager<Upload>() {
+    S3Util.withTransferManager(myProject, getParameters(), new S3Util.WithTransferManager<Upload>() {
       @NotNull
       @Override
       public Collection<Upload> run(@NotNull TransferManager manager) throws Throwable {
@@ -112,7 +130,7 @@ public class S3UtilTest extends BaseTestCase {
         }
       }
     }).start();
-    S3Util.withTransferManager(getParameters(), new S3Util.InterruptAwareWithTransferManager<Upload>() {
+    S3Util.withTransferManager(myProject, getParameters(), new S3Util.InterruptAwareWithTransferManager<Upload>() {
       @NotNull
       @Override
       public Collection<Upload> run(@NotNull TransferManager manager) throws Throwable {
@@ -139,7 +157,7 @@ public class S3UtilTest extends BaseTestCase {
     assertEquals(testDownload.length(), createS3Client().getObject(BUCKET_NAME, "testDownload").getObjectMetadata().getContentLength());
 
     final File result = new File(createTempDir(), "testDownload");
-    S3Util.withTransferManager(getParameters(), new S3Util.WithTransferManager<Download>() {
+    S3Util.withTransferManager(myProject, getParameters(), new S3Util.WithTransferManager<Download>() {
       @NotNull
       @Override
       public Collection<Download> run(@NotNull TransferManager manager) throws Throwable {
