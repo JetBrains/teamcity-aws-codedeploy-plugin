@@ -55,7 +55,7 @@ public final class AWSRegions {
 
     for (Regions region : Regions.values()) {
       if (REGION_NAMES_FOR_WEB.containsKey(region.getName())) continue;
-      REGION_NAMES_FOR_WEB.put(region.getName(), region.getName());
+      REGION_NAMES_FOR_WEB.put(region.getName(), region.getDescription());
     }
   }
 
