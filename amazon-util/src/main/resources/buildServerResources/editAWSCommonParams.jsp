@@ -27,7 +27,7 @@
             <props:selectSectionPropertyContent value="" caption="<Default>" />
             <props:selectSectionPropertyContent value="${environment_type_custom}" caption="Custom">
                 <tr>
-                    <th><label for="${service_endpoint_param}">${service_endpoint_label}: <l:star/></label></th>
+                    <th><label for="${service_endpoint_param}">${service_endpoint_label}: </label></th>
                     <td>
                         <props:textProperty name="${service_endpoint_param}" className="longField"/>
                         <span class="smallNote">Specify the URL for AWS service</span>
