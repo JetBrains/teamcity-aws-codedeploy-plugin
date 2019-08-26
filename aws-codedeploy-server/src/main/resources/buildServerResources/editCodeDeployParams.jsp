@@ -61,7 +61,7 @@
     </tr>
     <tr>
         <th><label for="${bucket_name_param}">${bucket_name_label}: <l:star/></label></th>
-        <td><props:textProperty name="${bucket_name_param}" className="longField" maxlength="256"/><a href="https://console.aws.amazon.com/s3" target="_blank">Open S3 Console</a>
+        <td><props:textProperty name="${bucket_name_param}" className="longField" maxlength="256"/><a href="https://console.aws.amazon.com/s3" target="_blank" rel="noopener noreferrer">Open S3 Console</a>
             <span class="smallNote">Existing S3 bucket name</span><span class="error" id="error_${bucket_name_param}"></span>
         </td>
     </tr>
@@ -80,7 +80,7 @@
 </tr>
 <tr data-steps="${register_deploy_steps}">
     <th><label for="${app_name_param}">${app_name_label}: <l:star/></label></th>
-    <td><props:textProperty name="${app_name_param}" className="longField" maxlength="256"/><a href="https://console.aws.amazon.com/codedeploy" target="_blank">Open CodeDeploy Console</a>
+    <td><props:textProperty name="${app_name_param}" className="longField" maxlength="256"/><a href="https://console.aws.amazon.com/codedeploy" target="_blank" rel="noopener noreferrer">Open CodeDeploy Console</a>
         <span class="smallNote">Pre-configured CodeDeploy application name</span><span class="error" id="error_${app_name_param}"></span>
     </td>
 </tr>
