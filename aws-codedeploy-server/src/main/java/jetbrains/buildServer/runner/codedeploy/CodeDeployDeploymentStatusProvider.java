@@ -36,7 +36,7 @@ import static jetbrains.buildServer.serverSide.buildLog.MessageAttrs.attrs;
 
 public class CodeDeployDeploymentStatusProvider implements DetachedBuildStatusProvider {
   @NotNull
-//  @Override
+  @Override
   public String getType() {
     return CodeDeployConstants.RUNNER_TYPE;
   }
@@ -48,7 +48,7 @@ public class CodeDeployDeploymentStatusProvider implements DetachedBuildStatusPr
   }
 
   @Override
-  public boolean isAccepts(@NotNull SRunningBuild sRunningBuild, @NotNull String s) {
+  public boolean accepts(@NotNull SRunningBuild sRunningBuild, @NotNull String s) {
     return getDeploymentId(sRunningBuild) != null;
   }
 
