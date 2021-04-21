@@ -22,4 +22,5 @@
 
     <bean id="codeDeployRunnerRunType" class="jetbrains.buildServer.runner.codedeploy.CodeDeployRunType"/>
     <bean id="codeDeployBuildProblemTypes" class="jetbrains.buildServer.runner.codedeploy.CodeDeployBuildProblemTypes"/>
+    <bean id="deploymentStatusProvider" class="jetbrains.buildServer.runner.codedeploy.CodeDeployDeploymentStatusProvider"/>
 </beans>

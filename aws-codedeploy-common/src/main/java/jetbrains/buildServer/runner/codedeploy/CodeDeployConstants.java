@@ -78,15 +78,6 @@ public interface CodeDeployConstants {
   String DEPLOYMENT_CONFIG_NAME_PARAM = "codedeploy.deployment.config.name";
   String DEPLOYMENT_CONFIG_NAME_LABEL = "Deployment configuration";
 
-  String WAIT_FLAG_PARAM_OLD = "codedeploy_wait";
-  String WAIT_FLAG_PARAM = "codedeploy.wait";
-  String WAIT_FLAG_LABEL = "Wait for deployment finish";
-  String WAIT_TIMEOUT_SEC_PARAM_OLD = "codedeploy_wait_timeout_sec";
-  String WAIT_TIMEOUT_SEC_PARAM = "codedeploy.wait.timeout.sec";
-  String WAIT_TIMEOUT_SEC_LABEL = "Timeout (seconds)";
-  String WAIT_POLL_INTERVAL_SEC_CONFIG_PARAM = "codedeploy.wait.poll.interval.sec";
-  int WAIT_POLL_INTERVAL_SEC_DEFAULT = 20;
-
   String ROLLBACK_ON_FAILURE_PARAM_OLD = "codedeploy_rollback_on_failure";
   String ROLLBACK_ON_FAILURE_PARAM = "codedeploy.rollback.on.failure";
   String ROLLBACK_ON_FAILURE_LABEL = "Roll back when a deployment fails";
@@ -117,7 +108,6 @@ public interface CodeDeployConstants {
   ));
 
   Map<String, String> DEFAULTS = Collections.unmodifiableMap(CollectionsUtil.asMap(
-    WAIT_FLAG_PARAM, "true",
     DEPLOYMENT_STEPS_PARAM, UPLOAD_REGISTER_DEPLOY_STEPS
   ));
 

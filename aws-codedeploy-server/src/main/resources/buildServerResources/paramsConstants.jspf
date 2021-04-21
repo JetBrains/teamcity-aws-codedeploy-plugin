@@ -58,16 +58,6 @@
         params.remove(CodeDeployConstants.DEPLOYMENT_CONFIG_NAME_PARAM_OLD);
     }
 
-    if (params.containsKey(CodeDeployConstants.WAIT_FLAG_PARAM_OLD)) {
-        params.put(CodeDeployConstants.WAIT_FLAG_PARAM, params.get(CodeDeployConstants.WAIT_FLAG_PARAM_OLD));
-        params.remove(CodeDeployConstants.WAIT_FLAG_PARAM_OLD);
-    }
-
-    if (params.containsKey(CodeDeployConstants.WAIT_TIMEOUT_SEC_PARAM_OLD)) {
-        params.put(CodeDeployConstants.WAIT_TIMEOUT_SEC_PARAM, params.get(CodeDeployConstants.WAIT_TIMEOUT_SEC_PARAM_OLD));
-        params.remove(CodeDeployConstants.WAIT_TIMEOUT_SEC_PARAM_OLD);
-    }
-
     if (params.containsKey(CodeDeployConstants.ROLLBACK_ON_FAILURE_PARAM_OLD)) {
         params.put(CodeDeployConstants.ROLLBACK_ON_FAILURE_PARAM, params.get(CodeDeployConstants.ROLLBACK_ON_FAILURE_PARAM_OLD));
         params.remove(CodeDeployConstants.ROLLBACK_ON_FAILURE_PARAM_OLD);
@@ -106,12 +96,6 @@
 
 <c:set var="dep_config_name_param" value="<%=CodeDeployConstants.DEPLOYMENT_CONFIG_NAME_PARAM%>"/>
 <c:set var="dep_config_name_label" value="<%=CodeDeployConstants.DEPLOYMENT_CONFIG_NAME_LABEL%>"/>
-
-<c:set var="wait_flag_param" value="<%=CodeDeployConstants.WAIT_FLAG_PARAM%>"/>
-<c:set var="wait_flag_label" value="<%=CodeDeployConstants.WAIT_FLAG_LABEL%>"/>
-
-<c:set var="wait_timeout_param" value="<%=CodeDeployConstants.WAIT_TIMEOUT_SEC_PARAM%>"/>
-<c:set var="wait_timeout_label" value="<%=CodeDeployConstants.WAIT_TIMEOUT_SEC_LABEL%>"/>
 
 <c:set var="deployment_steps_param" value="<%=CodeDeployConstants.DEPLOYMENT_STEPS_PARAM%>"/>
 <c:set var="deployment_steps_label" value="<%=CodeDeployConstants.DEPLOYMENT_STEPS_LABEL%>"/>

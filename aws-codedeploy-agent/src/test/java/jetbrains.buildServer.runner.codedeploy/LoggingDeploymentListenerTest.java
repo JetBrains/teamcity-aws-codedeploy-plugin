@@ -16,7 +16,6 @@
 
 package jetbrains.buildServer.runner.codedeploy;
 
-import jetbrains.buildServer.agent.NullBuildProgressLogger;
 import jetbrains.buildServer.util.amazon.AWSException;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -89,7 +88,7 @@ public class LoggingDeploymentListenerTest extends LoggingTestCase {
       "LOG Creating application " + applicationName + " deployment to deployment group " + groupName + " with default deployment configuration",
       "PARAM " + CodeDeployConstants.DEPLOYMENT_ID_BUILD_CONFIG_PARAM + " -> " + FAKE_ID,
       "LOG Deployment " + FAKE_ID + " created",
-      "LOG Waiting for deployment finish");
+      "CLOSE " + LoggingDeploymentListener.DEPLOY_APPLICATION);
   }
 
   @Test
@@ -115,8 +114,7 @@ public class LoggingDeploymentListenerTest extends LoggingTestCase {
     create().deploymentSucceeded(FAKE_ID, createStatus("finished", 0, 0, 5, 0, 0));
     assertLog(
       "LOG Deployment " + FAKE_ID + " finished, 5 instances succeeded, 0 failed, 0 pending, 0 skipped, 0 in progress",
-      "STATUS_TEXT Deployment " + FAKE_ID + " finished, 5 instances succeeded",
-      "CLOSE " + LoggingDeploymentListener.DEPLOY_APPLICATION);
+      "STATUS_TEXT Deployment " + FAKE_ID + " finished, 5 instances succeeded");
   }
 
   @Test
@@ -124,8 +122,7 @@ public class LoggingDeploymentListenerTest extends LoggingTestCase {
     create().deploymentSucceeded(FAKE_ID, createStatus("finished", 2, 2, 1, 2, 2));
     assertLog(
       "LOG Deployment " + FAKE_ID + " finished, 1 instance succeeded, 2 failed, 2 pending, 2 skipped, 2 in progress",
-      "STATUS_TEXT Deployment " + FAKE_ID + " finished, 1 instance succeeded, 2 failed, 2 pending, 2 skipped, 2 in progress",
-      "CLOSE " + LoggingDeploymentListener.DEPLOY_APPLICATION);
+      "STATUS_TEXT Deployment " + FAKE_ID + " finished, 1 instance succeeded, 2 failed, 2 pending, 2 skipped, 2 in progress");
   }
 
   @Test
@@ -133,8 +130,7 @@ public class LoggingDeploymentListenerTest extends LoggingTestCase {
     create().deploymentFailed(FAKE_ID, 2400, null, createStatus("in progress", 1, 1, 0, 0, 0));
     assertLog(
       "ERR Timeout 2400 sec exceeded, deployment " + FAKE_ID + " in progress, 0 instances succeeded, 0 failed, 1 pending, 0 skipped, 1 in progress",
-      "PROBLEM identity: -1745153132 type: CODEDEPLOY_TIMEOUT descr: Timeout 2400 sec exceeded, deployment " + FAKE_ID + " in progress, 0 instances succeeded, 1 pending, 1 in progress",
-      "CLOSE deploy application");
+      "PROBLEM identity: -1745153132 type: CODEDEPLOY_TIMEOUT descr: Timeout 2400 sec exceeded, deployment " + FAKE_ID + " in progress, 0 instances succeeded, 1 pending, 1 in progress");
   }
 
   @Test
@@ -144,8 +140,7 @@ public class LoggingDeploymentListenerTest extends LoggingTestCase {
       "ERR Timeout 2400 sec exceeded, deployment " + FAKE_ID + " failed, 0 instances succeeded, 1 failed, 1 pending, 0 skipped, 1 in progress",
       "ERR Associated error: Some error message",
       "ERR Error code: abc",
-      "PROBLEM identity: -116108899 type: CODEDEPLOY_TIMEOUT descr: Timeout 2400 sec exceeded, deployment " + FAKE_ID + " failed, 0 instances succeeded, 1 failed, 1 pending, 1 in progress: Some error message",
-      "CLOSE deploy application");
+      "PROBLEM identity: -116108899 type: CODEDEPLOY_TIMEOUT descr: Timeout 2400 sec exceeded, deployment " + FAKE_ID + " failed, 0 instances succeeded, 1 failed, 1 pending, 1 in progress: Some error message");
   }
 
   @Test
@@ -155,8 +150,7 @@ public class LoggingDeploymentListenerTest extends LoggingTestCase {
       "ERR deployment " + FAKE_ID + " failed, 0 instances succeeded, 2 failed, 0 pending, 0 skipped, 0 in progress",
       "ERR Associated error: Some error message",
       "ERR Error code: abc",
-      "PROBLEM identity: 448838431 type: CODEDEPLOY_FAILURE descr: deployment " + FAKE_ID + " failed, 0 instances succeeded, 2 failed: Some error message",
-      "CLOSE deploy application");
+      "PROBLEM identity: 448838431 type: CODEDEPLOY_FAILURE descr: deployment " + FAKE_ID + " failed, 0 instances succeeded, 2 failed: Some error message");
   }
 
   @Test
@@ -221,13 +215,7 @@ public class LoggingDeploymentListenerTest extends LoggingTestCase {
   @NotNull
   private LoggingDeploymentListener create() {
     return new LoggingDeploymentListener(Collections.<String, String>emptyMap(),
-      new NullBuildProgressLogger(),
       "fake_checkout_dir") {
-      @Override
-      protected void debug(@NotNull String message) {
-        logMessage("DEBUG " + message);
-      }
-
       @Override
       protected void log(@NotNull String message) {
         logMessage("LOG " + message);

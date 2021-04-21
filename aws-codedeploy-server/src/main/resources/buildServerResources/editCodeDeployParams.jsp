@@ -103,19 +103,6 @@
         <span class="smallNote">e.g. "CodeDeployDefault.OneAtATime", "CodeDeployDefault.AllAtOnce" or a custom one, leave blank for default configuration</span><span class="error" id="error_${dep_config_name_param}"></span>
     </td>
 </tr>
-<tr class="groupingTitle" data-steps="${deploy_step}">
-    <td colspan="2">Wait and Rollback</td>
-</tr>
-<tr data-steps="${deploy_step}">
-    <th><label for="${wait_flag_param}">${wait_flag_label}: </label></th>
-    <td><props:checkboxProperty name="${wait_flag_param}" uncheckedValue="false" onclick="codeDeployUpdateVisibility()"/></td>
-</tr>
-<tr id="${wait_timeout_param}_row" data-steps="${deploy_step}">
-    <th><label for="${wait_timeout_param}">${wait_timeout_label}: <l:star/></label></th>
-    <td><props:textProperty name="${wait_timeout_param}" maxlength="256"/>
-        <span class="smallNote">Build will fail if the timeout is exceeded</span><span class="error" id="error_${wait_timeout_param}"></span>
-    </td>
-</tr>
 <tr data-steps="${deploy_step}">
     <th><label for="${rollback_on_failure_param}">${rollback_on_failure_label}: </label></th>
     <td><props:checkboxProperty name="${rollback_on_failure_param}" uncheckedValue="false"/></td>
@@ -161,14 +148,6 @@
                 });
             }
         });
-
-        if (deploySteps.indexOf('${deploy_step}') >= 0) {
-            if ($j(BS.Util.escapeId('${wait_flag_param}')).is(':checked')) {
-                BS.Util.show('${wait_timeout_param}_row');
-            } else {
-                BS.Util.hide('${wait_timeout_param}_row');
-            }
-        }
 
         if (deploySteps.indexOf('${upload_step}') < 0) {
             BS.Util.show('${s3_object_key_param}_star');

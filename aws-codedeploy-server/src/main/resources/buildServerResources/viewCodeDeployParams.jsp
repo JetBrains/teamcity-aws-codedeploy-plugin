@@ -55,16 +55,6 @@
 </div>
 
 <div class="parameter">
-    ${wait_flag_label}: <strong><props:displayCheckboxValue name="${wait_flag_param}"/></strong>
-</div>
-
-<c:set var="wait_flag" value="${propertiesBean.properties[wait_flag_param]}"/>
-<c:if test="${empty wait_flag or ('true' eq wait_flag)}">
-    <div class="parameter">
-        ${wait_timeout_label}: <props:displayValue name="${wait_timeout_param}" emptyValue="empty"/>
-    </div>
-</c:if>
-<div class="parameter">
     ${rollback_on_failure_label}: <strong><props:displayCheckboxValue name="${rollback_on_failure_param}"/></strong>
 </div>
 <div class="parameter">

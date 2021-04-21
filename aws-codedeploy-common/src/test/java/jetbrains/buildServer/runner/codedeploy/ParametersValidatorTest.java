@@ -139,27 +139,12 @@ public class ParametersValidatorTest extends BaseTestCase {
   }
 
   @Test
-  public void unexpected_wait_timeout() {
-    then(validate(DEPLOYMENT_STEPS_PARAM, DEPLOY_STEP, WAIT_FLAG_PARAM, "true", WAIT_TIMEOUT_SEC_PARAM, "10min")).as("Must detect unexpected wait timeout").
-      containsEntry(WAIT_TIMEOUT_SEC_PARAM, "Timeout (seconds) must be a positive integer value");
-  }
-
-  @Test
   public void revision_not_fount() throws Exception {
     then(validateRuntime(
       params(DEPLOYMENT_STEPS_PARAM, UPLOAD_STEP, REVISION_PATHS_PARAM, "ready_revision.zip"),
       params())).
       as("Must detect no revision").
       containsEntry(REVISION_PATHS_PARAM, "Application revision ready_revision.zip doesn't exist");
-  }
-
-  @Test
-  public void unexpected_wait_poll_interval() throws Exception {
-    then(validateRuntime(
-      params(DEPLOYMENT_STEPS_PARAM, DEPLOY_STEP, WAIT_FLAG_PARAM, "true"),
-      params(WAIT_POLL_INTERVAL_SEC_CONFIG_PARAM, "50sec"))).
-      as("Must detect unexpected wait poll interval").
-      containsEntry(WAIT_POLL_INTERVAL_SEC_CONFIG_PARAM, "codedeploy.wait.poll.interval.sec must be a positive integer value");
   }
 
   @NotNull

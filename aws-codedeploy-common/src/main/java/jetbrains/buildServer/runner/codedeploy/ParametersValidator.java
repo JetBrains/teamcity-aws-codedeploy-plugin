@@ -49,15 +49,6 @@ final class ParametersValidator {
         invalids.put(REVISION_PATHS_PARAM, REVISION_PATHS_LABEL + " " + revisionPath + " doesn't exist");
       }
     }
-
-
-    if (isDeploymentWaitEnabled(runnerParams)) {
-      final String waitIntervalSec = configParams.get(WAIT_POLL_INTERVAL_SEC_CONFIG_PARAM);
-      if (StringUtil.isNotEmpty(waitIntervalSec)) {
-        validatePositiveInteger(invalids, waitIntervalSec, WAIT_POLL_INTERVAL_SEC_CONFIG_PARAM, WAIT_POLL_INTERVAL_SEC_CONFIG_PARAM, true);
-      }
-    }
-
     return Collections.unmodifiableMap(invalids);
   }
 
@@ -140,15 +131,6 @@ final class ParametersValidator {
       final String fileExistsParam = getFileExistsBehavior(runnerParams);
       if (StringUtil.isNotEmpty(fileExistsParam)) {
         validateFileExistsBehavior(invalids, fileExistsParam, FILE_EXISTS_BEHAVIOR_PARAM, FILE_EXISTS_BEHAVIOR_PARAM, runtime);
-      }
-
-      if (isDeploymentWaitEnabled(runnerParams)) {
-        final String waitTimeoutSec = getWaitTimeOutSec(runnerParams);
-        if (StringUtil.isEmptyOrSpaces(waitTimeoutSec)) {
-          invalids.put(WAIT_TIMEOUT_SEC_PARAM, WAIT_TIMEOUT_SEC_LABEL + " must not be empty");
-        } else {
-          validatePositiveInteger(invalids, waitTimeoutSec, WAIT_TIMEOUT_SEC_PARAM, WAIT_TIMEOUT_SEC_LABEL, runtime);
-        }
       }
     }
     return invalids;

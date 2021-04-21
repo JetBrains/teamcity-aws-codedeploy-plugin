@@ -18,7 +18,6 @@ package jetbrains.buildServer.runner.codedeploy;
 
 import com.amazonaws.services.codedeploy.AmazonCodeDeployClient;
 import com.amazonaws.services.s3.AmazonS3;
-import com.amazonaws.services.s3.AmazonS3Client;
 import jetbrains.buildServer.RunBuildException;
 import jetbrains.buildServer.agent.*;
 import jetbrains.buildServer.messages.ErrorData;
@@ -61,7 +60,7 @@ public class CodeDeployRunner implements AgentBuildRunner {
           @Override
           public BuildFinishedStatus run(@NotNull AWSClients clients) throws CodeDeployRunnerException {
             final AWSClient awsClient = createAWSClient(clients.createS3Client(), clients.createCodeDeployClient(), runningBuild).withListener(
-              new LoggingDeploymentListener(runnerParameters, runningBuild.getBuildLogger(), runningBuild.getCheckoutDirectory().getAbsolutePath()) {
+              new ServiceMessageLoggingDeploymentListener(runnerParameters, runningBuild.getCheckoutDirectory().getAbsolutePath()) {
                 @Override
                 protected void problem(int identity, @NotNull String type, @NotNull String descr) {
                   super.problem(identity, type, descr);
@@ -73,6 +72,11 @@ public class CodeDeployRunner implements AgentBuildRunner {
                   super.uploadRevisionFinished(revision, s3BucketName, s3ObjectKey, s3ObjectVersion, s3ObjectETag, url);
                   m.s3ObjectVersion = s3ObjectVersion;
                   m.s3ObjectETag = s3ObjectETag;
+                }
+
+                @Override
+                protected void log(@NotNull String message) {
+                  runningBuild.getBuildLogger().message(message);
                 }
               });
 
@@ -105,25 +109,17 @@ public class CodeDeployRunner implements AgentBuildRunner {
               final String deploymentGroupName = getDeploymentGroupName(runnerParameters);
               final String deploymentConfigName = nullIfEmpty(getDeploymentConfigName(runnerParameters));
 
-              if (CodeDeployUtil.isDeploymentWaitEnabled(runnerParameters)) {
-                awsClient.deployRevisionAndWait(
-                  s3BucketName, s3ObjectKey, bundleType, m.s3ObjectVersion, m.s3ObjectETag,
-                  applicationName, deploymentGroupName,
-                  getEC2Tags(runnerParameters), getAutoScalingGroups(runnerParameters),
-                  deploymentConfigName,
-                  Integer.parseInt(getWaitTimeOutSec(runnerParameters)),
-                  getIntegerOrDefault(configParameters.get(WAIT_POLL_INTERVAL_SEC_CONFIG_PARAM), WAIT_POLL_INTERVAL_SEC_DEFAULT),
-                  Boolean.parseBoolean(getRollbackOnFailure(runnerParameters)),
-                  Boolean.parseBoolean(getRollbackOnAlarmThreshold(runnerParameters)),
-                  getFileExistsBehavior(runnerParameters));
-              } else {
-                awsClient.deployRevision(
-                  s3BucketName, s3ObjectKey, bundleType, m.s3ObjectVersion, m.s3ObjectETag,
-                  applicationName, deploymentGroupName, getEC2Tags(runnerParameters), getAutoScalingGroups(runnerParameters), deploymentConfigName, getFileExistsBehavior(runnerParameters));
-              }
+              awsClient.deployRevision(
+                s3BucketName, s3ObjectKey, bundleType, m.s3ObjectVersion, m.s3ObjectETag,
+                applicationName, deploymentGroupName,
+                getEC2Tags(runnerParameters), getAutoScalingGroups(runnerParameters),
+                deploymentConfigName,
+                Boolean.parseBoolean(getRollbackOnFailure(runnerParameters)),
+                Boolean.parseBoolean(getRollbackOnAlarmThreshold(runnerParameters)),
+                getFileExistsBehavior(runnerParameters));
             }
 
-            return m.problemOccurred ? BuildFinishedStatus.FINISHED_WITH_PROBLEMS : BuildFinishedStatus.FINISHED_SUCCESS;
+            return m.problemOccurred ? BuildFinishedStatus.FINISHED_WITH_PROBLEMS : BuildFinishedStatus.FINISHED_DETACHED;
           }
         });
       }
@@ -140,9 +136,6 @@ public class CodeDeployRunner implements AgentBuildRunner {
       private Map<String, String> patchParams(final Map<String, String> runnerParameters, @NotNull final AgentRunningBuild runningBuild) {
         final Map<String, String> params = new HashMap<String, String>(runnerParameters);
         params.put(TEMP_CREDENTIALS_SESSION_NAME_PARAM, runningBuild.getBuildTypeExternalId() + runningBuild.getBuildId());
-        if (CodeDeployUtil.isDeploymentWaitEnabled(runnerParameters)) {
-          params.put(TEMP_CREDENTIALS_DURATION_SEC_PARAM, String.valueOf(2 * Integer.parseInt(getWaitTimeOutSec(params))));
-        }
         return params;
       }
     };

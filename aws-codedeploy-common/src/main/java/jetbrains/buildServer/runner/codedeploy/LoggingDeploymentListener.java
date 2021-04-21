@@ -17,8 +17,6 @@
 package jetbrains.buildServer.runner.codedeploy;
 
 import com.intellij.openapi.diagnostic.Logger;
-import jetbrains.buildServer.agent.BuildProgressLogger;
-import jetbrains.buildServer.log.Loggers;
 import jetbrains.buildServer.util.CollectionsUtil;
 import jetbrains.buildServer.util.StringUtil;
 import jetbrains.buildServer.util.amazon.AWSCommonParams;
@@ -34,9 +32,9 @@ import java.util.Map;
 /**
  * @author vbedrosova
  */
-class LoggingDeploymentListener extends AWSClient.Listener {
+abstract class LoggingDeploymentListener extends AWSClient.Listener {
   @NotNull
-  private static final Logger LOG = Logger.getInstance(Loggers.VCS_CATEGORY + CodeDeployRunner.class);
+  private static final Logger LOG = Logger.getInstance(LoggingDeploymentListener.class.getName());
 
   static final String DEPLOY_APPLICATION = "deploy application";
   static final String REGISTER_REVISION = "register revision";
@@ -44,14 +42,11 @@ class LoggingDeploymentListener extends AWSClient.Listener {
 
   @NotNull
   private final Map<String, String> myRunnerParameters;
-  @NotNull
-  private final BuildProgressLogger myBuildLogger;
-  @NotNull
+  @Nullable
   private final String myCheckoutDir;
 
-  LoggingDeploymentListener(@NotNull Map<String, String> runnerParameters, @NotNull BuildProgressLogger buildLogger, @NotNull String checkoutDir) {
+  LoggingDeploymentListener(@NotNull Map<String, String> runnerParameters, @Nullable String checkoutDir) {
     myRunnerParameters = runnerParameters;
-    myBuildLogger = buildLogger;
     myCheckoutDir = checkoutDir;
   }
 
@@ -106,11 +101,11 @@ class LoggingDeploymentListener extends AWSClient.Listener {
   void createDeploymentFinished(@NotNull String applicationName, @NotNull String deploymentGroupName, @Nullable String deploymentConfigName, @NotNull String deploymentId) {
     parameter(CodeDeployConstants.DEPLOYMENT_ID_BUILD_CONFIG_PARAM, deploymentId);
     log("Deployment " + deploymentId + " created");
+    close(DEPLOY_APPLICATION);
   }
 
   @Override
   void deploymentWaitStarted(@NotNull String deploymentId) {
-    log("Waiting for deployment finish");
   }
 
 
@@ -137,16 +132,12 @@ class LoggingDeploymentListener extends AWSClient.Listener {
     }
 
     problem(getIdentity(timeoutSec, errorInfo, instancesStatus), timeoutSec == null ? CodeDeployConstants.FAILURE_BUILD_PROBLEM_TYPE : CodeDeployConstants.TIMEOUT_BUILD_PROBLEM_TYPE, msg);
-
-    close(DEPLOY_APPLICATION);
   }
 
   @Override
   void deploymentSucceeded(@NotNull String deploymentId, @Nullable InstancesStatus instancesStatus) {
     log(deploymentDescription(instancesStatus, deploymentId, true));
     statusText(deploymentDescription(instancesStatus, deploymentId, false));
-
-    close(DEPLOY_APPLICATION);
   }
 
   @Override
@@ -203,50 +194,19 @@ class LoggingDeploymentListener extends AWSClient.Listener {
       CodeDeployUtil.getDeploymentGroupName(myRunnerParameters));
   }
 
-  protected void debug(@NotNull String message) {
-    myBuildLogger.message(String.format("##teamcity[message text='%s' tc:tags='tc:internal']", escape(message)));
-  }
+  protected abstract void log(@NotNull String message);
 
-  protected void log(@NotNull String message) {
-    myBuildLogger.message(message);
-  }
+  protected abstract void err(@NotNull String message);
 
-  protected void err(@NotNull String message) {
-    myBuildLogger.error(message);
-  }
+  protected abstract void open(@NotNull String block);
 
-  protected void open(@NotNull String block) {
-    myBuildLogger.targetStarted(block);
-  }
+  protected abstract void close(@NotNull String block);
 
-  protected void close(@NotNull String block) {
-    myBuildLogger.targetFinished(block);
-  }
+  protected abstract void progress(@NotNull String message);
 
-  protected void progress(@NotNull String message) {
-    myBuildLogger.message(String.format("##teamcity[progressMessage '%s']", escape(message)));
-  }
+  protected abstract void problem(int identity, @NotNull String type, @NotNull String descr);
 
-  protected void problem(int identity, @NotNull String type, @NotNull String descr) {
-    myBuildLogger.message(String.format("##teamcity[buildProblem identity='%d' type='%s' description='%s' tc:tags='tc:internal']", identity, type, escape(descr)));
-  }
+  protected abstract void parameter(@NotNull String name, @NotNull String value);
 
-  protected void parameter(@NotNull String name, @NotNull String value) {
-    myBuildLogger.message(String.format("##teamcity[setParameter name='%s' value='%s' tc:tags='tc:internal']", name, value));
-  }
-
-  protected void statusText(@NotNull String text) {
-    myBuildLogger.message(String.format("##teamcity[buildStatus tc:tags='tc:internal' text='{build.status.text}; %s']", text));
-  }
-
-  @NotNull
-  protected String escape(@NotNull String s) {
-    return s.
-      replace("|", "||").
-      replace("'", "|'").
-      replace("\n", "|n").
-      replace("\r", "|r").
-      replace("\\uNNNN", "|0xNNNN").
-      replace("[", "|[").replace("]", "|]");
-  }
+  protected abstract void statusText(@NotNull String text);
 }

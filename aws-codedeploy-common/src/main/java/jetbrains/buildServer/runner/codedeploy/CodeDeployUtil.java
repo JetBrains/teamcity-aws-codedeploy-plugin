@@ -44,10 +44,6 @@ final class CodeDeployUtil {
     return isStepEnabled(DEPLOY_STEP, params);
   }
 
-  static boolean isDeploymentWaitEnabled(@NotNull Map<String, String> params) {
-    return isDeployStepEnabled(params) && Boolean.parseBoolean(getWaitFlag(params));
-  }
-
   private static boolean isStepEnabled(@NotNull String step, @NotNull Map<String, String> params) {
     final String steps = getDeploymentSteps(params);
     return steps != null && steps.contains(step);
@@ -198,16 +194,6 @@ final class CodeDeployUtil {
   @Nullable
   public static String getDeploymentConfigName(@NotNull Map<String, String> params) {
     return getNewOrOld(params, DEPLOYMENT_CONFIG_NAME_PARAM, DEPLOYMENT_CONFIG_NAME_PARAM_OLD);
-  }
-
-  @Nullable
-  public static String getWaitFlag(@NotNull Map<String, String> params) {
-    return getNewOrOld(params, WAIT_FLAG_PARAM, WAIT_FLAG_PARAM_OLD);
-  }
-
-  @Nullable
-  public static String getWaitTimeOutSec(@NotNull Map<String, String> params) {
-    return getNewOrOld(params, WAIT_TIMEOUT_SEC_PARAM, WAIT_TIMEOUT_SEC_PARAM_OLD);
   }
 
   @Nullable

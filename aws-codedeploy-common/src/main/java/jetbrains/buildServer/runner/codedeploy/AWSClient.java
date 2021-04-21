@@ -19,7 +19,6 @@ package jetbrains.buildServer.runner.codedeploy;
 import com.amazonaws.services.codedeploy.AmazonCodeDeployClient;
 import com.amazonaws.services.codedeploy.model.*;
 import com.amazonaws.services.s3.AmazonS3;
-import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.transfer.TransferManager;
 import com.amazonaws.services.s3.transfer.Upload;
 import com.amazonaws.services.s3.transfer.model.UploadResult;
@@ -35,11 +34,13 @@ import org.jetbrains.annotations.Nullable;
 import java.io.File;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Date;
 import java.util.Map;
 
 /**
  * @author vbedrosova
  */
+@SuppressWarnings("JavaDoc")
 public class AWSClient {
 
   @NotNull private final AmazonS3 myS3Client;
@@ -107,7 +108,7 @@ public class AWSClient {
   /**
    * Creates deployment of the application revision from the specified location for specified application (must be pre-configured) to
    * deploymentGroupName (must be pre-configured) EC2 instances group with
-   * deploymentConfigName or default configuration name and waits for deployment finish.
+   * deploymentConfigName or default configuration name.
    * <p>
    * For performing this operation target AWSClient must have corresponding CodeDeploy permissions.
    *
@@ -119,70 +120,39 @@ public class AWSClient {
    * @param applicationName      CodeDeploy application name
    * @param deploymentGroupName  deployment group name
    * @param deploymentConfigName deployment configuration name or null for default deployment configuration
-   * @param waitTimeoutSec       seconds to wait for the created deployment finish or fail
-   * @param waitIntervalSec      seconds between polling CodeDeploy for the created deployment status
-   */
-  public void deployRevisionAndWait(@NotNull String s3BucketName, @NotNull String s3ObjectKey, @NotNull String bundleType, @Nullable String s3ObjectVersion, @Nullable String s3ObjectETag,
-                                    @NotNull String applicationName, @NotNull String deploymentGroupName,
-                                    @NotNull Map<String, String> ec2Tags, @NotNull Collection<String> autoScalingGroups,
-                                    @Nullable String deploymentConfigName,
-                                    int waitTimeoutSec, int waitIntervalSec,
-                                    boolean rollbackOnFailure, boolean rollbackOnAlarmThreshold, @Nullable String fileExistsBehavior) {
-    doDeployAndWait(s3BucketName, s3ObjectKey, bundleType, s3ObjectVersion, s3ObjectETag, applicationName, deploymentGroupName, ec2Tags, autoScalingGroups, deploymentConfigName, true, waitTimeoutSec, waitIntervalSec, rollbackOnFailure, rollbackOnAlarmThreshold, fileExistsBehavior);
-  }
-
-  /**
-   * The same as {@link #deployRevisionAndWait} but without waiting
    */
   public void deployRevision(@NotNull String s3BucketName, @NotNull String s3ObjectKey, @NotNull String bundleType, @Nullable String s3ObjectVersion, @Nullable String s3ObjectETag,
-                             @NotNull String applicationName, @NotNull String deploymentGroupName, @NotNull Map<String, String> ec2Tags, @NotNull Collection<String> autoScalingGroups,
-                             @Nullable String deploymentConfigName, @Nullable String fileExistsBehavior) {
-    doDeployAndWait(s3BucketName, s3ObjectKey, bundleType, s3ObjectVersion, s3ObjectETag, applicationName, deploymentGroupName, ec2Tags, autoScalingGroups, deploymentConfigName, false, null, null, false, false, fileExistsBehavior);
+                             @NotNull String applicationName, @NotNull String deploymentGroupName,
+                             @NotNull Map<String, String> ec2Tags, @NotNull Collection<String> autoScalingGroups,
+                             @Nullable String deploymentConfigName,
+                             boolean rollbackOnFailure, boolean rollbackOnAlarmThreshold, @Nullable String fileExistsBehavior) {
+    doDeploy(s3BucketName, s3ObjectKey, bundleType, s3ObjectVersion, s3ObjectETag, applicationName, deploymentGroupName, ec2Tags, autoScalingGroups, deploymentConfigName, rollbackOnFailure, rollbackOnAlarmThreshold, fileExistsBehavior);
   }
 
-  @SuppressWarnings("ConstantConditions")
-  private void doDeployAndWait(@NotNull String s3BucketName, @NotNull String s3ObjectKey, @NotNull String bundleType, @Nullable String s3ObjectVersion, @Nullable String s3ObjectETag,
-                               @NotNull String applicationName, @NotNull String deploymentGroupName,
-                               @NotNull Map<String, String> ec2Tags, @NotNull Collection<String> autoScalingGroups,
-                               @Nullable String deploymentConfigName,
-                               boolean wait, @Nullable Integer waitTimeoutSec, @Nullable Integer waitIntervalSec,
-                               boolean rollbackOnFailure, boolean rollbackOnAlarmThreshold, @Nullable String fileExistsBehavior) {
+  private void doDeploy(@NotNull String s3BucketName, @NotNull String s3ObjectKey, @NotNull String bundleType, @Nullable String s3ObjectVersion, @Nullable String s3ObjectETag,
+                        @NotNull String applicationName, @NotNull String deploymentGroupName,
+                        @NotNull Map<String, String> ec2Tags, @NotNull Collection<String> autoScalingGroups,
+                        @Nullable String deploymentConfigName,
+                        boolean rollbackOnFailure, boolean rollbackOnAlarmThreshold, @Nullable String fileExistsBehavior) {
     try {
-        final String deploymentId = createDeployment(getRevisionLocation(s3BucketName, s3ObjectKey, bundleType, s3ObjectVersion, s3ObjectETag), applicationName, deploymentGroupName, ec2Tags, autoScalingGroups, deploymentConfigName, rollbackOnFailure, rollbackOnAlarmThreshold, fileExistsBehavior);
-
-        if (wait) {
-          waitForDeployment(deploymentId, waitTimeoutSec, waitIntervalSec);
-        }
+      createDeployment(getRevisionLocation(s3BucketName, s3ObjectKey, bundleType, s3ObjectVersion, s3ObjectETag), applicationName, deploymentGroupName, ec2Tags, autoScalingGroups, deploymentConfigName, rollbackOnFailure, rollbackOnAlarmThreshold, fileExistsBehavior);
     } catch (Throwable t) {
       processFailure(t);
     }
   }
 
-  private void waitForDeployment(@NotNull String deploymentId, int waitTimeoutSec, int waitIntervalSec) {
-    myListener.deploymentWaitStarted(deploymentId);
+  /**
+   *
+   * @param deploymentId
+   * @param knownDeploymentStartTime
+   * @return true if either the deployment finished or timeout occurred, false otherwise
+   */
+  public boolean checkDeploymentStatus(@NotNull String deploymentId, @Nullable Date knownDeploymentStartTime) {
+    final DeploymentInfo dInfo = myCodeDeployClient.getDeployment(new GetDeploymentRequest().withDeploymentId(deploymentId)).getDeploymentInfo();
 
-    final GetDeploymentRequest dRequest = new GetDeploymentRequest().withDeploymentId(deploymentId);
-
-    DeploymentInfo dInfo = myCodeDeployClient.getDeployment(dRequest).getDeploymentInfo();
-
-    long startTime = (dInfo == null || dInfo.getStartTime() == null) ? System.currentTimeMillis() : dInfo.getStartTime().getTime();
-
-    while (dInfo == null || dInfo.getCompleteTime() == null) {
+    if (dInfo == null || dInfo.getCompleteTime() == null) { // deployment in progress?
       myListener.deploymentInProgress(deploymentId, getInstancesStatus(dInfo));
-
-      if (System.currentTimeMillis() - startTime > waitTimeoutSec * 1000) {
-        myListener.deploymentFailed(deploymentId, waitTimeoutSec, getErrorInfo(dInfo), getInstancesStatus(dInfo));
-        return;
-      }
-
-      try {
-        Thread.sleep(waitIntervalSec * 1000);
-      } catch (InterruptedException e) {
-        processFailure(e);
-        return;
-      }
-
-      dInfo = myCodeDeployClient.getDeployment(dRequest).getDeploymentInfo();
+      return false;
     }
 
     if (isSuccess(dInfo)) {
@@ -190,6 +160,8 @@ public class AWSClient {
     } else {
       myListener.deploymentFailed(deploymentId, null, getErrorInfo(dInfo), getInstancesStatus(dInfo));
     }
+
+    return true;
   }
 
   private void doUploadRevision(@NotNull final File revision, @NotNull final String s3BucketName, @NotNull final String s3ObjectKey) throws Throwable {
