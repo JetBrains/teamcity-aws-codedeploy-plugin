@@ -298,7 +298,8 @@ public class AWSClient {
     if (DeploymentStatus.Succeeded.toString().equals(status)) return "succeeded";
     if (DeploymentStatus.Failed.toString().equals(status)) return "failed";
     if (DeploymentStatus.Stopped.toString().equals(status)) return "stopped";
-    return CodeDeployConstants.STATUS_IS_UNKNOWN;
+    if (DeploymentStatus.Ready.toString().equals(status)) return "ready";
+    return StringUtil.decapitalize(status);
   }
 
   @Contract("null -> null")
