@@ -145,14 +145,15 @@ public class AWSClient {
    *
    * @param deploymentId
    * @param knownDeploymentStartTime
-   * @return true if either the deployment finished or timeout occurred, false otherwise
+   * @return deployment finis date or null if it's still in progress
    */
-  public boolean checkDeploymentStatus(@NotNull String deploymentId, @Nullable Date knownDeploymentStartTime) {
+  @Nullable
+  public Date checkDeploymentStatus(@NotNull String deploymentId, @Nullable Date knownDeploymentStartTime) {
     final DeploymentInfo dInfo = myCodeDeployClient.getDeployment(new GetDeploymentRequest().withDeploymentId(deploymentId)).getDeploymentInfo();
 
     if (dInfo == null || dInfo.getCompleteTime() == null) { // deployment in progress?
       myListener.deploymentInProgress(deploymentId, getInstancesStatus(dInfo));
-      return false;
+      return null;
     }
 
     if (isSuccess(dInfo)) {
@@ -161,7 +162,7 @@ public class AWSClient {
       myListener.deploymentFailed(deploymentId, null, getErrorInfo(dInfo), getInstancesStatus(dInfo));
     }
 
-    return true;
+    return dInfo.getCompleteTime();
   }
 
   private void doUploadRevision(@NotNull final File revision, @NotNull final String s3BucketName, @NotNull final String s3ObjectKey) throws Throwable {

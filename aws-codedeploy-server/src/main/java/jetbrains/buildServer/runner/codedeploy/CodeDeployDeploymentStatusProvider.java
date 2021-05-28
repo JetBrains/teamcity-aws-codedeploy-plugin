@@ -37,33 +37,27 @@ import static jetbrains.buildServer.serverSide.buildLog.MessageAttrs.attrs;
 public class CodeDeployDeploymentStatusProvider implements DetachedBuildStatusProvider {
   @NotNull
   @Override
-  public String getType() {
-    return CodeDeployConstants.RUNNER_TYPE;
-  }
-
-  @NotNull
-  @Override
   public String getDescription() {
     return CodeDeployConstants.RUNNER_DISPLAY_NAME;
   }
 
   @Override
-  public boolean accepts(@NotNull SRunningBuild sRunningBuild, @NotNull String s) {
-    return getDeploymentId(sRunningBuild) != null;
+  public boolean accepts(@NotNull SRunningBuild runningBuild, @Nullable String trackingInfo) {
+    return getDeploymentInfo(runningBuild) != null;
   }
 
   @Nullable
-  private String getDeploymentId(@NotNull SRunningBuild sRunningBuild) {
+  private String getDeploymentInfo(@NotNull SRunningBuild sRunningBuild) {
     return sRunningBuild.getParametersProvider().get(CodeDeployConstants.DEPLOYMENT_ID_BUILD_CONFIG_PARAM);
   }
 
   @Override
-  public boolean processBuild(@NotNull SRunningBuild runningBuild, @Nullable String trackingId) {
-    final String deploymentId = getDeploymentId(runningBuild);
+  public void updateBuild(@NotNull SRunningBuild runningBuild, @Nullable String trackingInfo) {
+    final String deploymentId = getDeploymentInfo(runningBuild);
     assert deploymentId != null;
 
     final Map<String, String> runnerParameters = getParameters(runningBuild);
-    return AWSCommonParams.withAWSClients(runnerParameters, clients -> {
+    final Date finishDate = AWSCommonParams.withAWSClients(runnerParameters, clients -> {
       final AWSClient awsClient = createAWSClient(clients.createS3Client(), clients.createCodeDeployClient(), runningBuild).withListener(new LoggingDeploymentListener(runnerParameters, StringUtil.EMPTY) {
         private void log(@NotNull String message, @NotNull Status status) {
           runningBuild.getBuildLog().message(message, status, attrs());
@@ -92,7 +86,6 @@ public class CodeDeployDeploymentStatusProvider implements DetachedBuildStatusPr
         @Override
         protected void progress(@NotNull String message) {
           runningBuild.getBuildLog().progressMessage(message, null, DEFAULT_FLOW_ID);
-
         }
 
         @Override
@@ -102,16 +95,18 @@ public class CodeDeployDeploymentStatusProvider implements DetachedBuildStatusPr
 
         @Override
         protected void parameter(@NotNull String name, @NotNull String value) {
-          ((RunningBuildEx)runningBuild).getBuildPromotion().setCustomParameters(Collections.singletonMap(name, value));
+          ((RunningBuildEx) runningBuild).getBuildPromotion().setCustomParameters(Collections.singletonMap(name, value));
         }
 
         @Override
         protected void statusText(@NotNull String text) {
-          ((RunningBuildEx)runningBuild).setCustomStatusText(text);
+          ((RunningBuildEx) runningBuild).setCustomStatusText(text);
         }
       });
       return awsClient.checkDeploymentStatus(deploymentId, runningBuild.getFinishOnAgentDate());
     });
+    if (finishDate == null) return;
+    runningBuild.finish(finishDate);
   }
 
   @NotNull
