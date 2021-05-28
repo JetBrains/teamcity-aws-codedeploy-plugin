@@ -19,7 +19,6 @@ package jetbrains.buildServer.runner.codedeploy;
 import com.amazonaws.services.codedeploy.AmazonCodeDeployClient;
 import com.amazonaws.services.codedeploy.model.*;
 import com.amazonaws.services.s3.AmazonS3;
-import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.transfer.TransferManager;
 import com.amazonaws.services.s3.transfer.Upload;
 import com.amazonaws.services.s3.transfer.model.UploadResult;
@@ -326,7 +325,8 @@ public class AWSClient {
     if (DeploymentStatus.Succeeded.toString().equals(status)) return "succeeded";
     if (DeploymentStatus.Failed.toString().equals(status)) return "failed";
     if (DeploymentStatus.Stopped.toString().equals(status)) return "stopped";
-    return CodeDeployConstants.STATUS_IS_UNKNOWN;
+    if (DeploymentStatus.Ready.toString().equals(status)) return "ready";
+    return StringUtil.decapitalize(status);
   }
 
   @Contract("null -> null")
