@@ -103,7 +103,7 @@ public class CodeDeployDeploymentStatusProvider implements DetachedBuildStatusPr
           ((RunningBuildEx) runningBuild).setCustomStatusText(text);
         }
       });
-      return awsClient.checkDeploymentStatus(deploymentId, runningBuild.getFinishOnAgentDate());
+      return IOGuard.allowNetworkCall(() -> awsClient.checkDeploymentStatus(deploymentId, runningBuild.getFinishOnAgentDate()));
     });
     if (finishDate == null) return;
     runningBuild.finish(finishDate);
