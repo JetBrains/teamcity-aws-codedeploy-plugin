@@ -111,7 +111,7 @@ abstract class LoggingDeploymentListener extends AWSClient.Listener {
 
   @Override
   void deploymentInProgress(@NotNull String deploymentId, @Nullable InstancesStatus instancesStatus) {
-    progress(deploymentDescription(instancesStatus, null, false));
+    progress(deploymentDescription(instancesStatus, deploymentId, false));
   }
 
   @Override

@@ -117,9 +117,9 @@ public class CodeDeployRunner implements AgentBuildRunner {
                 Boolean.parseBoolean(getRollbackOnFailure(runnerParameters)),
                 Boolean.parseBoolean(getRollbackOnAlarmThreshold(runnerParameters)),
                 getFileExistsBehavior(runnerParameters));
+              return m.problemOccurred ? BuildFinishedStatus.FINISHED_WITH_PROBLEMS : BuildFinishedStatus.FINISHED_DETACHED;
             }
-
-            return m.problemOccurred ? BuildFinishedStatus.FINISHED_WITH_PROBLEMS : BuildFinishedStatus.FINISHED_DETACHED;
+            return m.problemOccurred ? BuildFinishedStatus.FINISHED_WITH_PROBLEMS : BuildFinishedStatus.FINISHED_SUCCESS;
           }
         });
       }
