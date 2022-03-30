@@ -94,19 +94,19 @@ public class LoggingDeploymentListenerTest extends LoggingTestCase {
   @Test
   public void deployment_progress_unknown() throws Exception {
     create().deploymentInProgress(FAKE_ID, createStatus());
-    assertLog("PROGRESS Deployment status is unknown, 0 instances succeeded");
+    assertLog("PROGRESS Deployment ID-123XYZ status is unknown, 0 instances succeeded");
   }
 
   @Test
   public void deployment_progress() throws Exception {
     create().deploymentInProgress(FAKE_ID, createStatus("in progress", 1, 1, 1, 1, 1));
-    assertLog("PROGRESS Deployment in progress, 1 instance succeeded, 1 failed, 1 pending, 1 skipped, 1 in progress");
+    assertLog("PROGRESS Deployment ID-123XYZ in progress, 1 instance succeeded, 1 failed, 1 pending, 1 skipped, 1 in progress");
   }
 
   @Test
   public void deployment_progress_finished_five_succeeded() throws Exception {
     create().deploymentInProgress(FAKE_ID, createStatus("finished", 0, 0, 5, 0, 0));
-    assertLog("PROGRESS Deployment finished, 5 instances succeeded");
+    assertLog("PROGRESS Deployment ID-123XYZ finished, 5 instances succeeded");
   }
 
   @Test
