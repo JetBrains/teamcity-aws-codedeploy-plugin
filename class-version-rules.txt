@@ -18,3 +18,11 @@
 
 
 1.8 =>
+
+9 => aws-codedeploy-plugin.zip!agent/aws-codedeploy-plugin-agent.zip!lib/jackson-core-2.12.3.jar
+9 => aws-codedeploy-plugin.zip!agent/aws-codedeploy-plugin-agent.zip!lib/jackson-databind-2.12.3.jar
+9 => aws-codedeploy-plugin.zip!agent/aws-codedeploy-plugin-agent.zip!lib/jackson-dataformat-cbor-2.12.3.jar
+9 => aws-codedeploy-plugin.zip!server/jackson-annotations-2.12.3.jar
+9 => aws-codedeploy-plugin.zip!server/jackson-core-2.12.3.jar
+9 => aws-codedeploy-plugin.zip!server/jackson-databind-2.12.3.jar
+9 => aws-codedeploy-plugin.zip!server/jackson-dataformat-cbor-2.12.3.jar
